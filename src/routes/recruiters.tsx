@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Mail, Phone, Plus, Send, Loader2 } from "lucide-react";
@@ -141,7 +141,11 @@ function TeamPage() {
                       aria-label="Resend invite"
                       title="Resend invite"
                       disabled={resend.isPending}
-                      onClick={() => resend.mutate(s.id)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        resend.mutate(s.id);
+                      }}
                     >
                       {resend.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -178,7 +182,7 @@ function TeamPage() {
                   </div>
                 )}
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
