@@ -7,4 +7,4 @@
 - [x] Verify login and candidate interactions across desktop and mobile.
 - [x] Restyle the login screen with simplified password-only sign-in and subtle branded artwork.
 - [x] Place both login sections inside one centered shared card and update the primary purple palette.
-- [ ] Replace the bounded login card with one full-bleed purple artwork surface and a compact glass sign-in panel.
+- [x] Replace the bounded login card with one full-bleed purple artwork surface and a compact glass sign-in panel.
