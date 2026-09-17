@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { Building2, Plus, Loader2, Search, Users, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
-import { createClient, fetchClients } from "@/lib/crm-queries";
+import { fetchClients } from "@/lib/crm-queries";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,6 +50,10 @@ function ClientsPage() {
   const [industry, setIndustry] = useState("");
   const [parentId, setParentId] = useState("none");
   const [isFranchise, setIsFranchise] = useState(false);
+  const [contactFirst, setContactFirst] = useState("");
+  const [contactLast, setContactLast] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPosition, setContactPosition] = useState("");
 
   const { data: clients = [], isLoading } = useQuery({ queryKey: ["clients"], queryFn: fetchClients });
 
@@ -64,19 +69,43 @@ function ClientsPage() {
   const create = useMutation({
     mutationFn: async () => {
       if (!name.trim()) throw new Error("Company name is required");
-      return createClient({
-        name,
-        industry,
-        parent_client_id: parentId === "none" ? null : parentId,
-        is_franchise_brand: isFranchise,
+      if (!contactFirst.trim() || !contactLast.trim()) {
+        throw new Error("Primary contact first and last name are required");
+      }
+      if (!contactEmail.trim()) throw new Error("Primary contact email is required");
+
+      const { data, error } = await supabase.functions.invoke("admin-create-client", {
+        body: {
+          name: name.trim(),
+          industry: industry.trim() || null,
+          parent_client_id: parentId === "none" ? null : parentId,
+          is_franchise_brand: isFranchise,
+          primary_contact: {
+            first_name: contactFirst.trim(),
+            last_name: contactLast.trim(),
+            email: contactEmail.trim(),
+            position: contactPosition.trim() || null,
+          },
+        },
       });
+      const serverError =
+        data && typeof data === "object" && "error" in data
+          ? (data as { error?: string }).error
+          : null;
+      if (serverError) throw new Error(serverError);
+      if (error) throw new Error(error.message || "Could not add client");
+      return data as { client_id: string };
     },
     onSuccess: () => {
-      toast.success("Client added");
+      toast.success("Client added — invite sent");
       setName("");
       setIndustry("");
       setParentId("none");
       setIsFranchise(false);
+      setContactFirst("");
+      setContactLast("");
+      setContactEmail("");
+      setContactPosition("");
       setOpen(false);
       queryClient.invalidateQueries({ queryKey: ["clients"] });
     },
@@ -146,10 +175,12 @@ function ClientsPage() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add client</DialogTitle>
-            <DialogDescription>Create a company record staff can raise requests against.</DialogDescription>
+            <DialogDescription>
+              Create a company record and invite its primary contact.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -175,6 +206,49 @@ function ClientsPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="rounded-xl border p-3 space-y-3">
+              <div>
+                <Label>Primary contact *</Label>
+                <p className="text-xs text-muted-foreground">
+                  They receive an email invite to their client account.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="contact-first">First name *</Label>
+                  <Input
+                    id="contact-first"
+                    value={contactFirst}
+                    onChange={(e) => setContactFirst(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contact-last">Last name *</Label>
+                  <Input
+                    id="contact-last"
+                    value={contactLast}
+                    onChange={(e) => setContactLast(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contact-email">Email *</Label>
+                <Input
+                  id="contact-email"
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contact-position">Position</Label>
+                <Input
+                  id="contact-position"
+                  value={contactPosition}
+                  onChange={(e) => setContactPosition(e.target.value)}
+                />
+              </div>
             </div>
             <div className="flex items-center justify-between rounded-xl border p-3">
               <div>

@@ -13,6 +13,7 @@ import { Route as SystemMonitorRouteImport } from './routes/system-monitor'
 import { Route as RolesRouteImport } from './routes/roles'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RequestsRouteImport } from './routes/requests'
+import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as RecruitersRouteImport } from './routes/recruiters'
 import { Route as RecruiterActivityRouteImport } from './routes/recruiter-activity'
 import { Route as PlacementsRouteImport } from './routes/placements'
@@ -26,6 +27,7 @@ import { Route as CsQueueRouteImport } from './routes/cs-queue'
 import { Route as ClientsRouteImport } from './routes/clients'
 import { Route as CandidatesRouteImport } from './routes/candidates'
 import { Route as AuditLogsRouteImport } from './routes/audit-logs'
+import { Route as AdminToolsRouteImport } from './routes/admin-tools'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RequestsIndexRouteImport } from './routes/requests.index'
 import { Route as ClientsIndexRouteImport } from './routes/clients.index'
@@ -53,6 +55,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RequestsRoute = RequestsRouteImport.update({
   id: '/requests',
   path: '/requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecruitersRoute = RecruitersRouteImport.update({
@@ -120,6 +127,11 @@ const AuditLogsRoute = AuditLogsRouteImport.update({
   path: '/audit-logs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminToolsRoute = AdminToolsRouteImport.update({
+  id: '/admin-tools',
+  path: '/admin-tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -163,6 +175,7 @@ const CandidatesCandidateIdRoute = CandidatesCandidateIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin-tools': typeof AdminToolsRoute
   '/audit-logs': typeof AuditLogsRoute
   '/candidates': typeof CandidatesRouteWithChildren
   '/clients': typeof ClientsRouteWithChildren
@@ -176,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/placements': typeof PlacementsRoute
   '/recruiter-activity': typeof RecruiterActivityRoute
   '/recruiters': typeof RecruitersRoute
+  '/reports': typeof ReportsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
@@ -190,6 +204,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin-tools': typeof AdminToolsRoute
   '/audit-logs': typeof AuditLogsRoute
   '/cs-queue': typeof CsQueueRoute
   '/dashboard': typeof DashboardRoute
@@ -201,6 +216,7 @@ export interface FileRoutesByTo {
   '/placements': typeof PlacementsRoute
   '/recruiter-activity': typeof RecruiterActivityRoute
   '/recruiters': typeof RecruitersRoute
+  '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
   '/system-monitor': typeof SystemMonitorRoute
@@ -215,6 +231,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin-tools': typeof AdminToolsRoute
   '/audit-logs': typeof AuditLogsRoute
   '/candidates': typeof CandidatesRouteWithChildren
   '/clients': typeof ClientsRouteWithChildren
@@ -228,6 +245,7 @@ export interface FileRoutesById {
   '/placements': typeof PlacementsRoute
   '/recruiter-activity': typeof RecruiterActivityRoute
   '/recruiters': typeof RecruitersRoute
+  '/reports': typeof ReportsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
@@ -244,6 +262,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin-tools'
     | '/audit-logs'
     | '/candidates'
     | '/clients'
@@ -257,6 +276,7 @@ export interface FileRouteTypes {
     | '/placements'
     | '/recruiter-activity'
     | '/recruiters'
+    | '/reports'
     | '/requests'
     | '/reset-password'
     | '/roles'
@@ -271,6 +291,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin-tools'
     | '/audit-logs'
     | '/cs-queue'
     | '/dashboard'
@@ -282,6 +303,7 @@ export interface FileRouteTypes {
     | '/placements'
     | '/recruiter-activity'
     | '/recruiters'
+    | '/reports'
     | '/reset-password'
     | '/roles'
     | '/system-monitor'
@@ -295,6 +317,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin-tools'
     | '/audit-logs'
     | '/candidates'
     | '/clients'
@@ -308,6 +331,7 @@ export interface FileRouteTypes {
     | '/placements'
     | '/recruiter-activity'
     | '/recruiters'
+    | '/reports'
     | '/requests'
     | '/reset-password'
     | '/roles'
@@ -323,6 +347,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminToolsRoute: typeof AdminToolsRoute
   AuditLogsRoute: typeof AuditLogsRoute
   CandidatesRoute: typeof CandidatesRouteWithChildren
   ClientsRoute: typeof ClientsRouteWithChildren
@@ -336,6 +361,7 @@ export interface RootRouteChildren {
   PlacementsRoute: typeof PlacementsRoute
   RecruiterActivityRoute: typeof RecruiterActivityRoute
   RecruitersRoute: typeof RecruitersRoute
+  ReportsRoute: typeof ReportsRoute
   RequestsRoute: typeof RequestsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   RolesRoute: typeof RolesRoute
@@ -370,6 +396,13 @@ declare module '@tanstack/react-router' {
       path: '/requests'
       fullPath: '/requests'
       preLoaderRoute: typeof RequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recruiters': {
@@ -461,6 +494,13 @@ declare module '@tanstack/react-router' {
       path: '/audit-logs'
       fullPath: '/audit-logs'
       preLoaderRoute: typeof AuditLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-tools': {
+      id: '/admin-tools'
+      path: '/admin-tools'
+      fullPath: '/admin-tools'
+      preLoaderRoute: typeof AdminToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -567,6 +607,7 @@ const RequestsRouteWithChildren = RequestsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminToolsRoute: AdminToolsRoute,
   AuditLogsRoute: AuditLogsRoute,
   CandidatesRoute: CandidatesRouteWithChildren,
   ClientsRoute: ClientsRouteWithChildren,
@@ -580,6 +621,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlacementsRoute: PlacementsRoute,
   RecruiterActivityRoute: RecruiterActivityRoute,
   RecruitersRoute: RecruitersRoute,
+  ReportsRoute: ReportsRoute,
   RequestsRoute: RequestsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   RolesRoute: RolesRoute,
