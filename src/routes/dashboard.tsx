@@ -144,7 +144,6 @@ function DashboardPage() {
     return {
       total: candidates.length,
       newThisWeek: candidates.filter((c) => new Date(c.created_at).getTime() >= weekAgo).length,
-      screening: byStatus("screening"),
       shortlisted: byStatus("shortlisted"),
       placed: byStatus("placed"),
       mine: candidates.filter((c) => c.recruiter_id === profile?.id).length,
