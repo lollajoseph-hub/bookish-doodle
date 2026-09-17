@@ -169,6 +169,34 @@ function DashboardPage() {
 
   const recent = useMemo(() => candidates.slice(0, 6), [candidates]);
 
+  const myCandidates = useMemo(
+    () => candidates.filter((c) => c.recruiter_id === profile?.id),
+    [candidates, profile?.id],
+  );
+  const myStats = useMemo(() => {
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const byStatus = (st: string) => myCandidates.filter((c) => (c.status ?? "new") === st).length;
+    const myCandidateIds = new Set(myCandidates.map((c) => c.id));
+    const myMatchesList = matches.filter((m) => myCandidateIds.has(m.candidate_id));
+    const byMatch = (...sts: string[]) => myMatchesList.filter((m) => sts.includes(m.status ?? "")).length;
+    return {
+      total: myCandidates.length,
+      newThisWeek: myCandidates.filter((c) => new Date(c.created_at).getTime() >= weekAgo).length,
+      new: byStatus("new"),
+      shortlisted: byStatus("shortlisted"),
+      interviewed: byStatus("interviewed"),
+      hiredCandidates: byStatus("hired"),
+      placed: byStatus("placed"),
+      rejected: byStatus("rejected"),
+      upcomingInterviews: byMatch("interview_requested", "interview_confirmed"),
+      pendingOffers: byMatch("offer_extended"),
+      activePlacements: placements.filter(
+        (p) => myCandidateIds.has(p.candidate_id) && (p.status ?? "active") === "active",
+      ).length,
+    };
+  }, [myCandidates, matches, placements]);
+  const myRecent = useMemo(() => myCandidates.slice(0, 6), [myCandidates]);
+
   async function refreshAll() {
     setRefreshing(true);
     try {
@@ -196,10 +224,21 @@ function DashboardPage() {
       <div className="space-y-8">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-primary-dark">Operations overview</h1>
-            <p className="text-sm text-muted-foreground">
-              Live snapshot of the candidate pool, client demand and placements.
-            </p>
+            {isAdmin ? (
+              <>
+                <h1 className="text-xl font-semibold text-primary-dark">Operations overview</h1>
+                <p className="text-sm text-muted-foreground">
+                  Live snapshot of the candidate pool, client demand and placements.
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="text-xl font-semibold text-primary-dark">My pipeline overview</h1>
+                <p className="text-sm text-muted-foreground">
+                  Your assigned candidates, pipeline and today's snapshot.
+                </p>
+              </>
+            )}
           </div>
           <Button variant="outline" onClick={refreshAll} disabled={refreshing}>
             <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
@@ -207,127 +246,226 @@ function DashboardPage() {
           </Button>
         </div>
 
-        <section className="space-y-3">
-          <SectionTitle
-            action={
-              <Link to="/candidates" className="text-sm text-primary hover:underline">
-                View candidates
-              </Link>
-            }
-          >
-            Candidate pipeline
-          </SectionTitle>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard label="Total candidates" value={stats.total} icon={Users} loading={loadingCore} />
-            <StatCard
-              label="New this week"
-              value={stats.newThisWeek}
-              icon={UserPlus}
-              tone="success"
-              hint="Added in the last 7 days"
-              loading={loadingCore}
-            />
-            <StatCard label="New" value={stats.new} icon={Sparkles} loading={loadingCore} />
-            <StatCard
-              label="Shortlisted"
-              value={stats.shortlisted}
-              icon={BadgeCheck}
-              tone="warning"
-              loading={loadingCore}
-            />
-            <StatCard
-              label="Interviewed"
-              value={stats.interviewed}
-              icon={CalendarCheck}
-              loading={loadingCore}
-            />
-            <StatCard
-              label="Hired"
-              value={stats.hiredCandidates}
-              icon={UserCheck}
-              tone="success"
-              loading={loadingCore}
-            />
-            <StatCard label="Placed" value={stats.placed} icon={Sparkles} tone="success" loading={loadingCore} />
-            <StatCard label="Rejected" value={stats.rejected} icon={UserMinus} loading={loadingCore} />
-            <StatCard label="Assigned to me" value={stats.mine} icon={UserCheck} loading={loadingCore} />
-            <StatCard
-              label="Unassigned"
-              value={stats.unassigned}
-              icon={UserMinus}
-              tone="warning"
-              hint="Need a recruiter"
-              loading={loadingCore}
-            />
-          </div>
-        </section>
+        {isAdmin ? (
+          <section className="space-y-3">
+            <SectionTitle
+              action={
+                <Link to="/candidates" className="text-sm text-primary hover:underline">
+                  View candidates
+                </Link>
+              }
+            >
+              Candidate pipeline
+            </SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard label="Total candidates" value={stats.total} icon={Users} loading={loadingCore} />
+              <StatCard
+                label="New this week"
+                value={stats.newThisWeek}
+                icon={UserPlus}
+                tone="success"
+                hint="Added in the last 7 days"
+                loading={loadingCore}
+              />
+              <StatCard label="New" value={stats.new} icon={Sparkles} loading={loadingCore} />
+              <StatCard
+                label="Shortlisted"
+                value={stats.shortlisted}
+                icon={BadgeCheck}
+                tone="warning"
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Interviewed"
+                value={stats.interviewed}
+                icon={CalendarCheck}
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Hired"
+                value={stats.hiredCandidates}
+                icon={UserCheck}
+                tone="success"
+                loading={loadingCore}
+              />
+              <StatCard label="Placed" value={stats.placed} icon={Sparkles} tone="success" loading={loadingCore} />
+              <StatCard label="Rejected" value={stats.rejected} icon={UserMinus} loading={loadingCore} />
+              <StatCard label="Assigned to me" value={stats.mine} icon={UserCheck} loading={loadingCore} />
+              <StatCard
+                label="Unassigned"
+                value={stats.unassigned}
+                icon={UserMinus}
+                tone="warning"
+                hint="Need a recruiter"
+                loading={loadingCore}
+              />
+            </div>
+          </section>
+        ) : (
+          <section className="space-y-3">
+            <SectionTitle
+              action={
+                <Link to="/candidates" className="text-sm text-primary hover:underline">
+                  View candidates
+                </Link>
+              }
+            >
+              My candidate pipeline
+            </SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard label="Total assigned to me" value={myStats.total} icon={Users} loading={loadingCore} />
+              <StatCard
+                label="New this week"
+                value={myStats.newThisWeek}
+                icon={UserPlus}
+                tone="success"
+                hint="Added in the last 7 days"
+                loading={loadingCore}
+              />
+              <StatCard label="New" value={myStats.new} icon={Sparkles} loading={loadingCore} />
+              <StatCard
+                label="Shortlisted"
+                value={myStats.shortlisted}
+                icon={BadgeCheck}
+                tone="warning"
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Interviewed"
+                value={myStats.interviewed}
+                icon={CalendarCheck}
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Hired"
+                value={myStats.hiredCandidates}
+                icon={UserCheck}
+                tone="success"
+                loading={loadingCore}
+              />
+              <StatCard label="Placed" value={myStats.placed} icon={Sparkles} tone="success" loading={loadingCore} />
+              <StatCard label="Rejected" value={myStats.rejected} icon={UserMinus} loading={loadingCore} />
+            </div>
+          </section>
+        )}
 
-        <section className="space-y-3">
-          <SectionTitle
-            action={
-              <Link to="/requests" className="text-sm text-primary hover:underline">
-                View requests
-              </Link>
-            }
-          >
-            Client &amp; placement pipeline
-          </SectionTitle>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard
-              label="Active clients"
-              value={clients.length}
-              icon={Building2}
-              loading={clientsQ.isLoading}
-            />
-            <StatCard
-              label="Recruiters"
-              value={stats.recruiters}
-              icon={UserCog}
-              loading={staffQ.isLoading}
-            />
-            <StatCard
-              label="Open requests"
-              value={stats.openRequests}
-              icon={ClipboardList}
-              tone="warning"
-              loading={requestsQ.isLoading}
-            />
-            <StatCard
-              label="Needs attention"
-              value={stats.needsAttention}
-              icon={LifeBuoy}
-              tone="warning"
-              hint="CS queue"
-              loading={requestsQ.isLoading}
-            />
-            <StatCard
-              label="Candidates matched"
-              value={matches.length}
-              icon={GitCompareArrows}
-              loading={matchesQ.isLoading}
-            />
-            <StatCard
-              label="Upcoming interviews"
-              value={stats.upcomingInterviews}
-              icon={CalendarCheck}
-              loading={matchesQ.isLoading}
-            />
-            <StatCard
-              label="Pending offers"
-              value={stats.pendingOffers}
-              icon={FileCheck}
-              tone="warning"
-              loading={matchesQ.isLoading}
-            />
-            <StatCard
-              label="Active placements"
-              value={stats.activePlacements}
-              icon={Sparkles}
-              tone="success"
-              loading={placementsQ.isLoading}
-            />
-          </div>
-        </section>
+        {isAdmin ? (
+          <section className="space-y-3">
+            <SectionTitle
+              action={
+                <Link to="/requests" className="text-sm text-primary hover:underline">
+                  View requests
+                </Link>
+              }
+            >
+              Client &amp; placement pipeline
+            </SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard
+                label="Active clients"
+                value={clients.length}
+                icon={Building2}
+                loading={clientsQ.isLoading}
+              />
+              <StatCard
+                label="Recruiters"
+                value={stats.recruiters}
+                icon={UserCog}
+                loading={staffQ.isLoading}
+              />
+              <StatCard
+                label="Open requests"
+                value={stats.openRequests}
+                icon={ClipboardList}
+                tone="warning"
+                loading={requestsQ.isLoading}
+              />
+              <StatCard
+                label="Needs attention"
+                value={stats.needsAttention}
+                icon={LifeBuoy}
+                tone="warning"
+                hint="CS queue"
+                loading={requestsQ.isLoading}
+              />
+              <StatCard
+                label="Candidates matched"
+                value={matches.length}
+                icon={GitCompareArrows}
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Upcoming interviews"
+                value={stats.upcomingInterviews}
+                icon={CalendarCheck}
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Pending offers"
+                value={stats.pendingOffers}
+                icon={FileCheck}
+                tone="warning"
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Active placements"
+                value={stats.activePlacements}
+                icon={Sparkles}
+                tone="success"
+                loading={placementsQ.isLoading}
+              />
+            </div>
+          </section>
+        ) : (
+          <section className="space-y-3">
+            <SectionTitle
+              action={
+                <Link to="/requests" className="text-sm text-primary hover:underline">
+                  View requests
+                </Link>
+              }
+            >
+              My activity &amp; company snapshot
+            </SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard
+                label="Upcoming interviews"
+                value={myStats.upcomingInterviews}
+                icon={CalendarCheck}
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Pending offers"
+                value={myStats.pendingOffers}
+                icon={FileCheck}
+                tone="warning"
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Active placements"
+                value={myStats.activePlacements}
+                icon={Sparkles}
+                tone="success"
+                loading={placementsQ.isLoading}
+              />
+              <StatCard
+                label="Open requests"
+                value={stats.openRequests}
+                icon={ClipboardList}
+                tone="warning"
+                hint="Company-wide"
+                loading={requestsQ.isLoading}
+              />
+              <StatCard
+                label="Active clients"
+                value={clients.length}
+                icon={Building2}
+                hint="Company-wide"
+                loading={clientsQ.isLoading}
+              />
+            </div>
+          </section>
+        )}
 
         {isAdmin && (
           <section className="space-y-3">
@@ -377,12 +515,13 @@ function DashboardPage() {
               </Link>
             }
           >
-            Candidates by role
+            {isAdmin ? "Candidates by role" : "My candidates by role"}
           </SectionTitle>
           <div className="mt-4 space-y-3">
             {roles.map((r) => {
-              const count = candidates.filter((c) => c.roleIds.includes(r.id)).length;
-              const pct = candidates.length ? Math.round((count / candidates.length) * 100) : 0;
+              const pool = isAdmin ? candidates : myCandidates;
+              const count = pool.filter((c) => c.roleIds.includes(r.id)).length;
+              const pct = pool.length ? Math.round((count / pool.length) * 100) : 0;
               return (
                 <div key={r.id}>
                   <div className="flex items-center justify-between text-sm">
@@ -400,9 +539,9 @@ function DashboardPage() {
         </section>
 
         <section className="card-amber rounded-2xl border bg-card p-5">
-          <SectionTitle>Recently added</SectionTitle>
+          <SectionTitle>{isAdmin ? "Recently added" : "My recently added"}</SectionTitle>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {recent.map((c) => (
+            {(isAdmin ? recent : myRecent).map((c) => (
               <Link
                 key={c.id}
                 to="/candidates/$candidateId"
@@ -411,10 +550,14 @@ function DashboardPage() {
               >
                 <div className="truncate font-medium">{c.full_name}</div>
                 <div className="truncate text-xs text-muted-foreground">{c.headline || c.email || "—"}</div>
-                <div className="mt-1 text-[11px] text-primary">{c.recruiterName ?? "Unassigned"}</div>
+                {isAdmin && <div className="mt-1 text-[11px] text-primary">{c.recruiterName ?? "Unassigned"}</div>}
               </Link>
             ))}
-            {!recent.length && <p className="text-sm text-muted-foreground">No candidates added yet.</p>}
+            {!(isAdmin ? recent : myRecent).length && (
+              <p className="text-sm text-muted-foreground">
+                {isAdmin ? "No candidates added yet." : "No candidates assigned to you yet."}
+              </p>
+            )}
           </div>
         </section>
       </div>
