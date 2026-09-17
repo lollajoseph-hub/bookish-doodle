@@ -366,6 +366,15 @@ function CandidateDetailPage() {
                     </Select>
                   </div>
                 )}
+                {isAdmin && (
+                  <Button
+                    className="w-full justify-start"
+                    variant="destructive"
+                    onClick={() => setDeleteOpen(true)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete candidate
+                  </Button>
+                )}
               </div>
             </section>
           </div>
@@ -524,6 +533,32 @@ function CandidateDetailPage() {
       </div>
 
       <CandidateFormDialog open={editOpen} onOpenChange={setEditOpen} candidateId={candidateId} />
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {c.full_name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes their profile, files, notes, and match history. This can't
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteCand.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteCand.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                deleteCand.mutate(undefined, { onSettled: () => setDeleteOpen(false) });
+              }}
+            >
+              {deleteCand.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }
