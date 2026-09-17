@@ -1,0 +1,128 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { CalendarCheck } from "lucide-react";
+import { AppShell } from "@/components/app-shell";
+import { MatchStatusBadge } from "@/components/match-status";
+import { fetchMatchesByStatus, updateMatchStatus } from "@/lib/crm-queries";
+import type { MatchStatus } from "@/lib/database.types";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+const STAGES: MatchStatus[] = ["interview_requested", "interview_confirmed", "interview_completed"];
+
+const NEXT_STAGE: Partial<Record<MatchStatus, MatchStatus>> = {
+  interview_requested: "interview_confirmed",
+  interview_confirmed: "interview_completed",
+  interview_completed: "offer_extended",
+};
+
+export const Route = createFileRoute("/interview-review")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Interview review | ScaleSource Candidate Review Dashboard" },
+      { name: "description", content: "Candidates currently moving through client interview stages." },
+      { property: "og:title", content: "Interview review | ScaleSource" },
+      { property: "og:description", content: "Advance candidates through interview stages." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: InterviewReviewPage,
+});
+
+function InterviewReviewPage() {
+  const queryClient = useQueryClient();
+  const { data: matches = [], isLoading } = useQuery({
+    queryKey: ["matches", "interview"],
+    queryFn: () => fetchMatchesByStatus(STAGES),
+  });
+
+  const advance = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: MatchStatus }) => updateMatchStatus(id, status),
+    onSuccess: () => {
+      toast.success("Status updated");
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <AppShell title="Interview review" description="Candidates in the interview stages">
+      {isLoading && <p className="text-sm text-muted-foreground">Loading interviews…</p>}
+      <div className="overflow-x-auto rounded-2xl border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Candidate</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Stage</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {matches.map((m) => {
+              const next = NEXT_STAGE[m.status];
+              return (
+                <TableRow key={m.id}>
+                  <TableCell>
+                    <Link
+                      to="/candidates/$candidateId"
+                      params={{ candidateId: m.candidate_id }}
+                      className="font-medium hover:underline"
+                    >
+                      {m.candidateName ?? "Candidate"}
+                    </Link>
+                    {m.candidateHeadline && (
+                      <div className="text-xs text-muted-foreground">{m.candidateHeadline}</div>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-sm">{m.clientName ?? "—"}</TableCell>
+                  <TableCell className="text-sm">{m.roleName ?? m.requestTitle ?? "—"}</TableCell>
+                  <TableCell>
+                    <MatchStatusBadge status={m.status} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex flex-wrap justify-end gap-2">
+                      {next && (
+                        <Button
+                          size="sm"
+                          disabled={advance.isPending}
+                          onClick={() => advance.mutate({ id: m.id, status: next })}
+                        >
+                          {next === "offer_extended" ? "Extend offer" : "Move to next stage"}
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={advance.isPending}
+                        onClick={() => advance.mutate({ id: m.id, status: "rejected" })}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+      {!isLoading && !matches.length && (
+        <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
+          <CalendarCheck className="h-4 w-4" /> No candidates are in an interview stage right now.
+        </p>
+      )}
+    </AppShell>
+  );
+}
