@@ -14,3 +14,8 @@
 - [x] Segment sidebar navigation, add admin toolkit and role deep-links
 - [x] Implement approved segmented sidebar and synchronized role links
 - [x] Replace candidate role chips with a sidebar role dropdown
+- [x] Candidate avatar upload + intro video (upload or link)
+- [x] Dedicated AI Profile tab
+- [x] Left-rail + tabbed candidate detail layout
+- [x] Full-page /candidates/new create flow
+- [x] Admin "Add staff" invite + resend invite on Team page
