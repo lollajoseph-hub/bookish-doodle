@@ -224,10 +224,21 @@ function DashboardPage() {
       <div className="space-y-8">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-primary-dark">Operations overview</h1>
-            <p className="text-sm text-muted-foreground">
-              Live snapshot of the candidate pool, client demand and placements.
-            </p>
+            {isAdmin ? (
+              <>
+                <h1 className="text-xl font-semibold text-primary-dark">Operations overview</h1>
+                <p className="text-sm text-muted-foreground">
+                  Live snapshot of the candidate pool, client demand and placements.
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="text-xl font-semibold text-primary-dark">My pipeline overview</h1>
+                <p className="text-sm text-muted-foreground">
+                  Your assigned candidates, pipeline and today's snapshot.
+                </p>
+              </>
+            )}
           </div>
           <Button variant="outline" onClick={refreshAll} disabled={refreshing}>
             <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
