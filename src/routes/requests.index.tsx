@@ -66,7 +66,7 @@ function ArrowScrollArea({ children }: { children: ReactNode }) {
     ref.current?.scrollBy({ top: dir * 160, behavior: "smooth" });
 
   return (
-    <div className="relative min-h-0">
+    <div className="relative flex min-h-0 flex-col">
       <div
         ref={ref}
         onScroll={updateScrollState}
@@ -89,7 +89,7 @@ function ArrowScrollArea({ children }: { children: ReactNode }) {
           type="button"
           aria-label="Scroll down"
           onClick={() => scroll(1)}
-          className="absolute bottom-0 left-1/2 z-10 flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-foreground/80 shadow-sm transition-colors hover:bg-primary hover:text-primary-foreground"
+          className="mx-auto mt-2 flex h-6 w-6 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-foreground/80 shadow-sm transition-colors hover:bg-primary hover:text-primary-foreground"
         >
           <ChevronDown className="h-4 w-4" />
         </button>
