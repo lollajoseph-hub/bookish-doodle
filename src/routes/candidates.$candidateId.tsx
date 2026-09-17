@@ -419,7 +419,11 @@ function CandidateDetailPage() {
                   </div>
                 </SectionCard>
 
-                <IntroVideoCard videoUrl={media?.videoUrl ?? null} linkUrl={c.intro_video_url} />
+                <IntroVideoCard
+                  videoUrl={media?.videoUrl ?? null}
+                  linkUrl={c.intro_video_url}
+                  mimeType={media?.videoMimeType ?? null}
+                />
 
                 <SkillsSection skills={data.skills} />
                 <WorkHistorySection workHistory={data.workHistory} />
