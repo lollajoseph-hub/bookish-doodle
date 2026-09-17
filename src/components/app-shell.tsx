@@ -15,7 +15,7 @@ import {
 import { NotificationsBell } from "@/components/notifications-bell";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth, isStaff } from "@/lib/auth";
-import { BRAND_LOGO_URL } from "@/lib/supabase";
+import brandLogo from "@/assets/scalesource-logo-transparent.png.asset.json";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -87,16 +87,13 @@ function Brand({ role }: { role?: string | null }) {
   const subtitle =
     role === "admin" ? "Admin workspace" : role === "recruiter" ? "Recruiter workspace" : "Staff workspace";
   return (
-    <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
+    <div className="border-b border-sidebar-border px-5 py-5">
       <img
-        src={BRAND_LOGO_URL}
+        src={brandLogo.url}
         alt="ScaleSource"
-        className="h-9 w-9 rounded-xl bg-white object-contain p-1"
+        className="h-auto w-full max-w-[190px] object-contain object-left drop-shadow-sm"
       />
-      <div className="leading-tight">
-        <div className="text-sidebar-foreground font-semibold">ScaleSource</div>
-        <div className="text-[11px] uppercase tracking-wider text-sidebar-foreground/60">{subtitle}</div>
-      </div>
+      <div className="mt-2 text-[11px] uppercase tracking-wider text-sidebar-foreground/70">{subtitle}</div>
     </div>
   );
 }

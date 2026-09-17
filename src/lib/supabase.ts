@@ -19,9 +19,6 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   },
 });
 
-export const BRAND_LOGO_URL =
-  "https://kjpozzjeddvctcabtnzg.supabase.co/storage/v1/object/public/brand-assets/scalesource-logo.png";
-
 export { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY };
 
 export type StaffRole = "admin" | "recruiter";
