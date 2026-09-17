@@ -5,10 +5,6 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import {
   Users,
-  Briefcase,
-  UserCheck,
-  Sparkles,
-  ArrowRight,
   RefreshCw,
   Building2,
   ClipboardList,
