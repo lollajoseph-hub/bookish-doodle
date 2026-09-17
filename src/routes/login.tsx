@@ -2,7 +2,8 @@ import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-r
 import { useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
-import { supabase, BRAND_LOGO_URL } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
+import brandLogo from "@/assets/scalesource-logo-transparent.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,28 +65,34 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      <div className="hidden lg:flex flex-col justify-between bg-primary-dark text-white p-10">
-        <img src={BRAND_LOGO_URL} alt="ScaleSource" className="h-10 w-auto object-contain" />
+      <div className="login-panel-enter hidden lg:flex flex-col justify-between bg-primary text-primary-foreground p-10">
+        <img
+          src={brandLogo.url}
+          alt="ScaleSource"
+          className="h-14 w-auto max-w-full self-start object-contain drop-shadow-sm"
+        />
         <div>
-          <h2 className="text-3xl font-semibold leading-tight">Candidate Review Dashboard</h2>
-          <p className="mt-3 max-w-md text-white/70">
+          <h2 className="text-3xl font-semibold leading-tight">Candidate Review Workstation</h2>
+          <p className="mt-3 max-w-md text-primary-foreground/75">
             Review the ScaleSource candidate pool by role — CSR, sales support, bookkeeping,
             executive assistance, office support and marketing.
           </p>
         </div>
-        <p className="text-xs text-white/50">ScaleSource Candidate Pool Review System</p>
+        <p className="text-xs text-primary-foreground/60">ScaleSource Candidate Pool Review System</p>
       </div>
 
       <div className="flex items-center justify-center px-4 py-12 bg-background">
-        <div className="w-full max-w-md rounded-2xl border bg-card shadow-sm p-8">
+        <div className="login-form-enter w-full max-w-md rounded-2xl border bg-card shadow-sm p-8">
           <img
-            src={BRAND_LOGO_URL}
+            src={brandLogo.url}
             alt="ScaleSource"
-            className="h-10 w-auto object-contain lg:hidden"
+            className="mb-8 h-12 w-auto max-w-full object-contain object-left drop-shadow-sm lg:hidden"
           />
-          <h1 className="mt-4 text-2xl font-semibold tracking-tight">Sign in</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            For ScaleSource admins and recruiters.
+          <h1 className="text-2xl font-semibold leading-tight">
+            Welcome to ScaleSource Candidate Review Workstation
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Sign in to continue to your recruiting workspace.
           </p>
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <div className="space-y-2">

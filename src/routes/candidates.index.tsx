@@ -56,8 +56,8 @@ function CandidateTile({
       onClick={onSelect}
       onDoubleClick={onOpen}
       aria-pressed={selected}
-      className={`group text-left rounded-2xl border bg-card p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/60 ${
-        selected ? "border-amber ring-2 ring-amber shadow-md" : "border-border"
+      className={`group text-left rounded-2xl border bg-card p-4 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-primary/60 ${
+        selected ? "border-amber bg-amber-soft/40 ring-2 ring-amber shadow-md" : "border-border"
       }`}
     >
       <div className="flex items-start gap-3">
@@ -107,7 +107,7 @@ function CandidateTile({
       </div>
 
       <div
-        className={`mt-3 text-[11px] font-medium transition-opacity ${
+        className={`mt-3 text-[11px] font-medium transition-all duration-300 ${
           selected ? "text-amber-foreground opacity-100" : "text-primary opacity-0 group-hover:opacity-100"
         }`}
       >
