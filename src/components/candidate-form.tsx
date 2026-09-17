@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { TimezoneSelect } from "@/components/timezone-select";
 import {
   Select,
   SelectContent,
@@ -47,6 +47,11 @@ function emptyForm(recruiterId: string | null): CandidateFormInput {
     headline: "",
     years_experience: null,
     country: "",
+    availability: "available",
+    timezone: null,
+    weekly_hours_available: null,
+    preferred_shift: null,
+    earliest_start_date: null,
     intro_video_url: null,
     roleIds: [],
     skillNames: [],
@@ -71,7 +76,6 @@ export function CandidateForm({
   const isAdmin = profile?.role === "admin";
   const queryClient = useQueryClient();
   const [form, setForm] = useState<CandidateFormInput>(() => emptyForm(profile?.id ?? null));
-  const [skillInput, setSkillInput] = useState("");
   const [files, setFiles] = useState<Partial<Record<CandidateFileType, File>>>({});
   const [videoMode, setVideoMode] = useState<"upload" | "link">("link");
 
@@ -95,6 +99,11 @@ export function CandidateForm({
         headline: detail.candidate.headline ?? "",
         years_experience: detail.candidate.years_experience ?? null,
         country: detail.candidate.country ?? "",
+        availability: detail.candidate.availability ?? "available",
+        timezone: detail.candidate.timezone ?? null,
+        weekly_hours_available: detail.candidate.weekly_hours_available ?? null,
+        preferred_shift: detail.candidate.preferred_shift ?? null,
+        earliest_start_date: detail.candidate.earliest_start_date ?? null,
         intro_video_url: detail.candidate.intro_video_url ?? null,
         roleIds: detail.roleIds,
         skillNames: detail.skills.map((s) => s.name),
@@ -168,15 +177,6 @@ export function CandidateForm({
       "roleIds",
       form.roleIds.includes(id) ? form.roleIds.filter((r) => r !== id) : [...form.roleIds, id],
     );
-  }
-
-  function addSkill() {
-    const v = skillInput.trim();
-    if (!v) return;
-    if (!form.skillNames.some((s) => s.toLowerCase() === v.toLowerCase())) {
-      set("skillNames", [...form.skillNames, v]);
-    }
-    setSkillInput("");
   }
 
   function updateRow<T>(list: T[], i: number, patch: Partial<T>): T[] {
@@ -314,35 +314,75 @@ export function CandidateForm({
         </div>
       </section>
 
-      <section className="space-y-2">
-        <Label>Skills</Label>
-        <div className="flex gap-2">
-          <Input
-            value={skillInput}
-            placeholder="Type a skill and press Enter"
-            onChange={(e) => setSkillInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addSkill();
-              }
-            }}
-          />
-          <Button type="button" variant="secondary" onClick={addSkill}>
-            Add
-          </Button>
+      <section className="space-y-3">
+        <div>
+          <Label>Availability</Label>
+          <p className="text-xs text-muted-foreground">
+            When and how much this candidate can work.
+          </p>
         </div>
-        <div className="flex flex-wrap gap-2 pt-1">
-          {form.skillNames.map((s) => (
-            <Badge
-              key={s}
-              variant="secondary"
-              className="gap-1 cursor-pointer"
-              onClick={() => set("skillNames", form.skillNames.filter((x) => x !== s))}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="availability">Availability</Label>
+            <Select
+              value={form.availability ?? "available"}
+              onValueChange={(v: string) =>
+                set("availability", v as CandidateFormInput["availability"])
+              }
             >
-              {s} <Trash2 className="h-3 w-3" />
-            </Badge>
-          ))}
+              <SelectTrigger id="availability">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="available">Available</SelectItem>
+                <SelectItem value="open_to_offers">Open to offers</SelectItem>
+                <SelectItem value="not_available">Not available</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="timezone">Timezone</Label>
+            <TimezoneSelect
+              id="timezone"
+              value={form.timezone ?? ""}
+              onChange={(v) => set("timezone", v || null)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="weekly_hours">Weekly hours available</Label>
+            <Input
+              id="weekly_hours"
+              type="number"
+              min={0}
+              max={80}
+              placeholder="e.g. 40"
+              value={form.weekly_hours_available ?? ""}
+              onChange={(e) =>
+                set(
+                  "weekly_hours_available",
+                  e.target.value === "" ? null : Number(e.target.value),
+                )
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="preferred_shift">Preferred shift</Label>
+            <Input
+              id="preferred_shift"
+              placeholder="e.g. Morning, Evening, Flexible"
+              value={form.preferred_shift ?? ""}
+              onChange={(e) => set("preferred_shift", e.target.value || null)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="earliest_start">Earliest start date</Label>
+            <Input
+              id="earliest_start"
+              type="date"
+              value={form.earliest_start_date ?? ""}
+              onChange={(e) => set("earliest_start_date", e.target.value || null)}
+            />
+          </div>
         </div>
       </section>
 

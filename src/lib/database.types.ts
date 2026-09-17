@@ -34,6 +34,8 @@ export interface JobRoleRow {
   updated_at: string | null;
 }
 
+export type CandidateAvailability = "available" | "open_to_offers" | "not_available";
+
 export interface CandidateRow {
   id: string;
   full_name: string;
@@ -45,6 +47,10 @@ export interface CandidateRow {
   years_experience: number | null;
   country: string | null;
   timezone: string | null;
+  availability: CandidateAvailability | null;
+  weekly_hours_available: number | null;
+  preferred_shift: string | null;
+  earliest_start_date: string | null;
   intro_video_url: string | null;
   created_by: string | null;
   created_at: string;
@@ -133,6 +139,11 @@ export interface Database {
           years_experience?: number | null;
           country?: string | null;
           timezone?: string | null;
+          availability?: CandidateAvailability | null;
+          weekly_hours_available?: number | null;
+          preferred_shift?: string | null;
+          earliest_start_date?: string | null;
+          intro_video_url?: string | null;
           created_by?: string | null;
         }
       >;

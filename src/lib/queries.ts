@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import type {
+  CandidateAvailability,
   CandidateRow,
   EducationRow,
   JobRoleRow,
@@ -197,6 +198,11 @@ export interface CandidateFormInput {
   headline: string | null;
   years_experience: number | null;
   country: string | null;
+  availability: CandidateAvailability | null;
+  timezone: string | null;
+  weekly_hours_available: number | null;
+  preferred_shift: string | null;
+  earliest_start_date: string | null;
   intro_video_url: string | null;
   roleIds: string[];
   skillNames: string[];
@@ -275,6 +281,11 @@ export async function createCandidate(
       headline: input.headline,
       years_experience: input.years_experience,
       country: input.country,
+      availability: input.availability,
+      timezone: input.timezone,
+      weekly_hours_available: input.weekly_hours_available,
+      preferred_shift: input.preferred_shift,
+      earliest_start_date: input.earliest_start_date,
       intro_video_url: input.intro_video_url,
       created_by: createdBy,
     })
@@ -297,6 +308,11 @@ export async function updateCandidate(id: string, input: CandidateFormInput): Pr
       headline: input.headline,
       years_experience: input.years_experience,
       country: input.country,
+      availability: input.availability,
+      timezone: input.timezone,
+      weekly_hours_available: input.weekly_hours_available,
+      preferred_shift: input.preferred_shift,
+      earliest_start_date: input.earliest_start_date,
       intro_video_url: input.intro_video_url,
     })
     .eq("id", id);
