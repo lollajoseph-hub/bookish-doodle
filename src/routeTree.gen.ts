@@ -11,16 +11,21 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RolesRouteImport } from './routes/roles'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as RecruitersRouteImport } from './routes/recruiters'
+import { Route as PlacementsRouteImport } from './routes/placements'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ClientsRouteImport } from './routes/clients'
 import { Route as CandidatesRouteImport } from './routes/candidates'
+import { Route as AuditLogsRouteImport } from './routes/audit-logs'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RequestsIndexRouteImport } from './routes/requests.index'
 import { Route as ClientsIndexRouteImport } from './routes/clients.index'
 import { Route as CandidatesIndexRouteImport } from './routes/candidates.index'
+import { Route as RequestsRequestIdRouteImport } from './routes/requests.$requestId'
 import { Route as ClientsClientIdRouteImport } from './routes/clients.$clientId'
 import { Route as CandidatesCandidateIdRouteImport } from './routes/candidates.$candidateId'
 
@@ -34,9 +39,19 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RequestsRoute = RequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecruitersRoute = RecruitersRouteImport.update({
   id: '/recruiters',
   path: '/recruiters',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlacementsRoute = PlacementsRouteImport.update({
+  id: '/placements',
+  path: '/placements',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificationsRoute = NotificationsRouteImport.update({
@@ -69,10 +84,20 @@ const CandidatesRoute = CandidatesRouteImport.update({
   path: '/candidates',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuditLogsRoute = AuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const RequestsIndexRoute = RequestsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RequestsRoute,
 } as any)
 const ClientsIndexRoute = ClientsIndexRouteImport.update({
   id: '/',
@@ -83,6 +108,11 @@ const CandidatesIndexRoute = CandidatesIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => CandidatesRoute,
+} as any)
+const RequestsRequestIdRoute = RequestsRequestIdRouteImport.update({
+  id: '/$requestId',
+  path: '/$requestId',
+  getParentRoute: () => RequestsRoute,
 } as any)
 const ClientsClientIdRoute = ClientsClientIdRouteImport.update({
   id: '/$clientId',
@@ -97,109 +127,140 @@ const CandidatesCandidateIdRoute = CandidatesCandidateIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/audit-logs': typeof AuditLogsRoute
   '/candidates': typeof CandidatesRouteWithChildren
   '/clients': typeof ClientsRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
+  '/placements': typeof PlacementsRoute
   '/recruiters': typeof RecruitersRoute
+  '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
   '/candidates/$candidateId': typeof CandidatesCandidateIdRoute
   '/clients/$clientId': typeof ClientsClientIdRoute
+  '/requests/$requestId': typeof RequestsRequestIdRoute
   '/candidates/': typeof CandidatesIndexRoute
   '/clients/': typeof ClientsIndexRoute
+  '/requests/': typeof RequestsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/audit-logs': typeof AuditLogsRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
+  '/placements': typeof PlacementsRoute
   '/recruiters': typeof RecruitersRoute
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
   '/candidates/$candidateId': typeof CandidatesCandidateIdRoute
   '/clients/$clientId': typeof ClientsClientIdRoute
+  '/requests/$requestId': typeof RequestsRequestIdRoute
   '/candidates': typeof CandidatesIndexRoute
   '/clients': typeof ClientsIndexRoute
+  '/requests': typeof RequestsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/audit-logs': typeof AuditLogsRoute
   '/candidates': typeof CandidatesRouteWithChildren
   '/clients': typeof ClientsRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
+  '/placements': typeof PlacementsRoute
   '/recruiters': typeof RecruitersRoute
+  '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
   '/candidates/$candidateId': typeof CandidatesCandidateIdRoute
   '/clients/$clientId': typeof ClientsClientIdRoute
+  '/requests/$requestId': typeof RequestsRequestIdRoute
   '/candidates/': typeof CandidatesIndexRoute
   '/clients/': typeof ClientsIndexRoute
+  '/requests/': typeof RequestsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/audit-logs'
     | '/candidates'
     | '/clients'
     | '/dashboard'
     | '/forgot-password'
     | '/login'
     | '/notifications'
+    | '/placements'
     | '/recruiters'
+    | '/requests'
     | '/reset-password'
     | '/roles'
     | '/candidates/$candidateId'
     | '/clients/$clientId'
+    | '/requests/$requestId'
     | '/candidates/'
     | '/clients/'
+    | '/requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/audit-logs'
     | '/dashboard'
     | '/forgot-password'
     | '/login'
     | '/notifications'
+    | '/placements'
     | '/recruiters'
     | '/reset-password'
     | '/roles'
     | '/candidates/$candidateId'
     | '/clients/$clientId'
+    | '/requests/$requestId'
     | '/candidates'
     | '/clients'
+    | '/requests'
   id:
     | '__root__'
     | '/'
+    | '/audit-logs'
     | '/candidates'
     | '/clients'
     | '/dashboard'
     | '/forgot-password'
     | '/login'
     | '/notifications'
+    | '/placements'
     | '/recruiters'
+    | '/requests'
     | '/reset-password'
     | '/roles'
     | '/candidates/$candidateId'
     | '/clients/$clientId'
+    | '/requests/$requestId'
     | '/candidates/'
     | '/clients/'
+    | '/requests/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuditLogsRoute: typeof AuditLogsRoute
   CandidatesRoute: typeof CandidatesRouteWithChildren
   ClientsRoute: typeof ClientsRouteWithChildren
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
+  PlacementsRoute: typeof PlacementsRoute
   RecruitersRoute: typeof RecruitersRoute
+  RequestsRoute: typeof RequestsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   RolesRoute: typeof RolesRoute
 }
@@ -220,11 +281,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/requests': {
+      id: '/requests'
+      path: '/requests'
+      fullPath: '/requests'
+      preLoaderRoute: typeof RequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recruiters': {
       id: '/recruiters'
       path: '/recruiters'
       fullPath: '/recruiters'
       preLoaderRoute: typeof RecruitersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/placements': {
+      id: '/placements'
+      path: '/placements'
+      fullPath: '/placements'
+      preLoaderRoute: typeof PlacementsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -269,12 +344,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CandidatesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/audit-logs': {
+      id: '/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/audit-logs'
+      preLoaderRoute: typeof AuditLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/requests/': {
+      id: '/requests/'
+      path: '/'
+      fullPath: '/requests/'
+      preLoaderRoute: typeof RequestsIndexRouteImport
+      parentRoute: typeof RequestsRoute
     }
     '/clients/': {
       id: '/clients/'
@@ -289,6 +378,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/candidates/'
       preLoaderRoute: typeof CandidatesIndexRouteImport
       parentRoute: typeof CandidatesRoute
+    }
+    '/requests/$requestId': {
+      id: '/requests/$requestId'
+      path: '/$requestId'
+      fullPath: '/requests/$requestId'
+      preLoaderRoute: typeof RequestsRequestIdRouteImport
+      parentRoute: typeof RequestsRoute
     }
     '/clients/$clientId': {
       id: '/clients/$clientId'
@@ -334,15 +430,32 @@ const ClientsRouteChildren: ClientsRouteChildren = {
 const ClientsRouteWithChildren =
   ClientsRoute._addFileChildren(ClientsRouteChildren)
 
+interface RequestsRouteChildren {
+  RequestsRequestIdRoute: typeof RequestsRequestIdRoute
+  RequestsIndexRoute: typeof RequestsIndexRoute
+}
+
+const RequestsRouteChildren: RequestsRouteChildren = {
+  RequestsRequestIdRoute: RequestsRequestIdRoute,
+  RequestsIndexRoute: RequestsIndexRoute,
+}
+
+const RequestsRouteWithChildren = RequestsRoute._addFileChildren(
+  RequestsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuditLogsRoute: AuditLogsRoute,
   CandidatesRoute: CandidatesRouteWithChildren,
   ClientsRoute: ClientsRouteWithChildren,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
+  PlacementsRoute: PlacementsRoute,
   RecruitersRoute: RecruitersRoute,
+  RequestsRoute: RequestsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   RolesRoute: RolesRoute,
 }
