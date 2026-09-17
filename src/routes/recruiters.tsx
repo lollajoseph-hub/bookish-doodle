@@ -108,7 +108,7 @@ function TeamPage() {
       actions={
         isAdmin ? (
           <Button onClick={() => setAddOpen(true)}>
-            <Plus className="mr-1 h-4 w-4" /> Add staff
+            <Plus className="mr-1 h-4 w-4" /> Add recruiter
           </Button>
         ) : undefined
       }
@@ -214,7 +214,6 @@ function AddStaffDialog({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"admin" | "recruiter">("recruiter");
 
   const invite = useMutation({
     mutationFn: async () => {
@@ -222,7 +221,7 @@ function AddStaffDialog({
       if (!full_name) throw new Error("Enter a name");
       if (!email.trim()) throw new Error("Enter an email address");
       const { data, error } = await supabase.functions.invoke("admin-create-staff", {
-        body: { email: email.trim(), full_name, role },
+        body: { email: email.trim(), full_name, role: "recruiter" },
       });
       const message = invokeError(error, data);
       if (message) throw new Error(message);
@@ -232,7 +231,6 @@ function AddStaffDialog({
       setFirstName("");
       setLastName("");
       setEmail("");
-      setRole("recruiter");
       onOpenChange(false);
       onInvited();
     },
@@ -243,9 +241,9 @@ function AddStaffDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add staff</DialogTitle>
+          <DialogTitle>Add recruiter</DialogTitle>
           <DialogDescription>
-            Invite a recruiter or admin. They receive an email to set their password.
+            Invite a new recruiter. They receive an email to set their password.
           </DialogDescription>
         </DialogHeader>
 
