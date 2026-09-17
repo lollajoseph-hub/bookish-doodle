@@ -1,9 +1,31 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Mail, Phone } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { Mail, Phone, Plus, Send, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { fetchCandidates, fetchStaffProfiles } from "@/lib/queries";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/recruiters")({
   ssr: false,
@@ -23,16 +45,68 @@ export const Route = createFileRoute("/recruiters")({
   component: TeamPage,
 });
 
+/** Best-effort: an admin-only RPC may expose who has signed in. Missing RPC → show for all. */
+async function fetchSigninStatus(): Promise<Record<string, boolean> | null> {
+  const { data, error } = await supabase.rpc("admin_staff_signin_status");
+  if (error || !Array.isArray(data)) return null;
+  const out: Record<string, boolean> = {};
+  for (const row of data as { user_id: string; confirmed: boolean }[]) {
+    out[row.user_id] = !!row.confirmed;
+  }
+  return out;
+}
+
+function invokeError(error: unknown, data: unknown): string | null {
+  if (data && typeof data === "object" && "error" in data && (data as { error?: string }).error) {
+    return String((data as { error?: string }).error);
+  }
+  if (error) return (error as Error).message || "Something went wrong";
+  return null;
+}
+
 function TeamPage() {
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === "admin";
+  const queryClient = useQueryClient();
+  const [addOpen, setAddOpen] = useState(false);
+
   const { data: staff = [], isLoading } = useQuery({ queryKey: ["staff"], queryFn: fetchStaffProfiles });
   const { data: candidates = [] } = useQuery({ queryKey: ["candidates"], queryFn: fetchCandidates });
+  const { data: signinStatus } = useQuery({
+    queryKey: ["staff-signin-status"],
+    queryFn: fetchSigninStatus,
+    enabled: isAdmin,
+  });
+
+  const resend = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke("admin-resend-staff-invite", {
+        body: { user_id: userId },
+      });
+      const message = invokeError(error, data);
+      if (message) throw new Error(message);
+    },
+    onSuccess: () => toast.success("Invite resent"),
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   return (
-    <AppShell title="Team" description="Recruiters and admins">
+    <AppShell
+      title="Team"
+      description="Recruiters and admins"
+      actions={
+        isAdmin ? (
+          <Button onClick={() => setAddOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" /> Add staff
+          </Button>
+        ) : undefined
+      }
+    >
       {isLoading && <p className="text-sm text-muted-foreground">Loading team…</p>}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {staff.map((s) => {
           const owned = candidates.filter((c) => c.recruiter_id === s.id).length;
+          const pendingInvite = signinStatus ? signinStatus[s.id] === false : true;
           return (
             <div
               key={s.id}
@@ -45,9 +119,28 @@ function TeamPage() {
                     {s.role}
                   </Badge>
                 </div>
-                <div className="text-right">
-                  <div className="text-2xl font-semibold text-primary-dark">{owned}</div>
-                  <div className="text-[11px] text-muted-foreground">candidates</div>
+                <div className="flex items-start gap-2">
+                  {isAdmin && pendingInvite && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      aria-label="Resend invite"
+                      title="Resend invite"
+                      disabled={resend.isPending}
+                      onClick={() => resend.mutate(s.id)}
+                    >
+                      {resend.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </Button>
+                  )}
+                  <div className="text-right">
+                    <div className="text-2xl font-semibold text-primary-dark">{owned}</div>
+                    <div className="text-[11px] text-muted-foreground">candidates</div>
+                  </div>
                 </div>
               </div>
               <div className="mt-3 space-y-1 text-xs text-muted-foreground">
@@ -66,6 +159,111 @@ function TeamPage() {
           );
         })}
       </div>
+
+      {isAdmin && (
+        <AddStaffDialog
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          onInvited={() => {
+            queryClient.invalidateQueries({ queryKey: ["staff"] });
+            queryClient.invalidateQueries({ queryKey: ["staff-signin-status"] });
+          }}
+        />
+      )}
     </AppShell>
+  );
+}
+
+function AddStaffDialog({
+  open,
+  onOpenChange,
+  onInvited,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onInvited: () => void;
+}) {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"admin" | "recruiter">("recruiter");
+
+  const invite = useMutation({
+    mutationFn: async () => {
+      const full_name = `${firstName.trim()} ${lastName.trim()}`.trim();
+      if (!full_name) throw new Error("Enter a name");
+      if (!email.trim()) throw new Error("Enter an email address");
+      const { data, error } = await supabase.functions.invoke("admin-create-staff", {
+        body: { email: email.trim(), full_name, role },
+      });
+      const message = invokeError(error, data);
+      if (message) throw new Error(message);
+    },
+    onSuccess: () => {
+      toast.success("Invite sent");
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      setRole("recruiter");
+      onOpenChange(false);
+      onInvited();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add staff</DialogTitle>
+          <DialogDescription>
+            Invite a recruiter or admin. They receive an email to set their password.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="first_name">First name</Label>
+              <Input id="first_name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="last_name">Last name</Label>
+              <Input id="last_name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="staff_email">Email</Label>
+            <Input
+              id="staff_email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Role</Label>
+            <Select value={role} onValueChange={(v: string) => setRole(v as "admin" | "recruiter")}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recruiter">Recruiter</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={() => invite.mutate()} disabled={invite.isPending}>
+            {invite.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Send invite
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
