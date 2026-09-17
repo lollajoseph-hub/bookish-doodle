@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
-import brandLogo from "@/assets/scalesource-logo-transparent.png.asset.json";
+import colorBrandLogo from "@/assets/scalesource-logo-color.png.asset.json";
+import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,7 +68,7 @@ function LoginPage() {
     <div className="min-h-screen grid lg:grid-cols-2">
       <div className="login-panel-enter hidden lg:flex flex-col justify-between bg-primary text-primary-foreground p-10">
         <img
-          src={brandLogo.url}
+          src={whiteBrandLogo.url}
           alt="ScaleSource"
           className="h-14 w-auto max-w-full self-start object-contain drop-shadow-sm"
         />
@@ -84,7 +85,7 @@ function LoginPage() {
       <div className="flex items-center justify-center px-4 py-12 bg-background">
         <div className="login-form-enter w-full max-w-md rounded-2xl border bg-card shadow-sm p-8">
           <img
-            src={brandLogo.url}
+            src={colorBrandLogo.url}
             alt="ScaleSource"
             className="mb-8 h-12 w-auto max-w-full object-contain object-left drop-shadow-sm lg:hidden"
           />

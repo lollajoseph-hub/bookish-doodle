@@ -15,7 +15,7 @@ import {
 import { NotificationsBell } from "@/components/notifications-bell";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth, isStaff } from "@/lib/auth";
-import brandLogo from "@/assets/scalesource-logo-transparent.png.asset.json";
+import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -89,7 +89,7 @@ function Brand({ role }: { role?: string | null }) {
   return (
     <div className="border-b border-sidebar-border px-5 py-5">
       <img
-        src={brandLogo.url}
+        src={whiteBrandLogo.url}
         alt="ScaleSource"
         className="h-auto w-full max-w-[190px] object-contain object-left drop-shadow-sm"
       />
