@@ -190,6 +190,8 @@ function DashboardPage() {
       rejected: byStatus("rejected"),
       upcomingInterviews: byMatch("interview_requested", "interview_confirmed"),
       pendingOffers: byMatch("offer_extended"),
+      matched: myMatchesList.length,
+      hired: byMatch("hired"),
       activePlacements: placements.filter(
         (p) => myCandidateIds.has(p.candidate_id) && (p.status ?? "active") === "active",
       ).length,
@@ -345,6 +347,21 @@ function DashboardPage() {
               />
               <StatCard label="Placed" value={myStats.placed} icon={Sparkles} tone="success" loading={loadingCore} />
               <StatCard label="Rejected" value={myStats.rejected} icon={UserMinus} loading={loadingCore} />
+              <StatCard
+                label="Total candidates"
+                value={stats.total}
+                icon={Users}
+                hint="Company-wide"
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Unassigned"
+                value={stats.unassigned}
+                icon={UserMinus}
+                tone="warning"
+                hint="Company-wide"
+                loading={loadingCore}
+              />
             </div>
           </section>
         )}
@@ -429,6 +446,35 @@ function DashboardPage() {
             </SectionTitle>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <StatCard
+                label="Active clients"
+                value={clients.length}
+                icon={Building2}
+                hint="Company-wide"
+                loading={clientsQ.isLoading}
+              />
+              <StatCard
+                label="Open requests"
+                value={stats.openRequests}
+                icon={ClipboardList}
+                tone="warning"
+                hint="Company-wide"
+                loading={requestsQ.isLoading}
+              />
+              <StatCard
+                label="Needs attention"
+                value={stats.needsAttention}
+                icon={LifeBuoy}
+                tone="warning"
+                hint="CS queue"
+                loading={requestsQ.isLoading}
+              />
+              <StatCard
+                label="Candidates matched"
+                value={myStats.matched}
+                icon={GitCompareArrows}
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
                 label="Upcoming interviews"
                 value={myStats.upcomingInterviews}
                 icon={CalendarCheck}
@@ -442,26 +488,18 @@ function DashboardPage() {
                 loading={matchesQ.isLoading}
               />
               <StatCard
+                label="Hired"
+                value={myStats.hired}
+                icon={UserCheck}
+                tone="success"
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
                 label="Active placements"
                 value={myStats.activePlacements}
                 icon={Sparkles}
                 tone="success"
                 loading={placementsQ.isLoading}
-              />
-              <StatCard
-                label="Open requests"
-                value={stats.openRequests}
-                icon={ClipboardList}
-                tone="warning"
-                hint="Company-wide"
-                loading={requestsQ.isLoading}
-              />
-              <StatCard
-                label="Active clients"
-                value={clients.length}
-                icon={Building2}
-                hint="Company-wide"
-                loading={clientsQ.isLoading}
               />
             </div>
           </section>
@@ -499,6 +537,48 @@ function DashboardPage() {
                   </div>
                 ))}
                 {!auditQ.isLoading && !auditLogs.length && (
+                  <p className="text-sm text-muted-foreground">No recorded activity yet.</p>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {!isAdmin && (
+          <section className="space-y-3">
+            <SectionTitle>My overview</SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard
+                label="My candidates"
+                value={myStats.total}
+                icon={Users}
+                loading={loadingCore}
+              />
+              <StatCard label="Total roles" value={roles.length} icon={Briefcase} loading={rolesQ.isLoading} />
+            </div>
+            <div className="card-amber rounded-2xl border bg-card p-5">
+              <SectionTitle>
+                <span className="flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-primary" /> Recent activity
+                </span>
+              </SectionTitle>
+              <div className="mt-3 space-y-2">
+                {candidatesQ.isLoading && <p className="text-sm text-muted-foreground">Loading activity…</p>}
+                {myCandidates.slice(0, 10).map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3 text-sm"
+                  >
+                    <div className="min-w-0">
+                      <span className="font-medium">{c.full_name}</span>{" "}
+                      <span className="text-muted-foreground">· {labelize(c.status ?? "new")}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
+                    </span>
+                  </div>
+                ))}
+                {!candidatesQ.isLoading && !myCandidates.length && (
                   <p className="text-sm text-muted-foreground">No recorded activity yet.</p>
                 )}
               </div>
