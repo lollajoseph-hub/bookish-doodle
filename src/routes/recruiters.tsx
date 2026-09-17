@@ -115,7 +115,9 @@ function TeamPage() {
     >
       {isLoading && <p className="text-sm text-muted-foreground">Loading team…</p>}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {staff.map((s) => {
+        {staff
+          .filter((s) => s.role === "recruiter")
+          .map((s) => {
           const ownedList = candidates.filter((c) => c.recruiter_id === s.id);
           const owned = ownedList.length;
           const breakdown = PIPELINE_STATUSES.map((status) => ({
