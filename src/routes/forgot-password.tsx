@@ -9,6 +9,16 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/forgot-password")({
   ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Reset Password | ScaleSource Candidate Review" },
+      { name: "description", content: "Request a password recovery link for the ScaleSource Candidate Review Workstation." },
+      { property: "og:title", content: "Reset Password | ScaleSource Candidate Review" },
+      { property: "og:description", content: "Request a password recovery link for the ScaleSource Candidate Review Workstation." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ForgotPage,
 });
 
