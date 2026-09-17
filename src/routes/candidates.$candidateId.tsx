@@ -566,10 +566,12 @@ function CandidateDetailPage() {
 function IntroVideoCard({
   videoUrl,
   linkUrl,
+  mimeType = null,
   showEmpty = false,
 }: {
   videoUrl: string | null;
   linkUrl: string | null;
+  mimeType?: string | null;
   showEmpty?: boolean;
 }) {
   if (!videoUrl && !linkUrl) {
@@ -581,10 +583,14 @@ function IntroVideoCard({
     );
   }
   const source = videoUrl ?? linkUrl!;
-  const embeddable = !!videoUrl || (linkUrl ? isDirectVideo(linkUrl) : false);
+  const isImage = !!videoUrl && !!mimeType && mimeType.startsWith("image/");
+  const isVideoFile = !!videoUrl && (!mimeType || mimeType.startsWith("video/"));
+  const embeddable = isVideoFile || (!videoUrl && linkUrl ? isDirectVideo(linkUrl) : false);
   return (
     <SectionCard title="Introduction video">
-      {embeddable ? (
+      {isImage ? (
+        <img src={source} alt="Candidate introduction" className="w-full rounded-xl border" />
+      ) : embeddable ? (
         <video src={source} controls className="w-full rounded-xl border bg-black" />
       ) : (
         <a
