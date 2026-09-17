@@ -57,7 +57,15 @@ function DashboardPage() {
 
   return (
     <AppShell
-      title={`Welcome${profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}`}
+      title={
+        profile?.role === "admin" || profile?.role === "recruiter"
+          ? profile?.full_name
+            ? `Welcome, ${profile.full_name.split(" ")[0]} — here's your ${profile.role} dashboard`
+            : `Welcome to your ${profile.role} dashboard`
+          : profile?.full_name
+            ? `Welcome, ${profile.full_name.split(" ")[0]}`
+            : "Welcome"
+      }
       description="ScaleSource Candidate Pool Review System"
       actions={
         <Button asChild>
