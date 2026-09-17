@@ -8,6 +8,7 @@ import {
   fetchJobRoles,
   fetchStaffProfiles,
   updateCandidate,
+  LANGUAGE_CATEGORY,
   type CandidateFormInput,
 } from "@/lib/queries";
 import { uploadCandidateFile } from "@/lib/crm-queries";
@@ -59,9 +60,8 @@ function emptyForm(recruiterId: string | null): CandidateFormInput {
     earliest_start_date: null,
     intro_video_url: null,
     roleIds: [],
-    skillNames: [],
-    workHistory: [],
-    education: [],
+    languageNames: [],
+
   };
 }
 
@@ -110,6 +110,7 @@ export function CandidateForm({
   const [form, setForm] = useState<CandidateFormInput>(() => emptyForm(profile?.id ?? null));
   const [files, setFiles] = useState<Partial<Record<CandidateFileType, File>>>({});
   const [videoMode, setVideoMode] = useState<"upload" | "link">("link");
+  const [languageDraft, setLanguageDraft] = useState("");
 
   const { data: roles = [] } = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: fetchStaffProfiles });
@@ -138,21 +139,10 @@ export function CandidateForm({
         earliest_start_date: detail.candidate.earliest_start_date ?? null,
         intro_video_url: detail.candidate.intro_video_url ?? null,
         roleIds: detail.roleIds,
-        skillNames: detail.skills.map((s) => s.name),
-        workHistory: detail.workHistory.map((w) => ({
-          company: w.company ?? "",
-          title: w.title ?? "",
-          start_date: w.start_date,
-          end_date: w.end_date,
-          description: w.description,
-        })),
-        education: detail.education.map((e) => ({
-          institution: e.institution ?? "",
-          degree: e.degree ?? "",
-          field: e.field,
-          start_date: e.start_date,
-          end_date: e.end_date,
-        })),
+        languageNames: detail.skills
+          .filter((s) => s.category === LANGUAGE_CATEGORY)
+          .map((s) => s.name),
+
       });
     } else if (!candidateId) {
       setForm(emptyForm(profile?.id ?? null));
@@ -210,6 +200,23 @@ export function CandidateForm({
       form.roleIds.includes(id) ? form.roleIds.filter((r) => r !== id) : [...form.roleIds, id],
     );
   }
+
+  function addLanguage(raw: string) {
+    const name = raw.trim();
+    setLanguageDraft("");
+    if (!name) return;
+    if (form.languageNames.some((l) => l.toLowerCase() === name.toLowerCase())) return;
+    set("languageNames", [...form.languageNames, name]);
+  }
+
+  function removeLanguage(name: string) {
+    set(
+      "languageNames",
+      form.languageNames.filter((l) => l !== name),
+    );
+  }
+
+
 
   function pickFile(key: CandidateFileType, picked: File | undefined) {
     setFiles((prev) => {
@@ -426,7 +433,40 @@ export function CandidateForm({
               onChange={(e) => set("earliest_start_date", e.target.value || null)}
             />
           </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="languages">Languages</Label>
+            <Input
+              id="languages"
+              placeholder="Type a language and press Enter"
+              value={languageDraft}
+              onChange={(e) => setLanguageDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === ",") {
+                  e.preventDefault();
+                  addLanguage(languageDraft);
+                } else if (e.key === "Backspace" && !languageDraft && form.languageNames.length) {
+                  removeLanguage(form.languageNames[form.languageNames.length - 1]!);
+                }
+              }}
+              onBlur={() => addLanguage(languageDraft)}
+            />
+            {form.languageNames.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {form.languageNames.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => removeLanguage(name)}
+                    className="rounded-full border-amber bg-amber-soft px-3 py-0.5 text-xs font-medium text-amber-foreground transition-colors hover:bg-amber/80"
+                  >
+                    {name} ✕
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
+
       </FormSection>
 
       <FormSection
@@ -467,7 +507,7 @@ export function CandidateForm({
             <div className="space-y-1.5 rounded-xl border bg-primary-soft/40 p-3">
               <Input
                 type="file"
-                accept="video/*"
+                accept="video/mp4,video/webm,video/quicktime,video/ogg"
                 className="h-9 text-xs"
                 onChange={(e) => pickFile("intro_video", e.target.files?.[0])}
               />

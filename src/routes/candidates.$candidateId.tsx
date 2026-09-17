@@ -419,7 +419,11 @@ function CandidateDetailPage() {
                   </div>
                 </SectionCard>
 
-                <IntroVideoCard videoUrl={media?.videoUrl ?? null} linkUrl={c.intro_video_url} />
+                <IntroVideoCard
+                  videoUrl={media?.videoUrl ?? null}
+                  linkUrl={c.intro_video_url}
+                  mimeType={media?.videoMimeType ?? null}
+                />
 
                 <SkillsSection skills={data.skills} />
                 <WorkHistorySection workHistory={data.workHistory} />
@@ -457,6 +461,7 @@ function CandidateDetailPage() {
                 <IntroVideoCard
                   videoUrl={media?.videoUrl ?? null}
                   linkUrl={c.intro_video_url}
+                  mimeType={media?.videoMimeType ?? null}
                   showEmpty
                 />
 
@@ -566,10 +571,12 @@ function CandidateDetailPage() {
 function IntroVideoCard({
   videoUrl,
   linkUrl,
+  mimeType = null,
   showEmpty = false,
 }: {
   videoUrl: string | null;
   linkUrl: string | null;
+  mimeType?: string | null;
   showEmpty?: boolean;
 }) {
   if (!videoUrl && !linkUrl) {
@@ -581,10 +588,14 @@ function IntroVideoCard({
     );
   }
   const source = videoUrl ?? linkUrl!;
-  const embeddable = !!videoUrl || (linkUrl ? isDirectVideo(linkUrl) : false);
+  const isImage = !!videoUrl && !!mimeType && mimeType.startsWith("image/");
+  const isVideoFile = !!videoUrl && (!mimeType || mimeType.startsWith("video/"));
+  const embeddable = isVideoFile || (!videoUrl && linkUrl ? isDirectVideo(linkUrl) : false);
   return (
     <SectionCard title="Introduction video">
-      {embeddable ? (
+      {isImage ? (
+        <img src={source} alt="Candidate introduction" className="w-full rounded-xl border" />
+      ) : embeddable ? (
         <video src={source} controls className="w-full rounded-xl border bg-black" />
       ) : (
         <a
@@ -620,20 +631,35 @@ function SkillsSection({ skills }: { skills: CandidateDetail["skills"] }) {
 }
 
 function WorkHistorySection({ workHistory }: { workHistory: CandidateDetail["workHistory"] }) {
+  const [expanded, setExpanded] = useState(false);
+  const visible = expanded ? workHistory : workHistory.slice(0, 5);
+  const hidden = workHistory.length - visible.length;
   return (
     <SectionCard title="Work history">
       <div className="space-y-4">
         {workHistory.length ? (
-          workHistory.map((w) => (
-            <div key={w.id} className="border-l-2 border-primary/40 pl-3">
-              <div className="font-medium">{w.title || "Role"}</div>
-              <div className="text-sm text-muted-foreground">
-                {w.company}{" "}
-                {dateRange(w.start_date, w.end_date) && `· ${dateRange(w.start_date, w.end_date)}`}
+          <>
+            {visible.map((w) => (
+              <div key={w.id} className="border-l-2 border-primary/40 pl-3">
+                <div className="font-medium">{w.title || "Role"}</div>
+                <div className="text-sm text-muted-foreground">
+                  {w.company}{" "}
+                  {dateRange(w.start_date, w.end_date) && `· ${dateRange(w.start_date, w.end_date)}`}
+                </div>
+                {w.description && <p className="mt-1 text-sm">{w.description}</p>}
               </div>
-              {w.description && <p className="mt-1 text-sm">{w.description}</p>}
-            </div>
-          ))
+            ))}
+            {(hidden > 0 || expanded) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary"
+                onClick={() => setExpanded((v) => !v)}
+              >
+                {expanded ? "See less" : `See more (${hidden})`}
+              </Button>
+            )}
+          </>
         ) : (
           <p className="text-sm text-muted-foreground">No work history recorded.</p>
         )}

@@ -666,6 +666,7 @@ export async function fetchCandidateMedia(candidateId: string): Promise<{
   photoUrl: string | null;
   videoUrl: string | null;
   videoName: string | null;
+  videoMimeType: string | null;
 }> {
   const files = await fetchCandidateFiles(candidateId);
   const photo = files.find((f) => f.file_type === "profile_photo") ?? null;
@@ -674,7 +675,12 @@ export async function fetchCandidateMedia(candidateId: string): Promise<{
     photo ? getCandidateFileUrl(photo).catch(() => null) : Promise.resolve(null),
     video ? getCandidateFileUrl(video).catch(() => null) : Promise.resolve(null),
   ]);
-  return { photoUrl, videoUrl, videoName: video?.file_name ?? null };
+  return {
+    photoUrl,
+    videoUrl,
+    videoName: video?.file_name ?? null,
+    videoMimeType: video?.mime_type ?? null,
+  };
 }
 
 /* --------------------- pipeline views (interview / offer) ----------------- */
