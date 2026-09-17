@@ -1,4 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard,
   Users,
@@ -28,23 +29,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { fetchJobRoles } from "@/lib/queries";
 
 type NavItem = {
-  to: string;
+  to: "/dashboard" | "/candidates" | "/clients" | "/requests" | "/placements" | "/roles" | "/recruiters" | "/audit-logs";
   label: string;
   icon: typeof LayoutDashboard;
-  adminOnly?: boolean;
 };
 
-const navItems: NavItem[] = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/candidates", label: "Candidate Pool", icon: Users },
-  { to: "/clients", label: "Clients", icon: Building2 },
-  { to: "/requests", label: "Client Requests", icon: ClipboardList },
-  { to: "/placements", label: "Placements", icon: BriefcaseBusiness },
-  { to: "/roles", label: "Roles", icon: Briefcase },
-  { to: "/recruiters", label: "Team", icon: UserCog, adminOnly: true },
-  { to: "/audit-logs", label: "Audit Logs", icon: ScrollText, adminOnly: true },
+const dashboardItem: NavItem = { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard };
+
+const navGroups: Array<{ label: string; items: NavItem[]; adminOnly?: boolean }> = [
+  { label: "Candidate Pool", items: [{ to: "/candidates", label: "Candidate Pool", icon: Users }] },
+  {
+    label: "Clients",
+    items: [
+      { to: "/clients", label: "Clients", icon: Building2 },
+      { to: "/requests", label: "Client Requests", icon: ClipboardList },
+    ],
+  },
+  { label: "Placements", items: [{ to: "/placements", label: "Placements", icon: BriefcaseBusiness }] },
+  {
+    label: "Admin Toolkit",
+    adminOnly: true,
+    items: [
+      { to: "/roles", label: "Manage Roles", icon: Briefcase },
+      { to: "/recruiters", label: "Team", icon: UserCog },
+      { to: "/audit-logs", label: "Audit Logs", icon: ScrollText },
+    ],
+  },
 ];
 
 function initials(name?: string | null, email?: string | null) {
@@ -56,29 +69,79 @@ function initials(name?: string | null, email?: string | null) {
 
 function SidebarNav({ onNav, isAdmin }: { onNav?: () => void; isAdmin: boolean }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const roleSearch = useRouterState({
+    select: (s) => (s.location.search as { role?: string }).role,
+  });
+  const { data: roles = [] } = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
+  const activeRoles = roles.filter((role) => role.is_active !== false);
+
+  const renderItem = (item: NavItem) => {
+    const active = path.startsWith(item.to);
+    const Icon = item.icon;
+    return (
+      <Link
+        key={item.to}
+        to={item.to}
+        search={item.to === "/candidates" ? {} : undefined}
+        onClick={onNav}
+        className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all ${
+          active
+            ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-amber/70"
+            : "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:translate-x-0.5"
+        }`}
+      >
+        <Icon className="h-4 w-4" />
+        {item.label}
+      </Link>
+    );
+  };
+
   return (
     <nav className="flex-1 space-y-1 px-3 py-4">
-      {navItems
-        .filter((it) => !it.adminOnly || isAdmin)
-        .map((item) => {
-          const active = path.startsWith(item.to);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              onClick={onNav}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all ${
-                active
-                  ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-amber/70"
-                  : "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:translate-x-0.5"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          );
-        })}
+      {renderItem(dashboardItem)}
+      {navGroups
+        .filter((group) => !group.adminOnly || isAdmin)
+        .map((group) => (
+          <div key={group.label} className="mt-3 border-t border-sidebar-border pt-3">
+            <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+              {group.label}
+            </div>
+            <div className="space-y-1">
+              {group.items.map(renderItem)}
+              {group.label === "Candidate Pool" && (
+                <div className="space-y-0.5 pt-1">
+                  <Link
+                    to="/candidates"
+                    search={{}}
+                    onClick={onNav}
+                    className={`block rounded-lg py-1.5 pl-9 pr-3 text-xs transition-colors ${
+                      path.startsWith("/candidates") && !roleSearch
+                        ? "bg-sidebar-accent text-sidebar-foreground font-semibold"
+                        : "text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                    }`}
+                  >
+                    All roles
+                  </Link>
+                  {activeRoles.map((role) => (
+                    <Link
+                      key={role.id}
+                      to="/candidates"
+                      search={{ role: role.id }}
+                      onClick={onNav}
+                      className={`block rounded-lg py-1.5 pl-9 pr-3 text-xs transition-colors ${
+                        path.startsWith("/candidates") && roleSearch === role.id
+                          ? "bg-sidebar-accent text-sidebar-foreground font-semibold"
+                          : "text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                      }`}
+                    >
+                      {role.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
     </nav>
   );
 }
