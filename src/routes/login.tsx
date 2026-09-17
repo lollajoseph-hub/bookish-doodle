@@ -65,7 +65,7 @@ function LoginPage() {
       </div>
 
       <div className="relative z-10 flex min-h-screen items-center justify-center p-5 sm:p-8 lg:p-12">
-        <main className="login-card-amber-border relative grid w-full max-w-6xl overflow-hidden rounded-2xl bg-primary-dark/45 shadow-2xl backdrop-blur-md lg:min-h-[620px] lg:grid-cols-[1.05fr_0.95fr]">
+        <main className="login-card-amber-border relative grid w-full max-w-6xl overflow-hidden rounded-2xl bg-primary-dark/45 shadow-2xl backdrop-blur-md lg:min-h-[620px] lg:grid-cols-[1.05fr_0.95fr] lg:gap-6">
           <div aria-hidden="true" className="login-panel-artwork login-card-artwork">
             <span className="login-panel-arc login-panel-arc-one" />
             <span className="login-panel-arc login-panel-arc-two" />
@@ -74,7 +74,7 @@ function LoginPage() {
             <span className="login-panel-line login-panel-line-two" />
             <span className="login-panel-plane" />
           </div>
-          <section className="login-panel-enter relative z-10 flex min-h-[340px] flex-col justify-between p-7 sm:p-10 lg:min-h-0 lg:p-12">
+          <section className="login-panel-enter relative z-10 flex min-h-[340px] flex-col justify-between p-7 sm:p-10 lg:min-h-0 lg:px-16 lg:py-12">
             <img
               src={whiteBrandLogo.url}
               alt="ScaleSource"
@@ -92,8 +92,8 @@ function LoginPage() {
             </p>
           </section>
 
-          <section className="relative z-10 flex items-center justify-center p-6 sm:p-10 lg:px-8 lg:py-12">
-            <div className="login-form-enter w-full max-w-lg rounded-2xl border border-primary-foreground/20 bg-primary-foreground/10 p-8 shadow-xl backdrop-blur-xl sm:p-10">
+          <section className="relative z-10 flex items-center justify-center p-6 sm:p-10 lg:px-14 lg:py-12">
+            <div className="login-form-enter w-full max-w-md rounded-2xl border border-primary-foreground/20 bg-primary-foreground/10 p-8 shadow-xl backdrop-blur-xl sm:p-10">
             <h2 className="text-xl font-semibold leading-tight text-primary-foreground">Sign in to your workstation</h2>
             <form onSubmit={onSubmit} className="mt-5 space-y-4">
               <div className="space-y-2">
