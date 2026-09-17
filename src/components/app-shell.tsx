@@ -39,8 +39,12 @@ type NavItem = {
 const navItems: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/candidates", label: "Candidate Pool", icon: Users },
+  { to: "/clients", label: "Clients", icon: Building2 },
+  { to: "/requests", label: "Client Requests", icon: ClipboardList },
+  { to: "/placements", label: "Placements", icon: BriefcaseBusiness },
   { to: "/roles", label: "Roles", icon: Briefcase },
   { to: "/recruiters", label: "Team", icon: UserCog, adminOnly: true },
+  { to: "/audit-logs", label: "Audit Logs", icon: ScrollText, adminOnly: true },
 ];
 
 function initials(name?: string | null, email?: string | null) {
