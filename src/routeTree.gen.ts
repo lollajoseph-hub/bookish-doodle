@@ -19,6 +19,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ClientsRouteImport } from './routes/clients'
 import { Route as CandidatesRouteImport } from './routes/candidates'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClientsIndexRouteImport } from './routes/clients.index'
 import { Route as CandidatesIndexRouteImport } from './routes/candidates.index'
 import { Route as CandidatesCandidateIdRouteImport } from './routes/candidates.$candidateId'
 
@@ -72,6 +73,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientsIndexRoute = ClientsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ClientsRoute,
+} as any)
 const CandidatesIndexRoute = CandidatesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -86,7 +92,7 @@ const CandidatesCandidateIdRoute = CandidatesCandidateIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/candidates': typeof CandidatesRouteWithChildren
-  '/clients': typeof ClientsRoute
+  '/clients': typeof ClientsRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -96,10 +102,10 @@ export interface FileRoutesByFullPath {
   '/roles': typeof RolesRoute
   '/candidates/$candidateId': typeof CandidatesCandidateIdRoute
   '/candidates/': typeof CandidatesIndexRoute
+  '/clients/': typeof ClientsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/clients': typeof ClientsRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -109,12 +115,13 @@ export interface FileRoutesByTo {
   '/roles': typeof RolesRoute
   '/candidates/$candidateId': typeof CandidatesCandidateIdRoute
   '/candidates': typeof CandidatesIndexRoute
+  '/clients': typeof ClientsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/candidates': typeof CandidatesRouteWithChildren
-  '/clients': typeof ClientsRoute
+  '/clients': typeof ClientsRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -124,6 +131,7 @@ export interface FileRoutesById {
   '/roles': typeof RolesRoute
   '/candidates/$candidateId': typeof CandidatesCandidateIdRoute
   '/candidates/': typeof CandidatesIndexRoute
+  '/clients/': typeof ClientsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -140,10 +148,10 @@ export interface FileRouteTypes {
     | '/roles'
     | '/candidates/$candidateId'
     | '/candidates/'
+    | '/clients/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/clients'
     | '/dashboard'
     | '/forgot-password'
     | '/login'
@@ -153,6 +161,7 @@ export interface FileRouteTypes {
     | '/roles'
     | '/candidates/$candidateId'
     | '/candidates'
+    | '/clients'
   id:
     | '__root__'
     | '/'
@@ -167,12 +176,13 @@ export interface FileRouteTypes {
     | '/roles'
     | '/candidates/$candidateId'
     | '/candidates/'
+    | '/clients/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CandidatesRoute: typeof CandidatesRouteWithChildren
-  ClientsRoute: typeof ClientsRoute
+  ClientsRoute: typeof ClientsRouteWithChildren
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
@@ -254,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clients/': {
+      id: '/clients/'
+      path: '/'
+      fullPath: '/clients/'
+      preLoaderRoute: typeof ClientsIndexRouteImport
+      parentRoute: typeof ClientsRoute
+    }
     '/candidates/': {
       id: '/candidates/'
       path: '/'
@@ -285,10 +302,21 @@ const CandidatesRouteWithChildren = CandidatesRoute._addFileChildren(
   CandidatesRouteChildren,
 )
 
+interface ClientsRouteChildren {
+  ClientsIndexRoute: typeof ClientsIndexRoute
+}
+
+const ClientsRouteChildren: ClientsRouteChildren = {
+  ClientsIndexRoute: ClientsIndexRoute,
+}
+
+const ClientsRouteWithChildren =
+  ClientsRoute._addFileChildren(ClientsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CandidatesRoute: CandidatesRouteWithChildren,
-  ClientsRoute: ClientsRoute,
+  ClientsRoute: ClientsRouteWithChildren,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
