@@ -364,6 +364,15 @@ export async function updateMatchStatus(
   if (error) throw error;
 }
 
+export async function fetchAllMatches(): Promise<CandidateMatchRow[]> {
+  const { data, error } = await supabase
+    .from("candidate_matches")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as CandidateMatchRow[];
+}
+
 export interface CandidateMatchView extends CandidateMatchRow {
   requestTitle: string | null;
   clientName: string | null;
