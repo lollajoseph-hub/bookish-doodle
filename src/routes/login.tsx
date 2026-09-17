@@ -93,8 +93,8 @@ function LoginPage() {
           </section>
 
           <section className="relative z-10 flex items-center justify-center p-6 sm:p-10 lg:p-12">
-            <div className="login-form-enter w-full max-w-sm rounded-2xl border border-primary-foreground/20 bg-primary-foreground/10 p-6 shadow-xl backdrop-blur-xl sm:p-8">
-            <h2 className="text-lg font-semibold leading-tight text-primary-foreground">Sign in</h2>
+            <div className="login-form-enter w-full max-w-md rounded-2xl border border-primary-foreground/20 bg-primary-foreground/10 p-8 shadow-xl backdrop-blur-xl sm:p-10">
+            <h2 className="text-xl font-semibold leading-tight text-primary-foreground">Sign in to your workstation</h2>
             <form onSubmit={onSubmit} className="mt-5 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-primary-foreground">Email</Label>
