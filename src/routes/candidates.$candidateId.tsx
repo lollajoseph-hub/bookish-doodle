@@ -116,6 +116,7 @@ function CandidateDetailPage() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [note, setNote] = useState("");
   const [tab, setTab] = useState("overview");
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -186,6 +187,24 @@ function CandidateDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["candidate", candidateId] });
     },
     onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteCand = useMutation({
+    mutationFn: () => deleteCandidate(candidateId),
+    onSuccess: () => {
+      toast.success("Candidate deleted");
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      navigate({ to: "/candidates" });
+    },
+    onError: (e: Error & { code?: string }) => {
+      if (e.code === "23503" || /foreign key/i.test(e.message)) {
+        toast.error(
+          "This candidate has a placement on record and can't be deleted — archive them from Admin Tools instead.",
+        );
+      } else {
+        toast.error(e.message || "Delete failed");
+      }
+    },
   });
 
   if (isLoading) {
