@@ -362,8 +362,8 @@ function DashboardPage() {
                 )}
               </div>
             </div>
-          </section>
-        )}
+        </section>
+
 
         <section className="card-amber rounded-2xl border bg-card p-5">
           <SectionTitle
