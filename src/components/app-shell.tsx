@@ -21,6 +21,7 @@ import {
   BarChart3,
   Bell,
   History,
+  UserPlus,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
