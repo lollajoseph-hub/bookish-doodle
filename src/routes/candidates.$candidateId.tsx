@@ -1,598 +1,316 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
-import { format } from "date-fns";
-import {
-  ArrowLeft,
-  RefreshCw,
-  Send,
-  BookOpen,
-  UserCog,
-  Upload as UploadIcon,
-  PowerOff,
-  Archive,
-  ExternalLink,
-  Link2,
-  Pencil,
-  RotateCcw,
-  Camera,
-  Loader2,
-} from "lucide-react";
-import { AppShell } from "@/components/app-shell";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { ArrowLeft, Mail, Phone, Globe, Pencil, Lock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { AppShell } from "@/components/app-shell";
+import { CandidateFormDialog } from "@/components/candidate-form-dialog";
 import {
-  fetchCandidateAssessments,
+  addRecruiterNote,
   fetchCandidateDetail,
-  fetchCandidatePhotoUrl,
-  fetchLastActivity,
-  fetchCourseProgressDetail,
-  fetchPlacements,
-  resendInvitation,
-  uploadCandidateFileWithProgress,
-  type CandidateDetail,
+  fetchJobRoles,
+  fetchStaffProfiles,
 } from "@/lib/queries";
-import { OverviewTab } from "@/components/workspace/overview-tab";
-import { DocumentsTab } from "@/components/workspace/documents-tab";
-import { TrainingTab } from "@/components/workspace/training-tab";
-import { AssessmentsTab } from "@/components/workspace/assessments-tab";
-import { RoleplayTab } from "@/components/workspace/roleplay-tab";
-import { AiAnalysisTab } from "@/components/workspace/ai-analysis-tab";
-import { ResumeTab } from "@/components/workspace/resume-tab";
-import { PlacementTab } from "@/components/workspace/placement-tab";
-import { TimelineTab } from "@/components/workspace/timeline-tab";
-
-import { CertificateCard } from "@/components/workspace/certificate-card";
-
-import { EditCandidateSheet } from "@/components/workspace/edit-candidate-sheet";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  ChangeCourseDialog,
-  ChangeRecruiterDialog,
-  DeactivateDialog,
-  ReactivateDialog,
-} from "@/components/workspace/dialogs";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/candidates/$candidateId")({
   ssr: false,
-  component: CandidateWorkspacePage,
+  head: () => ({
+    meta: [
+      { title: "Candidate profile | ScaleSource Candidate Review Dashboard" },
+      {
+        name: "description",
+        content: "Full candidate profile: contact details, roles, skills, work history and notes.",
+      },
+      { property: "og:title", content: "Candidate profile | ScaleSource" },
+      {
+        property: "og:description",
+        content: "Full candidate profile in the ScaleSource Candidate Pool Review System.",
+      },
+      { property: "og:type", content: "profile" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: CandidateDetailPage,
 });
 
-const STATUS_LABEL: Record<string, string> = {
-  uploaded: "Uploaded",
-  invited: "Invited",
-  training_in_progress: "Training in progress",
-  training_completed: "Training complete",
-  qualified: "Qualified",
-  rejected: "Rejected",
-  placed: "Placed",
-  inactive: "Inactive",
-  training_failed: "Training failed",
-  training_expired: "Training expired",
-};
-
-function initials(name?: string | null, email?: string | null) {
-  const src = (name || email || "?").trim();
-  const parts = src.split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return src.slice(0, 2).toUpperCase();
+function dateRange(start?: string | null, end?: string | null) {
+  const f = (d?: string | null) => (d ? new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "short" }) : null);
+  const s = f(start);
+  const e = f(end);
+  if (!s && !e) return "";
+  return `${s ?? "?"} – ${e ?? "Present"}`;
 }
 
-function CandidateWorkspacePage() {
-  const { candidateId } = Route.useParams();
-  const qc = useQueryClient();
+function CandidateDetailPage() {
+  const { candidateId } = useParams({ from: "/candidates/$candidateId" });
   const navigate = useNavigate();
-  const [tab, setTab] = useState("overview");
-  const [courseOpen, setCourseOpen] = useState(false);
-  const [recruiterOpen, setRecruiterOpen] = useState(false);
-  const [deactivateOpen, setDeactivateOpen] = useState(false);
-  const [reactivateOpen, setReactivateOpen] = useState(false);
+  const { profile } = useAuth();
+  const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
-  const [resending, setResending] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const photoInputRef = useRef<HTMLInputElement | null>(null);
+  const [note, setNote] = useState("");
 
-  const handlePhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    setUploadingPhoto(true);
-    try {
-      await uploadCandidateFileWithProgress(
-        candidateId,
-        { file, bucket: "candidate-photos", fileType: "profile_photo" },
-        () => {},
-      );
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["photo", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["candidate-detail", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["candidate-files", candidateId] }),
-      ]);
-      toast.success("Photo uploaded");
-    } catch (err: any) {
-      toast.error(err?.message || "Upload failed");
-    } finally {
-      setUploadingPhoto(false);
-    }
-  };
-
-  const detail = useQuery({
-    queryKey: ["candidate-detail", candidateId],
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["candidate", candidateId],
     queryFn: () => fetchCandidateDetail(candidateId),
   });
+  const { data: roles = [] } = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
+  const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: fetchStaffProfiles });
 
-  const c = detail.data;
-  const enrollment = c?.candidate_courses?.[0];
+  const isAdmin = profile?.role === "admin";
+  const isOwner = !!data && data.candidate.recruiter_id === profile?.id;
+  const canEdit = isAdmin || isOwner;
 
-  const photo = useQuery({
-    queryKey: ["photo", candidateId, c?.profile?.avatar_url],
-    queryFn: () => fetchCandidatePhotoUrl(candidateId, c?.profile?.avatar_url ?? null),
-    enabled: !!c,
-    staleTime: 300_000,
+  const reassign = useMutation({
+    mutationFn: async (recruiterId: string | null) => {
+      const { error: err } = await supabase
+        .from("candidates")
+        .update({ recruiter_id: recruiterId })
+        .eq("id", candidateId);
+      if (err) throw err;
+    },
+    onSuccess: () => {
+      toast.success("Recruiter updated");
+      queryClient.invalidateQueries({ queryKey: ["candidate", candidateId] });
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
-  const lastActivity = useQuery({
-    queryKey: ["last-activity", candidateId],
-    queryFn: () => fetchLastActivity(candidateId),
-    enabled: !!c,
+  const saveNote = useMutation({
+    mutationFn: async () => {
+      if (!note.trim()) throw new Error("Write a note first");
+      await addRecruiterNote(candidateId, profile!.id, note.trim());
+    },
+    onSuccess: () => {
+      setNote("");
+      toast.success("Note added");
+      queryClient.invalidateQueries({ queryKey: ["candidate", candidateId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
-  const progress = useQuery({
-    queryKey: ["course-progress-detail", candidateId, enrollment?.course_id],
-    queryFn: () => fetchCourseProgressDetail(candidateId, enrollment!.course_id),
-    enabled: !!enrollment?.course_id,
-  });
-
-  const placements = useQuery({
-    queryKey: ["placements", candidateId],
-    queryFn: () => fetchPlacements(candidateId),
-    enabled: !!c,
-  });
-
-  const assessmentsQ = useQuery({
-    queryKey: ["candidate-assessments", candidateId, enrollment?.course_id],
-    queryFn: () => fetchCandidateAssessments(candidateId, enrollment!.course_id),
-    enabled: !!enrollment?.course_id,
-  });
-
-  const [refreshing, setRefreshing] = useState(false);
-  const refreshAll = async () => {
-    setRefreshing(true);
-    try {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["candidate-detail", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["last-activity", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["course-progress-detail", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["candidate-files", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["placements", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["candidate-assessments", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["photo", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["roleplay-sessions", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["candidate-roleplay", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["roleplay", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["ai-profile", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["interview-analysis", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["vetpod-resume", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["recruiter-notes", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["qa-readiness", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["timeline", candidateId] }),
-        qc.invalidateQueries({ queryKey: ["activity-log"] }),
-        qc.invalidateQueries({ queryKey: ["candidates"] }),
-        qc.invalidateQueries({ queryKey: ["dashboard-counts"] }),
-        qc.invalidateQueries({ queryKey: ["recent-activity"] }),
-        qc.invalidateQueries({ queryKey: ["certificate", candidateId] }),
-      ]);
-      toast.success("Refreshed");
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-
-  const handleResend = async () => {
-    setResending(true);
-    try {
-      await resendInvitation(candidateId);
-      toast.success("Invitation resent");
-    } catch (e: any) {
-      toast.error(e?.message || "Failed to resend");
-    } finally {
-      setResending(false);
-    }
-  };
-
-  if (detail.isLoading) {
+  if (isLoading) {
     return (
       <AppShell title="Candidate">
-        <div className="grid lg:grid-cols-[320px_1fr] gap-6">
-          <Skeleton className="h-[500px] rounded-2xl" />
-          <Skeleton className="h-[500px] rounded-2xl" />
-        </div>
+        <p className="text-sm text-muted-foreground">Loading profile…</p>
       </AppShell>
     );
   }
-  if (detail.isError || !c) {
+  if (error || !data) {
     return (
       <AppShell title="Candidate">
         <div className="rounded-2xl border bg-card p-8 text-center">
-          <p className="text-destructive font-medium">Failed to load candidate.</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            {(detail.error as Error)?.message}
-          </p>
-          <div className="mt-4 flex justify-center gap-2">
-            <Button variant="outline" onClick={() => detail.refetch()}>
-              <RefreshCw className="h-4 w-4 mr-2" /> Retry
-            </Button>
-            <Button variant="ghost" onClick={() => navigate({ to: "/candidates" })}>
-              Back to directory
-            </Button>
-          </div>
+          <p className="font-medium">Candidate not found</p>
+          <Button className="mt-4" onClick={() => navigate({ to: "/candidates" })}>
+            Back to pool
+          </Button>
         </div>
       </AppShell>
     );
   }
 
-  const statusKey = c.status;
-  const statusLabel = STATUS_LABEL[statusKey] ?? statusKey;
-  const invitationLabel = statusKey === "invited" ? "Invited / pending" : "Active";
+  const c = data.candidate;
+  const roleNames = data.roleIds
+    .map((id) => roles.find((r) => r.id === id)?.name)
+    .filter(Boolean) as string[];
+  const recruiterName =
+    staff.find((s) => s.id === c.recruiter_id)?.full_name ??
+    staff.find((s) => s.id === c.recruiter_id)?.email ??
+    "Unassigned";
 
   return (
-    <AppShell title={c.profile?.full_name || "Candidate"}>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <Link
-            to="/candidates"
-            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" /> Back to Candidate Pool
-          </Link>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-              <Pencil className="h-4 w-4 mr-2" /> Edit candidate
-            </Button>
-            <Button variant="outline" size="sm" onClick={refreshAll} disabled={refreshing}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} /> Refresh
-            </Button>
-          </div>
-        </div>
+    <AppShell
+      title={c.full_name}
+      description={c.headline ?? roleNames.join(", ")}
+      actions={
+        canEdit ? (
+          <Button onClick={() => setEditOpen(true)}>
+            <Pencil className="h-4 w-4 mr-1" /> Edit
+          </Button>
+        ) : (
+          <Badge variant="secondary" className="gap-1">
+            <Lock className="h-3 w-3" /> View only
+          </Badge>
+        )
+      }
+    >
+      <div className="space-y-6">
+        <Link to="/candidates" className="inline-flex items-center text-sm text-primary hover:underline">
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back to candidate pool
+        </Link>
 
-        <div className="grid lg:grid-cols-[320px_1fr] gap-6">
-          {/* LEFT RAIL */}
-          <aside className="space-y-4">
-            <div className="rounded-2xl border bg-card p-5 shadow-sm">
-              <div className="flex flex-col items-center text-center">
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => photoInputRef.current?.click()}
-                    disabled={uploadingPhoto}
-                    className="block rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-70"
-                    aria-label="Upload candidate photo"
-                    title="Upload photo"
-                  >
-                    <Avatar className="h-24 w-24">
-                      {photo.data && <AvatarImage src={photo.data} />}
-                      <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                        {initials(c.profile?.full_name, c.profile?.email)}
-                      </AvatarFallback>
-                    </Avatar>
-                    {uploadingPhoto && (
-                      <span className="absolute inset-0 flex items-center justify-center rounded-full bg-background/60">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => photoInputRef.current?.click()}
-                    disabled={uploadingPhoto}
-                    className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-primary-foreground shadow-md flex items-center justify-center hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-70"
-                    aria-label="Upload photo"
-                    title="Upload photo"
-                  >
-                    {uploadingPhoto ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Camera className="h-4 w-4" />
-                    )}
-                  </button>
-                  <input
-                    ref={photoInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handlePhotoSelected}
-                  />
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-2">
+            <section className="rounded-2xl border bg-card p-5">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+                Contact
+              </h2>
+              <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-primary" /> {c.email || "—"}
                 </div>
-                <h2 className="mt-3 text-lg font-semibold leading-tight">
-                  {c.profile?.full_name || "Unnamed candidate"}
-                </h2>
-                <p className="text-xs text-muted-foreground break-all">{c.profile?.email}</p>
-                <Badge
-                  className={`mt-2 border-0 ${
-                    statusKey === "training_failed"
-                      ? "bg-destructive/15 text-destructive"
-                      : statusKey === "training_expired"
-                        ? "bg-[color:var(--color-warning)]/15 text-[color:var(--color-warning-foreground)]"
-                        : "bg-secondary text-secondary-foreground"
-                  }`}
-                >
-                  {statusLabel}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-primary" /> {c.phone || "—"}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-primary" /> {c.country || "—"}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Experience:</span>
+                  {c.years_experience != null ? `${c.years_experience} yrs` : "—"}
+                </div>
               </div>
-
-              <dl className="mt-5 space-y-3 text-sm">
-                <RailRow label="Candidate Status">{statusLabel}</RailRow>
-                <RailRow label="Training Status">
-                  {(() => {
-                    const es = enrollment?.status;
-                    if (es) return es.replace(/_/g, " ");
-                    if (c.status === "training_in_progress") return "In training";
-                    if (c.status === "training_completed") return "Training complete";
-                    if (c.status === "invited") return "Not started";
-                    return statusLabel;
-                  })()}
-                </RailRow>
-                <RailRow label="Placement Status">
-                  {(() => {
-                    const p = placements.data?.[0];
-                    if (!p) return <span className="italic text-muted-foreground">Not placed</span>;
-                    return p.status.charAt(0).toUpperCase() + p.status.slice(1);
-                  })()}
-                </RailRow>
-                <RailRow label="Recruiter">
-                  {c.recruiter?.profile?.full_name ?? (
-                    <span className="italic text-muted-foreground">Unassigned</span>
-                  )}
-                </RailRow>
-                <RailRow label="Course">
-                  {enrollment?.course?.title ?? (
-                    <span className="italic text-muted-foreground">Not enrolled</span>
-                  )}
-                </RailRow>
-                <RailRow label="Assigned Client">
-                  {placements.data?.[0]?.client?.full_name ?? "—"}
-                </RailRow>
-                <RailRow label="Availability">{c.availability ?? "—"}</RailRow>
-                <RailRow label="Invitation">{invitationLabel}</RailRow>
-                <RailRow label="Created">
-                  {format(new Date(c.created_at), "MMM d, yyyy")}
-                </RailRow>
-                <RailRow label="Last activity">
-                  {lastActivity.data
-                    ? format(new Date(lastActivity.data), "MMM d, yyyy")
-                    : "—"}
-                </RailRow>
-                <RailRow label="Overall Progress">
-                  {progress.data ? `${Math.round(progress.data.percent ?? 0)}%` : "—"}
-                </RailRow>
-                <RailRow label="Overall Score">
-                  {(() => {
-                    const scores: number[] = [];
-                    (assessmentsQ.data ?? []).forEach((a) =>
-                      a.attempts.forEach((at) => {
-                        if (typeof at.score === "number") scores.push(at.score);
-                      }),
-                    );
-                    if (!scores.length) return "—";
-                    return `${Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)}%`;
-                  })()}
-                </RailRow>
-                <RailRow label="Ready for Placement">
-                  {c.status === "qualified" || progress.data?.graduated ? "Yes" : "No"}
-                </RailRow>
-                <RailRow label="Tags">
-                  <span className="text-muted-foreground">No tags assigned</span>
-                </RailRow>
-              </dl>
-
-            </div>
-
-            <div className="rounded-2xl border bg-card p-4 shadow-sm">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                Quick Actions
-              </h3>
-              <div className="space-y-1">
-                <ActionButton onClick={handleResend} disabled={resending} icon={Send}>
-                  {resending ? "Sending…" : "Resend Invitation"}
-                </ActionButton>
-                <ActionButton onClick={() => setCourseOpen(true)} icon={BookOpen}>
-                  {enrollment ? "Change Course" : "Assign Course"}
-                </ActionButton>
-                <ActionButton onClick={() => setRecruiterOpen(true)} icon={UserCog}>
-                  Change Recruiter
-                </ActionButton>
-                <ActionButton onClick={() => setTab("documents")} icon={UploadIcon}>
-                  Upload Documents
-                </ActionButton>
-                {c.status === "inactive" ? (
-                  <ActionButton
-                    onClick={() => setReactivateOpen(true)}
-                    icon={RotateCcw}
-                    variant="ghost"
-                  >
-                    Reactivate Candidate
-                  </ActionButton>
-                ) : (
-                  <ActionButton
-                    onClick={() => setDeactivateOpen(true)}
-                    icon={PowerOff}
-                    variant="destructive"
-                  >
-                    Deactivate Candidate
-                  </ActionButton>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {roleNames.map((r) => (
+                  <span key={r} className="rounded-full bg-primary-soft px-2.5 py-1 text-xs text-primary">
+                    {r}
+                  </span>
+                ))}
+                {c.status && (
+                  <Badge variant="secondary" className="capitalize">
+                    {c.status}
+                  </Badge>
                 )}
-                <DisabledAction icon={Archive} label="Archive Candidate" />
-                <DisabledAction icon={ExternalLink} label="Open Academy Profile" />
-                <DisabledAction icon={Link2} label="Copy Academy Login Link" />
               </div>
-            </div>
-          </aside>
+            </section>
 
-          {/* RIGHT WORKSPACE */}
-          <section className="rounded-2xl border bg-card shadow-sm min-w-0">
-            <Tabs value={tab} onValueChange={setTab} className="w-full">
-              <div className="border-b px-2 overflow-x-auto">
-                <TabsList className="bg-transparent h-auto p-0 gap-1">
-                  {[
-                    ["overview", "Overview"],
-                    ["documents", "Documents"],
-                    ["training", "Training"],
-                    ["assessments", "Assessments"],
-                    ["roleplay", "Roleplay"],
-                    ["ai", "AI Analysis"],
-                    ["resume", "VetPod Resume"],
-                    ["placement", "Placement"],
-                    ["timeline", "Activity"],
-
-                  ].map(([v, l]) => (
-                    <TabsTrigger
-                      key={v}
-                      value={v}
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 py-3"
-                    >
-                      {l}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
+            <section className="rounded-2xl border bg-card p-5">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">Skills</h2>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {data.skills.length ? (
+                  data.skills.map((s) => (
+                    <Badge key={s.id} variant="outline">
+                      {s.name}
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No skills recorded.</p>
+                )}
               </div>
+            </section>
 
-              <div className="p-5">
-                <TabsContent value="overview" className="mt-0 space-y-5">
-                  <OverviewTab candidate={c} />
-                  <CertificateCard candidateId={candidateId} />
-                  
-                </TabsContent>
-                <TabsContent value="documents" className="mt-0">
-                  <DocumentsTab candidateId={candidateId} />
-                </TabsContent>
-                <TabsContent value="training" className="mt-0">
-                  <TrainingTab candidate={c} />
-                </TabsContent>
-                <TabsContent value="assessments" className="mt-0">
-                  <AssessmentsTab candidate={c} />
-                </TabsContent>
-                <TabsContent value="roleplay" className="mt-0">
-                  <RoleplayTab candidateId={candidateId} />
-                </TabsContent>
-                <TabsContent value="ai" className="mt-0">
-                  <AiAnalysisTab candidateId={candidateId} />
-                </TabsContent>
-                <TabsContent value="resume" className="mt-0">
-                  <ResumeTab candidateId={candidateId} />
-                </TabsContent>
-                <TabsContent value="placement" className="mt-0">
-                  <PlacementTab candidate={c} />
-                </TabsContent>
-
-                <TabsContent value="timeline" className="mt-0">
-                  <TimelineTab candidate={c} />
-                </TabsContent>
+            <section className="rounded-2xl border bg-card p-5">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+                Work history
+              </h2>
+              <div className="mt-3 space-y-4">
+                {data.workHistory.length ? (
+                  data.workHistory.map((w) => (
+                    <div key={w.id} className="border-l-2 border-primary/40 pl-3">
+                      <div className="font-medium">{w.title || "Role"}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {w.company} {dateRange(w.start_date, w.end_date) && `· ${dateRange(w.start_date, w.end_date)}`}
+                      </div>
+                      {w.description && <p className="mt-1 text-sm">{w.description}</p>}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No work history recorded.</p>
+                )}
               </div>
-            </Tabs>
-          </section>
+            </section>
+
+            <section className="rounded-2xl border bg-card p-5">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+                Education
+              </h2>
+              <div className="mt-3 space-y-3">
+                {data.education.length ? (
+                  data.education.map((e) => (
+                    <div key={e.id} className="border-l-2 border-primary/40 pl-3">
+                      <div className="font-medium">{e.degree || "Studies"}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {[e.institution, e.field].filter(Boolean).join(" · ")}{" "}
+                        {dateRange(e.start_date, e.end_date)}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No education recorded.</p>
+                )}
+              </div>
+            </section>
+          </div>
+
+          <div className="space-y-6">
+            <section className="rounded-2xl border bg-card p-5">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+                Recruiter ownership
+              </h2>
+              <p className="mt-2 text-sm">{recruiterName}</p>
+              {isAdmin ? (
+                <div className="mt-3 space-y-2">
+                  <Select
+                    value={c.recruiter_id ?? "unassigned"}
+                    onValueChange={(v: string) => reassign.mutate(v === "unassigned" ? null : v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Reassign recruiter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      {staff.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.full_name || s.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">Admins only: reassign ownership.</p>
+                </div>
+              ) : (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Only an admin can reassign this candidate.
+                </p>
+              )}
+            </section>
+
+            <section className="rounded-2xl border bg-card p-5">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">Notes</h2>
+              {canEdit && (
+                <div className="mt-3 space-y-2">
+                  <Textarea
+                    value={note}
+                    placeholder="Add a recruiter note…"
+                    onChange={(e) => setNote(e.target.value)}
+                  />
+                  <Button size="sm" onClick={() => saveNote.mutate()} disabled={saveNote.isPending}>
+                    {saveNote.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Add note
+                  </Button>
+                </div>
+              )}
+              <div className="mt-4 space-y-3">
+                {data.notes.length ? (
+                  data.notes.map((n) => (
+                    <div key={n.id} className="rounded-xl bg-primary-soft/60 p-3 text-sm">
+                      <p>{n.note}</p>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        {new Date(n.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No notes yet.</p>
+                )}
+              </div>
+            </section>
+          </div>
         </div>
       </div>
 
-      <ChangeCourseDialog
-        open={courseOpen}
-        onOpenChange={setCourseOpen}
-        candidate={c}
-        onChanged={refreshAll}
-      />
-      <ChangeRecruiterDialog
-        open={recruiterOpen}
-        onOpenChange={setRecruiterOpen}
-        candidate={c}
-        onChanged={refreshAll}
-      />
-      <DeactivateDialog
-        open={deactivateOpen}
-        onOpenChange={setDeactivateOpen}
-        candidate={c}
-        onChanged={refreshAll}
-      />
-      <ReactivateDialog
-        open={reactivateOpen}
-        onOpenChange={setReactivateOpen}
-        candidate={c}
-        onChanged={refreshAll}
-      />
-      <EditCandidateSheet
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        candidate={c}
-      />
+      <CandidateFormDialog open={editOpen} onOpenChange={setEditOpen} candidateId={candidateId} />
     </AppShell>
   );
 }
-
-function RailRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-3">
-      <dt className="text-xs uppercase tracking-wider text-muted-foreground shrink-0">{label}</dt>
-      <dd className="text-sm text-right min-w-0 truncate">{children}</dd>
-    </div>
-  );
-}
-
-function ActionButton({
-  children,
-  icon: Icon,
-  onClick,
-  disabled,
-  variant = "ghost",
-}: {
-  children: React.ReactNode;
-  icon: any;
-  onClick?: () => void;
-  disabled?: boolean;
-  variant?: "ghost" | "destructive";
-}) {
-  return (
-    <Button
-      variant={variant === "destructive" ? "ghost" : "ghost"}
-      className={`w-full justify-start ${
-        variant === "destructive" ? "text-destructive hover:text-destructive" : ""
-      }`}
-      onClick={onClick}
-      disabled={disabled}
-    >
-      <Icon className="h-4 w-4 mr-2" />
-      {children}
-    </Button>
-  );
-}
-
-function DisabledAction({ icon: Icon, label }: { icon: any; label: string }) {
-  return (
-    <TooltipProvider delayDuration={150}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div>
-            <Button
-              variant="ghost"
-              className="w-full justify-start opacity-50 cursor-not-allowed"
-              disabled
-            >
-              <Icon className="h-4 w-4 mr-2" />
-              {label}
-            </Button>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="right">Available in a later phase</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
-
-export type { CandidateDetail };
