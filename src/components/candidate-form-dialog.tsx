@@ -12,6 +12,8 @@ import {
   type EducationInput,
   type WorkHistoryInput,
 } from "@/lib/queries";
+import { uploadCandidateFile } from "@/lib/crm-queries";
+import type { CandidateFileType } from "@/lib/database.types";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
