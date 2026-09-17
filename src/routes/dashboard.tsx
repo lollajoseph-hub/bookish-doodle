@@ -190,6 +190,8 @@ function DashboardPage() {
       rejected: byStatus("rejected"),
       upcomingInterviews: byMatch("interview_requested", "interview_confirmed"),
       pendingOffers: byMatch("offer_extended"),
+      matched: myMatchesList.length,
+      hired: byMatch("hired"),
       activePlacements: placements.filter(
         (p) => myCandidateIds.has(p.candidate_id) && (p.status ?? "active") === "active",
       ).length,
