@@ -224,7 +224,6 @@ function DashboardPage() {
               hint="Added in the last 7 days"
               loading={loadingCore}
             />
-            <StatCard label="Screening" value={stats.screening} icon={ListChecks} loading={loadingCore} />
             <StatCard
               label="Shortlisted"
               value={stats.shortlisted}
