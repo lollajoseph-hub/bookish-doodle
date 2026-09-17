@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ChevronDown, ChevronUp, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { RequestStatusBadge } from "@/components/match-status";
@@ -38,6 +38,65 @@ import {
 
 const STATUS_TABS = ["all", "open", "needs_attention", "fulfilled", "closed"] as const;
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/** Scrollable area with sidebar-style up/down arrows instead of a scrollbar. */
+function ArrowScrollArea({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [canScroll, setCanScroll] = useState({ up: false, down: false });
+
+  const updateScrollState = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    setCanScroll({
+      up: el.scrollTop > 4,
+      down: el.scrollTop + el.clientHeight < el.scrollHeight - 4,
+    });
+  }, []);
+
+  useEffect(() => {
+    updateScrollState();
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(updateScrollState);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [updateScrollState]);
+
+  const scroll = (dir: number) =>
+    ref.current?.scrollBy({ top: dir * 160, behavior: "smooth" });
+
+  return (
+    <div className="relative min-h-0">
+      <div
+        ref={ref}
+        onScroll={updateScrollState}
+        className="max-h-[58vh] space-y-4 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {children}
+      </div>
+      {canScroll.up && (
+        <button
+          type="button"
+          aria-label="Scroll up"
+          onClick={() => scroll(-1)}
+          className="absolute left-1/2 top-0 z-10 flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-foreground/80 shadow-sm transition-colors hover:bg-primary hover:text-primary-foreground"
+        >
+          <ChevronUp className="h-4 w-4" />
+        </button>
+      )}
+      {canScroll.down && (
+        <button
+          type="button"
+          aria-label="Scroll down"
+          onClick={() => scroll(1)}
+          className="absolute bottom-0 left-1/2 z-10 flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-foreground/80 shadow-sm transition-colors hover:bg-primary hover:text-primary-foreground"
+        >
+          <ChevronDown className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/requests/")({
   ssr: false,
@@ -203,6 +262,7 @@ function RequestsPage() {
             <DialogDescription>Define the seat and the size of the review batch.</DialogDescription>
           </DialogHeader>
 
+          <ArrowScrollArea>
           <FormSection title="Client & title" first>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -326,6 +386,7 @@ function RequestsPage() {
           <FormSection title="Additional notes" description="Anything else the sourcing team should know.">
             <Textarea id="req-notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
           </FormSection>
+          </ArrowScrollArea>
 
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>
