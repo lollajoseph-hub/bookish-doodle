@@ -119,6 +119,7 @@ export function CandidateFormDialog({
       });
     } else if (!candidateId) {
       setForm(emptyForm(profile?.id ?? null));
+      setFiles({});
     }
   }, [open, candidateId, detail, profile?.id]);
 
@@ -129,12 +130,36 @@ export function CandidateFormDialog({
         await updateCandidate(candidateId, form);
         return candidateId;
       }
-      return createCandidate(form, profile?.id ?? null);
+      const newId = await createCandidate(form, profile?.id ?? null);
+
+      const pending = (Object.entries(files) as [CandidateFileType, File][]).filter(([, f]) => !!f);
+      if (pending.length) {
+        const results = await Promise.all(
+          pending.map(([fileType, file]) =>
+            uploadCandidateFile({ candidateId: newId, file, fileType, uploadedBy: profile?.id ?? null })
+              .then(() => ({ fileType, ok: true as const }))
+              .catch((e: Error) => ({ fileType, ok: false as const, message: e.message })),
+          ),
+        );
+        const ok = results.filter((r) => r.ok);
+        const failed = results.filter((r) => !r.ok);
+        if (ok.length) toast.success(`${ok.length} file${ok.length > 1 ? "s" : ""} uploaded`);
+        for (const f of failed) {
+          toast.error(
+            `${UPLOAD_FIELDS.find((u) => u.key === f.fileType)?.label ?? f.fileType} failed to upload${
+              "message" in f && f.message ? `: ${f.message}` : ""
+            }`,
+          );
+        }
+      }
+      return newId;
     },
     onSuccess: (id) => {
       toast.success(candidateId ? "Candidate updated" : "Candidate added");
       queryClient.invalidateQueries({ queryKey: ["candidates"] });
       queryClient.invalidateQueries({ queryKey: ["candidate", id] });
+      queryClient.invalidateQueries({ queryKey: ["candidate-files", id] });
+      setFiles({});
       onOpenChange(false);
       onSaved?.(id);
     },
