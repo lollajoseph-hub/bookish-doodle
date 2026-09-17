@@ -515,12 +515,13 @@ function DashboardPage() {
               </Link>
             }
           >
-            Candidates by role
+            {isAdmin ? "Candidates by role" : "My candidates by role"}
           </SectionTitle>
           <div className="mt-4 space-y-3">
             {roles.map((r) => {
-              const count = candidates.filter((c) => c.roleIds.includes(r.id)).length;
-              const pct = candidates.length ? Math.round((count / candidates.length) * 100) : 0;
+              const pool = isAdmin ? candidates : myCandidates;
+              const count = pool.filter((c) => c.roleIds.includes(r.id)).length;
+              const pct = pool.length ? Math.round((count / pool.length) * 100) : 0;
               return (
                 <div key={r.id}>
                   <div className="flex items-center justify-between text-sm">
