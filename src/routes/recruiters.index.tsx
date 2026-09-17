@@ -124,7 +124,7 @@ function TeamPage() {
               key={s.id}
               to="/recruiters/$staffId"
               params={{ staffId: s.id }}
-              className="card-amber block rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
+              className="card-amber block rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-amber hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
