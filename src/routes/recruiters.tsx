@@ -119,9 +119,11 @@ function TeamPage() {
           })).filter((b) => b.count > 0);
           const pendingInvite = signinStatus ? signinStatus[s.id] === false : true;
           return (
-            <div
+            <Link
               key={s.id}
-              className="card-amber rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
+              to="/recruiters/$staffId"
+              params={{ staffId: s.id }}
+              className="card-amber block rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
