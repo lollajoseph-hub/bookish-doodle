@@ -6,7 +6,6 @@ import {
   LogOut,
   Menu,
   ShieldCheck,
-  Briefcase,
   UserCog,
   Building2,
   ClipboardList,
