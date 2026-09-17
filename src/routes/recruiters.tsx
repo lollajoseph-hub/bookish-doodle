@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Mail, Phone, Plus, Send, Loader2 } from "lucide-react";
@@ -119,9 +119,11 @@ function TeamPage() {
           })).filter((b) => b.count > 0);
           const pendingInvite = signinStatus ? signinStatus[s.id] === false : true;
           return (
-            <div
+            <Link
               key={s.id}
-              className="card-amber rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
+              to="/recruiters/$staffId"
+              params={{ staffId: s.id }}
+              className="card-amber block rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -139,7 +141,11 @@ function TeamPage() {
                       aria-label="Resend invite"
                       title="Resend invite"
                       disabled={resend.isPending}
-                      onClick={() => resend.mutate(s.id)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        resend.mutate(s.id);
+                      }}
                     >
                       {resend.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -176,7 +182,7 @@ function TeamPage() {
                   </div>
                 )}
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
