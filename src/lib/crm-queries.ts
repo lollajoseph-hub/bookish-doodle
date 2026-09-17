@@ -15,7 +15,18 @@ import type {
   RejectionReason,
 } from "./database.types";
 
-export const CANDIDATE_FILES_BUCKET = "candidate-files";
+export const FILE_TYPE_BUCKETS: Record<CandidateFileType, string> = {
+  resume: "candidate-resumes",
+  profile_photo: "candidate-photos",
+  intro_video: "intro-videos",
+  id_document: "candidate-documents",
+  reference: "candidate-documents",
+  other: "candidate-documents",
+};
+
+export function bucketForFileType(fileType: CandidateFileType): string {
+  return FILE_TYPE_BUCKETS[fileType];
+}
 
 export const MATCH_STATUSES: MatchStatus[] = [
   "recommended",
@@ -438,17 +449,18 @@ export async function uploadCandidateFile(input: {
   fileType: CandidateFileType;
   uploadedBy: string | null;
 }): Promise<void> {
+  const bucket = bucketForFileType(input.fileType);
   const safeName = input.file.name.replace(/[^\w.\-]+/g, "_");
   const path = `${input.candidateId}/${input.fileType}/${Date.now()}-${safeName}`;
   const { error: upErr } = await supabase.storage
-    .from(CANDIDATE_FILES_BUCKET)
+    .from(bucket)
     .upload(path, input.file, { upsert: false, contentType: input.file.type || undefined });
   if (upErr) throw upErr;
 
   const { error } = await supabase.from("candidate_files").insert({
     candidate_id: input.candidateId,
     file_type: input.fileType,
-    bucket_id: CANDIDATE_FILES_BUCKET,
+    bucket_id: bucket,
     storage_path: path,
     file_name: input.file.name,
     mime_type: input.file.type || null,
