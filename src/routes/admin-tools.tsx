@@ -107,7 +107,22 @@ function AdminToolsPage() {
   }
 
   return (
-    <AppShell title="Admin tools" description="Direct interventions on candidate records">
+    <AppShell title="Admin tools" description="Candidates, team and roles in one place">
+      <Tabs defaultValue="candidates" className="space-y-5">
+        <TabsList>
+          <TabsTrigger value="candidates">Candidates</TabsTrigger>
+          <TabsTrigger value="team">Team</TabsTrigger>
+          <TabsTrigger value="roles">Roles</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="team">
+          <TeamPanel isAdmin={isAdmin} />
+        </TabsContent>
+        <TabsContent value="roles">
+          <RolesPanel />
+        </TabsContent>
+
+        <TabsContent value="candidates">
       <div className="grid gap-5 lg:grid-cols-[1fr_1fr]">
         <div>
           <div className="relative mb-4">
