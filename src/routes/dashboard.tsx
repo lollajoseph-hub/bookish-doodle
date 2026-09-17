@@ -246,60 +246,108 @@ function DashboardPage() {
           </Button>
         </div>
 
-        <section className="space-y-3">
-          <SectionTitle
-            action={
-              <Link to="/candidates" className="text-sm text-primary hover:underline">
-                View candidates
-              </Link>
-            }
-          >
-            Candidate pipeline
-          </SectionTitle>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard label="Total candidates" value={stats.total} icon={Users} loading={loadingCore} />
-            <StatCard
-              label="New this week"
-              value={stats.newThisWeek}
-              icon={UserPlus}
-              tone="success"
-              hint="Added in the last 7 days"
-              loading={loadingCore}
-            />
-            <StatCard label="New" value={stats.new} icon={Sparkles} loading={loadingCore} />
-            <StatCard
-              label="Shortlisted"
-              value={stats.shortlisted}
-              icon={BadgeCheck}
-              tone="warning"
-              loading={loadingCore}
-            />
-            <StatCard
-              label="Interviewed"
-              value={stats.interviewed}
-              icon={CalendarCheck}
-              loading={loadingCore}
-            />
-            <StatCard
-              label="Hired"
-              value={stats.hiredCandidates}
-              icon={UserCheck}
-              tone="success"
-              loading={loadingCore}
-            />
-            <StatCard label="Placed" value={stats.placed} icon={Sparkles} tone="success" loading={loadingCore} />
-            <StatCard label="Rejected" value={stats.rejected} icon={UserMinus} loading={loadingCore} />
-            <StatCard label="Assigned to me" value={stats.mine} icon={UserCheck} loading={loadingCore} />
-            <StatCard
-              label="Unassigned"
-              value={stats.unassigned}
-              icon={UserMinus}
-              tone="warning"
-              hint="Need a recruiter"
-              loading={loadingCore}
-            />
-          </div>
-        </section>
+        {isAdmin ? (
+          <section className="space-y-3">
+            <SectionTitle
+              action={
+                <Link to="/candidates" className="text-sm text-primary hover:underline">
+                  View candidates
+                </Link>
+              }
+            >
+              Candidate pipeline
+            </SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard label="Total candidates" value={stats.total} icon={Users} loading={loadingCore} />
+              <StatCard
+                label="New this week"
+                value={stats.newThisWeek}
+                icon={UserPlus}
+                tone="success"
+                hint="Added in the last 7 days"
+                loading={loadingCore}
+              />
+              <StatCard label="New" value={stats.new} icon={Sparkles} loading={loadingCore} />
+              <StatCard
+                label="Shortlisted"
+                value={stats.shortlisted}
+                icon={BadgeCheck}
+                tone="warning"
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Interviewed"
+                value={stats.interviewed}
+                icon={CalendarCheck}
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Hired"
+                value={stats.hiredCandidates}
+                icon={UserCheck}
+                tone="success"
+                loading={loadingCore}
+              />
+              <StatCard label="Placed" value={stats.placed} icon={Sparkles} tone="success" loading={loadingCore} />
+              <StatCard label="Rejected" value={stats.rejected} icon={UserMinus} loading={loadingCore} />
+              <StatCard label="Assigned to me" value={stats.mine} icon={UserCheck} loading={loadingCore} />
+              <StatCard
+                label="Unassigned"
+                value={stats.unassigned}
+                icon={UserMinus}
+                tone="warning"
+                hint="Need a recruiter"
+                loading={loadingCore}
+              />
+            </div>
+          </section>
+        ) : (
+          <section className="space-y-3">
+            <SectionTitle
+              action={
+                <Link to="/candidates" className="text-sm text-primary hover:underline">
+                  View candidates
+                </Link>
+              }
+            >
+              My candidate pipeline
+            </SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard label="Total assigned to me" value={myStats.total} icon={Users} loading={loadingCore} />
+              <StatCard
+                label="New this week"
+                value={myStats.newThisWeek}
+                icon={UserPlus}
+                tone="success"
+                hint="Added in the last 7 days"
+                loading={loadingCore}
+              />
+              <StatCard label="New" value={myStats.new} icon={Sparkles} loading={loadingCore} />
+              <StatCard
+                label="Shortlisted"
+                value={myStats.shortlisted}
+                icon={BadgeCheck}
+                tone="warning"
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Interviewed"
+                value={myStats.interviewed}
+                icon={CalendarCheck}
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Hired"
+                value={myStats.hiredCandidates}
+                icon={UserCheck}
+                tone="success"
+                loading={loadingCore}
+              />
+              <StatCard label="Placed" value={myStats.placed} icon={Sparkles} tone="success" loading={loadingCore} />
+              <StatCard label="Rejected" value={myStats.rejected} icon={UserMinus} loading={loadingCore} />
+            </div>
+          </section>
+        )}
 
         <section className="space-y-3">
           <SectionTitle
