@@ -9,4 +9,4 @@
 - [x] Place both login sections inside one centered shared card and update the primary purple palette.
 - [x] Replace the bounded login card with one full-bleed purple artwork surface and a compact glass sign-in panel.
 
-- [ ] Restyle login as one floating purple card based on Lola’s supplied reference
+- [x] Restyle login as one floating purple card based on Lola’s supplied reference
