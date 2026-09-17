@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/recruiters/$staffId")({
-  ssr: false,
   head: () => ({
     meta: [
       { title: "Recruiter | ScaleSource Candidate Review Dashboard" },
