@@ -24,7 +24,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useAuth, isStaff } from "@/lib/auth";
 import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -120,9 +120,26 @@ let navScrollTop = 0;
 
 function SidebarNav({ onNav, isAdmin }: { onNav?: () => void; isAdmin: boolean }) {
   const navRef = useRef<HTMLElement | null>(null);
+  const [canScroll, setCanScroll] = useState({ up: false, down: false });
+
+  const updateScrollState = useCallback(() => {
+    const el = navRef.current;
+    if (!el) return;
+    setCanScroll({
+      up: el.scrollTop > 4,
+      down: el.scrollTop + el.clientHeight < el.scrollHeight - 4,
+    });
+  }, []);
+
   useLayoutEffect(() => {
     if (navRef.current) navRef.current.scrollTop = navScrollTop;
-  }, []);
+    updateScrollState();
+    const el = navRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(updateScrollState);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [updateScrollState]);
   const path = useRouterState({ select: (s) => s.location.pathname });
   const roleSearch = useRouterState({
     select: (s) => (s.location.search as { role?: string }).role,
