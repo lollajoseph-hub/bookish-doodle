@@ -195,6 +195,7 @@ export function AppShell({
           </div>
           <div className="flex items-center gap-2">
             {actions}
+            <NotificationsBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-2 px-2">
