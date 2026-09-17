@@ -461,6 +461,7 @@ function CandidateDetailPage() {
                 <IntroVideoCard
                   videoUrl={media?.videoUrl ?? null}
                   linkUrl={c.intro_video_url}
+                  mimeType={media?.videoMimeType ?? null}
                   showEmpty
                 />
 
