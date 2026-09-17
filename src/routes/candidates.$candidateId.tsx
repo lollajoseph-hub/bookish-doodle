@@ -124,6 +124,7 @@ function CandidateDetailPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["candidate", candidateId],
     queryFn: () => fetchCandidateDetail(candidateId),
+    staleTime: 30_000,
   });
   const { data: roles = [] } = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: fetchStaffProfiles });
