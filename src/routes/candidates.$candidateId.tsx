@@ -13,6 +13,7 @@ import {
   Upload,
   Video,
   ExternalLink,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
@@ -29,6 +30,7 @@ import {
 } from "@/lib/crm-queries";
 import {
   addRecruiterNote,
+  deleteCandidate,
   fetchCandidateDetail,
   fetchJobRoles,
   fetchStaffProfiles,
@@ -41,6 +43,16 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
