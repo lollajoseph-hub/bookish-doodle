@@ -198,10 +198,10 @@
     linear-gradient(35deg, color-mix(in oklab, var(--primary-dark) 72%, transparent), transparent 58%);
 }
 
-/* Gently soften the page-level artwork so the floating card pops, while keeping its shapes defined */
+/* Barely soften the page-level artwork so the floating card pops while shapes stay crisp */
 .login-panel-artwork:not(.login-card-artwork) {
-  filter: blur(4px);
-  transform: scale(1.04);
+  filter: blur(1.5px);
+  transform: scale(1.02);
 }
 
 /* Amber border framing the floating card */
