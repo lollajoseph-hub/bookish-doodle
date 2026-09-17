@@ -9,16 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SystemMonitorRouteImport } from './routes/system-monitor'
 import { Route as RolesRouteImport } from './routes/roles'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as RecruitersRouteImport } from './routes/recruiters'
+import { Route as RecruiterActivityRouteImport } from './routes/recruiter-activity'
 import { Route as PlacementsRouteImport } from './routes/placements'
+import { Route as OfferReviewRouteImport } from './routes/offer-review'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InterviewReviewRouteImport } from './routes/interview-review'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CsQueueRouteImport } from './routes/cs-queue'
 import { Route as ClientsRouteImport } from './routes/clients'
 import { Route as CandidatesRouteImport } from './routes/candidates'
 import { Route as AuditLogsRouteImport } from './routes/audit-logs'
@@ -31,6 +35,11 @@ import { Route as ClientsClientIdRouteImport } from './routes/clients.$clientId'
 import { Route as CandidatesNewRouteImport } from './routes/candidates.new'
 import { Route as CandidatesCandidateIdRouteImport } from './routes/candidates.$candidateId'
 
+const SystemMonitorRoute = SystemMonitorRouteImport.update({
+  id: '/system-monitor',
+  path: '/system-monitor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RolesRoute = RolesRouteImport.update({
   id: '/roles',
   path: '/roles',
@@ -51,9 +60,19 @@ const RecruitersRoute = RecruitersRouteImport.update({
   path: '/recruiters',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecruiterActivityRoute = RecruiterActivityRouteImport.update({
+  id: '/recruiter-activity',
+  path: '/recruiter-activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlacementsRoute = PlacementsRouteImport.update({
   id: '/placements',
   path: '/placements',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OfferReviewRoute = OfferReviewRouteImport.update({
+  id: '/offer-review',
+  path: '/offer-review',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificationsRoute = NotificationsRouteImport.update({
@@ -79,6 +98,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CsQueueRoute = CsQueueRouteImport.update({
+  id: '/cs-queue',
+  path: '/cs-queue',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientsRoute = ClientsRouteImport.update({
@@ -142,16 +166,20 @@ export interface FileRoutesByFullPath {
   '/audit-logs': typeof AuditLogsRoute
   '/candidates': typeof CandidatesRouteWithChildren
   '/clients': typeof ClientsRouteWithChildren
+  '/cs-queue': typeof CsQueueRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/interview-review': typeof InterviewReviewRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
+  '/offer-review': typeof OfferReviewRoute
   '/placements': typeof PlacementsRoute
+  '/recruiter-activity': typeof RecruiterActivityRoute
   '/recruiters': typeof RecruitersRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
+  '/system-monitor': typeof SystemMonitorRoute
   '/candidates/$candidateId': typeof CandidatesCandidateIdRoute
   '/candidates/new': typeof CandidatesNewRoute
   '/clients/$clientId': typeof ClientsClientIdRoute
@@ -163,15 +191,19 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/audit-logs': typeof AuditLogsRoute
+  '/cs-queue': typeof CsQueueRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/interview-review': typeof InterviewReviewRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
+  '/offer-review': typeof OfferReviewRoute
   '/placements': typeof PlacementsRoute
+  '/recruiter-activity': typeof RecruiterActivityRoute
   '/recruiters': typeof RecruitersRoute
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
+  '/system-monitor': typeof SystemMonitorRoute
   '/candidates/$candidateId': typeof CandidatesCandidateIdRoute
   '/candidates/new': typeof CandidatesNewRoute
   '/clients/$clientId': typeof ClientsClientIdRoute
@@ -186,16 +218,20 @@ export interface FileRoutesById {
   '/audit-logs': typeof AuditLogsRoute
   '/candidates': typeof CandidatesRouteWithChildren
   '/clients': typeof ClientsRouteWithChildren
+  '/cs-queue': typeof CsQueueRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/interview-review': typeof InterviewReviewRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
+  '/offer-review': typeof OfferReviewRoute
   '/placements': typeof PlacementsRoute
+  '/recruiter-activity': typeof RecruiterActivityRoute
   '/recruiters': typeof RecruitersRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
+  '/system-monitor': typeof SystemMonitorRoute
   '/candidates/$candidateId': typeof CandidatesCandidateIdRoute
   '/candidates/new': typeof CandidatesNewRoute
   '/clients/$clientId': typeof ClientsClientIdRoute
@@ -211,16 +247,20 @@ export interface FileRouteTypes {
     | '/audit-logs'
     | '/candidates'
     | '/clients'
+    | '/cs-queue'
     | '/dashboard'
     | '/forgot-password'
     | '/interview-review'
     | '/login'
     | '/notifications'
+    | '/offer-review'
     | '/placements'
+    | '/recruiter-activity'
     | '/recruiters'
     | '/requests'
     | '/reset-password'
     | '/roles'
+    | '/system-monitor'
     | '/candidates/$candidateId'
     | '/candidates/new'
     | '/clients/$clientId'
@@ -232,15 +272,19 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/audit-logs'
+    | '/cs-queue'
     | '/dashboard'
     | '/forgot-password'
     | '/interview-review'
     | '/login'
     | '/notifications'
+    | '/offer-review'
     | '/placements'
+    | '/recruiter-activity'
     | '/recruiters'
     | '/reset-password'
     | '/roles'
+    | '/system-monitor'
     | '/candidates/$candidateId'
     | '/candidates/new'
     | '/clients/$clientId'
@@ -254,16 +298,20 @@ export interface FileRouteTypes {
     | '/audit-logs'
     | '/candidates'
     | '/clients'
+    | '/cs-queue'
     | '/dashboard'
     | '/forgot-password'
     | '/interview-review'
     | '/login'
     | '/notifications'
+    | '/offer-review'
     | '/placements'
+    | '/recruiter-activity'
     | '/recruiters'
     | '/requests'
     | '/reset-password'
     | '/roles'
+    | '/system-monitor'
     | '/candidates/$candidateId'
     | '/candidates/new'
     | '/clients/$clientId'
@@ -278,20 +326,31 @@ export interface RootRouteChildren {
   AuditLogsRoute: typeof AuditLogsRoute
   CandidatesRoute: typeof CandidatesRouteWithChildren
   ClientsRoute: typeof ClientsRouteWithChildren
+  CsQueueRoute: typeof CsQueueRoute
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   InterviewReviewRoute: typeof InterviewReviewRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
+  OfferReviewRoute: typeof OfferReviewRoute
   PlacementsRoute: typeof PlacementsRoute
+  RecruiterActivityRoute: typeof RecruiterActivityRoute
   RecruitersRoute: typeof RecruitersRoute
   RequestsRoute: typeof RequestsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   RolesRoute: typeof RolesRoute
+  SystemMonitorRoute: typeof SystemMonitorRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/system-monitor': {
+      id: '/system-monitor'
+      path: '/system-monitor'
+      fullPath: '/system-monitor'
+      preLoaderRoute: typeof SystemMonitorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/roles': {
       id: '/roles'
       path: '/roles'
@@ -320,11 +379,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecruitersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recruiter-activity': {
+      id: '/recruiter-activity'
+      path: '/recruiter-activity'
+      fullPath: '/recruiter-activity'
+      preLoaderRoute: typeof RecruiterActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/placements': {
       id: '/placements'
       path: '/placements'
       fullPath: '/placements'
       preLoaderRoute: typeof PlacementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/offer-review': {
+      id: '/offer-review'
+      path: '/offer-review'
+      fullPath: '/offer-review'
+      preLoaderRoute: typeof OfferReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -360,6 +433,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cs-queue': {
+      id: '/cs-queue'
+      path: '/cs-queue'
+      fullPath: '/cs-queue'
+      preLoaderRoute: typeof CsQueueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/clients': {
@@ -490,16 +570,20 @@ const rootRouteChildren: RootRouteChildren = {
   AuditLogsRoute: AuditLogsRoute,
   CandidatesRoute: CandidatesRouteWithChildren,
   ClientsRoute: ClientsRouteWithChildren,
+  CsQueueRoute: CsQueueRoute,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   InterviewReviewRoute: InterviewReviewRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
+  OfferReviewRoute: OfferReviewRoute,
   PlacementsRoute: PlacementsRoute,
+  RecruiterActivityRoute: RecruiterActivityRoute,
   RecruitersRoute: RecruitersRoute,
   RequestsRoute: RequestsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   RolesRoute: RolesRoute,
+  SystemMonitorRoute: SystemMonitorRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
