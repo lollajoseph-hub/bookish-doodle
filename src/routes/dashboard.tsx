@@ -347,6 +347,21 @@ function DashboardPage() {
               />
               <StatCard label="Placed" value={myStats.placed} icon={Sparkles} tone="success" loading={loadingCore} />
               <StatCard label="Rejected" value={myStats.rejected} icon={UserMinus} loading={loadingCore} />
+              <StatCard
+                label="Total candidates"
+                value={stats.total}
+                icon={Users}
+                hint="Company-wide"
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Unassigned"
+                value={stats.unassigned}
+                icon={UserMinus}
+                tone="warning"
+                hint="Company-wide"
+                loading={loadingCore}
+              />
             </div>
           </section>
         )}
