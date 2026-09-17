@@ -8,7 +8,6 @@ import {
   Briefcase,
   UserCheck,
   Sparkles,
-  ArrowRight,
   RefreshCw,
   Building2,
   ClipboardList,
