@@ -75,6 +75,14 @@ function CandidateDetailPage() {
   });
   const { data: roles = [] } = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: fetchStaffProfiles });
+  const { data: matches = [] } = useQuery({
+    queryKey: ["candidate-matches", candidateId],
+    queryFn: () => fetchMatchesForCandidate(candidateId),
+  });
+  const { data: aiProfile } = useQuery({
+    queryKey: ["candidate-ai", candidateId],
+    queryFn: () => fetchCandidateAiProfile(candidateId),
+  });
 
   const isAdmin = profile?.role === "admin";
   const isOwner = !!data && data.candidate.recruiter_id === profile?.id;
