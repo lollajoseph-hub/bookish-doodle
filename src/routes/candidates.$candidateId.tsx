@@ -661,7 +661,7 @@ function WorkHistorySection({ workHistory }: { workHistory: CandidateDetail["wor
         {workHistory.length ? (
           <>
             {visible.map((w) => (
-              <div key={w.id} className="border-l-2 border-primary/40 pl-3">
+              <div key={w.id} className="border-l-2 border-amber/70 pl-3">
                 <div className="font-medium">{w.title || "Role"}</div>
                 <div className="text-sm text-muted-foreground">
                   {w.company}{" "}
@@ -695,7 +695,7 @@ function EducationSection({ education }: { education: CandidateDetail["education
       <div className="space-y-3">
         {education.length ? (
           education.map((e) => (
-            <div key={e.id} className="border-l-2 border-primary/40 pl-3">
+            <div key={e.id} className="border-l-2 border-amber/70 pl-3">
               <div className="font-medium">{e.degree || "Studies"}</div>
               <div className="text-sm text-muted-foreground">
                 {[e.institution, e.field].filter(Boolean).join(" · ")}{" "}
