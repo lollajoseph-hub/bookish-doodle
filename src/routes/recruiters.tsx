@@ -121,7 +121,7 @@ function TeamPage() {
           return (
             <div
               key={s.id}
-              className="rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
+              className="card-amber rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>

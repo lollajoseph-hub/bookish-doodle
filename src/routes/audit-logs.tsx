@@ -48,7 +48,7 @@ function AuditLogsPage() {
   return (
     <AppShell title="Audit logs" description="Recent changes across the system">
       {isLoading && <p className="text-sm text-muted-foreground">Loading logs…</p>}
-      <div className="overflow-x-auto rounded-2xl border bg-card">
+      <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
         <Table>
           <TableHeader>
             <TableRow>

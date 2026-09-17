@@ -91,7 +91,7 @@ function isDirectVideo(url: string) {
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border bg-card p-5">
+    <section className="card-amber rounded-2xl border bg-card p-5">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
@@ -186,7 +186,7 @@ function CandidateDetailPage() {
   if (error || !data) {
     return (
       <AppShell title="Candidate">
-        <div className="rounded-2xl border bg-card p-8 text-center">
+        <div className="card-amber rounded-2xl border bg-card p-8 text-center">
           <p className="font-medium">Candidate not found</p>
           <Button className="mt-4" onClick={() => navigate({ to: "/candidates" })}>
             Back to pool
@@ -229,7 +229,7 @@ function CandidateDetailPage() {
         <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
           {/* ------------------------------ left rail ------------------------------ */}
           <div className="space-y-6">
-            <section className="rounded-2xl border bg-card p-5 text-center">
+            <section className="card-amber rounded-2xl border bg-card p-5 text-center">
               <div className="relative mx-auto w-fit">
                 <Avatar className="h-28 w-28 border-2 border-primary-soft">
                   {media?.photoUrl && <AvatarImage src={media.photoUrl} alt={c.full_name} />}
@@ -294,7 +294,7 @@ function CandidateDetailPage() {
               </dl>
             </section>
 
-            <section className="rounded-2xl border bg-card p-5">
+            <section className="card-amber rounded-2xl border bg-card p-5">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
                 Quick actions
               </h2>
@@ -340,7 +340,7 @@ function CandidateDetailPage() {
           </div>
 
           {/* ------------------------------- tabs ---------------------------------- */}
-          <div className="rounded-2xl border bg-card p-4 sm:p-5">
+          <div className="card-amber rounded-2xl border bg-card p-4 sm:p-5">
             <Tabs value={tab} onValueChange={setTab}>
               <TabsList className="flex w-full flex-wrap justify-start">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -391,7 +391,7 @@ function CandidateDetailPage() {
               </TabsContent>
 
               <TabsContent value="ai" className="mt-4 space-y-5">
-                <section className="flex items-center gap-4 rounded-2xl border bg-card p-5">
+                <section className="flex items-center gap-4 card-amber rounded-2xl border bg-card p-5">
                   <Avatar className="h-16 w-16">
                     {media?.photoUrl && <AvatarImage src={media.photoUrl} alt={c.full_name} />}
                     <AvatarFallback className="bg-primary text-primary-foreground">
@@ -605,7 +605,7 @@ function AiSummaryCard({
   });
 
   return (
-    <section className="rounded-2xl border bg-card p-5">
+    <section className="card-amber rounded-2xl border bg-card p-5">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
           Candidate summary

@@ -58,7 +58,7 @@ function InterviewReviewPage() {
   return (
     <AppShell title="Interview review" description="Candidates in the interview stages">
       {isLoading && <p className="text-sm text-muted-foreground">Loading interviews…</p>}
-      <div className="overflow-x-auto rounded-2xl border bg-card">
+      <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
         <Table>
           <TableHeader>
             <TableRow>

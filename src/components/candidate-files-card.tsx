@@ -91,7 +91,7 @@ export function CandidateFilesCard({
   };
 
   return (
-    <section className="rounded-2xl border bg-card p-5">
+    <section className="card-amber rounded-2xl border bg-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">Files</h2>
         {canEdit && (

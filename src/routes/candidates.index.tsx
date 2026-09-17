@@ -58,7 +58,7 @@ function CandidateTile({
       onClick={onSelect}
       onDoubleClick={onOpen}
       aria-pressed={selected}
-      className={`group text-left rounded-2xl border bg-card p-4 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-primary/60 ${
+      className={`group text-left card-amber rounded-2xl border bg-card p-4 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-primary/60 ${
         selected ? "border-amber bg-amber-soft/40 ring-2 ring-amber shadow-md" : "border-border"
       }`}
     >
@@ -203,7 +203,7 @@ function CandidatesPage() {
         {isLoading && <p className="text-sm text-muted-foreground">Loading candidates…</p>}
 
         {!isLoading && !groups.length && (
-          <div className="rounded-2xl border bg-card p-10 text-center">
+          <div className="card-amber rounded-2xl border bg-card p-10 text-center">
             <Users className="mx-auto h-8 w-8 text-primary" />
             <p className="mt-3 font-medium">No candidates to show</p>
             <p className="text-sm text-muted-foreground">

@@ -82,7 +82,7 @@ export function TeamPanel({ isAdmin }: { isAdmin: boolean }) {
         {admins.map((s) => {
           const pendingInvite = signinStatus ? signinStatus[s.id] === false : true;
           return (
-            <div key={s.id} className="rounded-2xl border bg-card p-4">
+            <div key={s.id} className="card-amber rounded-2xl border bg-card p-4">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="truncate font-semibold">{s.full_name || s.email}</div>

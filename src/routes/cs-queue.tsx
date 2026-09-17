@@ -65,7 +65,7 @@ function CsQueuePage() {
   return (
     <AppShell title="CS queue" description="Client requests that need attention">
       {isLoading && <p className="text-sm text-muted-foreground">Loading queue…</p>}
-      <div className="overflow-x-auto rounded-2xl border bg-card">
+      <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
