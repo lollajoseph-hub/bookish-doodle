@@ -631,20 +631,35 @@ function SkillsSection({ skills }: { skills: CandidateDetail["skills"] }) {
 }
 
 function WorkHistorySection({ workHistory }: { workHistory: CandidateDetail["workHistory"] }) {
+  const [expanded, setExpanded] = useState(false);
+  const visible = expanded ? workHistory : workHistory.slice(0, 5);
+  const hidden = workHistory.length - visible.length;
   return (
     <SectionCard title="Work history">
       <div className="space-y-4">
         {workHistory.length ? (
-          workHistory.map((w) => (
-            <div key={w.id} className="border-l-2 border-primary/40 pl-3">
-              <div className="font-medium">{w.title || "Role"}</div>
-              <div className="text-sm text-muted-foreground">
-                {w.company}{" "}
-                {dateRange(w.start_date, w.end_date) && `· ${dateRange(w.start_date, w.end_date)}`}
+          <>
+            {visible.map((w) => (
+              <div key={w.id} className="border-l-2 border-primary/40 pl-3">
+                <div className="font-medium">{w.title || "Role"}</div>
+                <div className="text-sm text-muted-foreground">
+                  {w.company}{" "}
+                  {dateRange(w.start_date, w.end_date) && `· ${dateRange(w.start_date, w.end_date)}`}
+                </div>
+                {w.description && <p className="mt-1 text-sm">{w.description}</p>}
               </div>
-              {w.description && <p className="mt-1 text-sm">{w.description}</p>}
-            </div>
-          ))
+            ))}
+            {(hidden > 0 || expanded) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary"
+                onClick={() => setExpanded((v) => !v)}
+              >
+                {expanded ? "See less" : `See more (${hidden})`}
+              </Button>
+            )}
+          </>
         ) : (
           <p className="text-sm text-muted-foreground">No work history recorded.</p>
         )}
