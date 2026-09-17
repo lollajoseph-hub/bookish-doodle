@@ -175,16 +175,15 @@ function CandidatesPage() {
   }, [filtered, roles, activeRole]);
 
   return (
-    <AppShell
-      title="Candidate Pool"
-      description="All candidates, grouped by role"
-      actions={
-        <Button onClick={() => navigate({ to: "/candidates/new" })}>
-          <Plus className="h-4 w-4 mr-1" /> Add candidate
-        </Button>
-      }
-    >
+    <AppShell title="Candidate Pool" description="All candidates, grouped by role">
       <div className="space-y-5">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">Every candidate in the pool, grouped by role</p>
+          <Button onClick={() => navigate({ to: "/candidates/new" })}>
+            <Plus className="h-4 w-4 mr-1" /> Add candidate
+          </Button>
+        </div>
+
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
