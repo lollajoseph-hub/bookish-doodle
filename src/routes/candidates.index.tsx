@@ -6,7 +6,6 @@ import { z } from "zod";
 import { AppShell } from "@/components/app-shell";
 import { CandidateFormDialog } from "@/components/candidate-form-dialog";
 import { fetchCandidates, fetchJobRoles, type CandidateListItem } from "@/lib/queries";
-import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -138,7 +137,6 @@ function CandidateTile({
 function CandidatesPage() {
   const navigate = useNavigate({ from: "/candidates/" });
   const { role } = Route.useSearch();
-  const { profile } = useAuth();
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -149,13 +147,6 @@ function CandidatesPage() {
     queryFn: fetchCandidates,
   });
   const activeRole = role ?? "all";
-
-  const selectRole = (nextRole: string) => {
-    navigate({
-      search: nextRole === "all" ? {} : { role: nextRole },
-      replace: true,
-    });
-  };
 
   const roleName = useMemo(() => new Map(roles.map((r) => [r.id, r.name])), [roles]);
 
@@ -209,43 +200,6 @@ function CandidatesPage() {
           <div className="text-sm text-muted-foreground">
             {filtered.length} of {candidates.length} candidates
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => selectRole("all")}
-            className={`rounded-full border px-3 py-1.5 text-sm transition-all ${
-              activeRole === "all"
-                ? "border-amber bg-amber text-amber-foreground font-medium"
-                : "border-border bg-card hover:border-primary hover:text-primary"
-            }`}
-          >
-            All roles
-          </button>
-          {roles.map((r) => {
-            const count = filtered.filter((c) => c.roleIds.includes(r.id)).length;
-            return (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => selectRole(r.id)}
-                className={`rounded-full border px-3 py-1.5 text-sm transition-all ${
-                  activeRole === r.id
-                    ? "border-amber bg-amber text-amber-foreground font-medium"
-                    : "border-border bg-card hover:border-primary hover:text-primary"
-                }`}
-              >
-                {r.name}
-                <span className="ml-1.5 text-xs opacity-70">{count}</span>
-              </button>
-            );
-          })}
-          {profile?.role === "admin" && (
-            <Button variant="outline" size="sm" onClick={() => navigate({ to: "/roles" })}>
-              <Plus className="h-3.5 w-3.5 mr-1" /> Add new role
-            </Button>
-          )}
         </div>
 
         {isLoading && <p className="text-sm text-muted-foreground">Loading candidates…</p>}
