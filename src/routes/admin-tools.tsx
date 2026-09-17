@@ -120,7 +120,7 @@ function AdminToolsPage() {
             />
           </div>
           {isLoading && <p className="text-sm text-muted-foreground">Loading candidates…</p>}
-          <div className="divide-y card-amber rounded-2xl border bg-card">
+          <div className="divide-y overflow-hidden card-amber rounded-2xl border bg-card">
             {filtered.map((c) => (
               <button
                 key={c.id}
