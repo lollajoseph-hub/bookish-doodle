@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/lib/auth";
-import { fetchAuditLogs } from "@/lib/crm-queries";
+import { fetchAuditLogs, fetchMyAuditLogs } from "@/lib/crm-queries";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
