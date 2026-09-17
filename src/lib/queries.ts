@@ -146,13 +146,18 @@ export async function fetchSkills(): Promise<SkillRow[]> {
   return data ?? [];
 }
 
-async function resolveSkillIds(names: string[]): Promise<string[]> {
+export const LANGUAGE_CATEGORY = "Languages";
+
+/** Resolve (creating when needed) skill ids for the given names within one category. */
+async function resolveSkillIdsInCategory(names: string[], category: string): Promise<string[]> {
   const cleaned = Array.from(
     new Set(names.map((n) => n.trim()).filter((n) => n.length > 0)),
   );
   if (!cleaned.length) return [];
   const existing = await fetchSkills();
-  const byName = new Map(existing.map((s) => [s.name.toLowerCase(), s.id]));
+  const byName = new Map(
+    existing.filter((s) => s.category === category).map((s) => [s.name.toLowerCase(), s.id]),
+  );
   const ids: string[] = [];
   const toCreate: string[] = [];
   for (const name of cleaned) {
@@ -163,13 +168,42 @@ async function resolveSkillIds(names: string[]): Promise<string[]> {
   if (toCreate.length) {
     const { data, error } = await supabase
       .from("skills")
-      .insert(toCreate.map((name) => ({ name })))
+      .insert(toCreate.map((name) => ({ name, category })))
       .select("id");
     if (error) throw error;
     ids.push(...(data ?? []).map((s) => s.id));
   }
   return ids;
 }
+
+/**
+ * Replace ONLY the Languages-category skill links for a candidate.
+ * Skill rows in other categories are AI-owned and are never touched here.
+ */
+export async function syncLanguages(candidateId: string, languageNames: string[]): Promise<void> {
+  const allSkills = await fetchSkills();
+  const languageSkillIds = allSkills
+    .filter((s) => s.category === LANGUAGE_CATEGORY)
+    .map((s) => s.id);
+
+  if (languageSkillIds.length) {
+    const { error } = await supabase
+      .from("candidate_skills")
+      .delete()
+      .eq("candidate_id", candidateId)
+      .in("skill_id", languageSkillIds);
+    if (error) throw error;
+  }
+
+  const ids = await resolveSkillIdsInCategory(languageNames, LANGUAGE_CATEGORY);
+  if (ids.length) {
+    const { error } = await supabase
+      .from("candidate_skills")
+      .insert(ids.map((skill_id) => ({ candidate_id: candidateId, skill_id })));
+    if (error) throw error;
+  }
+}
+
 
 /* ------------------------------ candidate CRUD ------------------------------ */
 
