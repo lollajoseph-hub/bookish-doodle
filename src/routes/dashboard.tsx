@@ -8,7 +8,6 @@ import {
   Briefcase,
   UserCheck,
   Sparkles,
-  ArrowRight,
   RefreshCw,
   Building2,
   ClipboardList,
@@ -196,13 +195,7 @@ function DashboardPage() {
             : "Welcome"
       }
       description="ScaleSource Candidate Pool Review System"
-      actions={
-        <Button asChild>
-          <Link to="/candidates">
-            Browse pool <ArrowRight className="ml-1 h-4 w-4" />
-          </Link>
-        </Button>
-      }
+      actions={null}
     >
       <div className="space-y-8">
         <div className="flex flex-wrap items-start justify-between gap-3">
