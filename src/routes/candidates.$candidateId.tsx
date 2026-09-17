@@ -241,11 +241,7 @@ function CandidateDetailPage() {
       title={c.full_name}
       description={c.headline ?? roleNames.join(", ")}
       actions={
-        canEdit ? (
-          <Button onClick={() => setEditOpen(true)}>
-            <Pencil className="mr-1 h-4 w-4" /> Edit
-          </Button>
-        ) : (
+        canEdit ? null : (
           <Badge variant="secondary" className="gap-1">
             <Lock className="h-3 w-3" /> View only
           </Badge>
