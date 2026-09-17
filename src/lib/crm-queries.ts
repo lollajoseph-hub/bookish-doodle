@@ -660,6 +660,17 @@ export async function fetchAuditLogs(limit = 200): Promise<AuditLogView[]> {
   }));
 }
 
+export async function fetchMyAuditLogs(userId: string, limit = 200): Promise<AuditLogRow[]> {
+  const { data, error } = await supabase
+    .from("audit_logs")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as AuditLogRow[];
+}
+
 /* ----------------------- candidate media (photo/video) -------------------- */
 
 export async function fetchCandidateMedia(candidateId: string): Promise<{

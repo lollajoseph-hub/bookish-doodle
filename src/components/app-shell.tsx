@@ -100,11 +100,10 @@ const navGroups: Array<{ label: string; items: NavItem[]; adminOnly?: boolean }>
   },
   {
     label: "Activity",
-    adminOnly: true,
     items: [
       { to: "/notifications", label: "Notifications", icon: Bell },
-      { to: "/recruiter-activity", label: "Recruiter Activity", icon: History },
       { to: "/audit-logs", label: "Activity Log", icon: ScrollText },
+      { to: "/recruiter-activity", label: "Recruiter Activity", icon: History, adminOnly: true },
     ],
   },
 ];

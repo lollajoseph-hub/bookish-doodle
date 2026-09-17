@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/lib/auth";
-import { fetchAuditLogs } from "@/lib/crm-queries";
+import { fetchAuditLogs, fetchMyAuditLogs } from "@/lib/crm-queries";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -17,10 +17,10 @@ export const Route = createFileRoute("/audit-logs")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Audit logs | ScaleSource Candidate Review Dashboard" },
-      { name: "description", content: "Admin-only record of changes made across the candidate review system." },
-      { property: "og:title", content: "Audit logs | ScaleSource" },
-      { property: "og:description", content: "Admin-only change history for the ScaleSource dashboard." },
+      { title: "Activity log | ScaleSource Candidate Review Dashboard" },
+      { name: "description", content: "Activity log of actions in the ScaleSource Candidate Review Dashboard." },
+      { property: "og:title", content: "Activity log | ScaleSource" },
+      { property: "og:description", content: "Activity log of actions in the ScaleSource dashboard." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -32,21 +32,23 @@ function AuditLogsPage() {
   const { profile } = useAuth();
   const isAdmin = profile?.role === "admin";
   const { data: logs = [], isLoading } = useQuery({
-    queryKey: ["audit-logs"],
-    queryFn: () => fetchAuditLogs(),
-    enabled: isAdmin,
+    queryKey: ["audit-logs", isAdmin ? "all" : profile?.id],
+    queryFn: async () => {
+      if (isAdmin) return fetchAuditLogs();
+      const rows = await fetchMyAuditLogs(profile!.id);
+      return rows.map((l) => ({
+        ...l,
+        userName: profile?.full_name ?? profile?.email ?? null,
+      }));
+    },
+    enabled: !!profile?.id,
   });
 
-  if (!isAdmin) {
-    return (
-      <AppShell title="Audit logs">
-        <p className="text-sm text-muted-foreground">Only admins can view the audit log.</p>
-      </AppShell>
-    );
-  }
-
   return (
-    <AppShell title="Audit logs" description="Recent changes across the system">
+    <AppShell
+      title={isAdmin ? "Activity Log" : "My Activity"}
+      description={isAdmin ? "Recent changes across the system" : "Your recent actions in the system"}
+    >
       {isLoading && <p className="text-sm text-muted-foreground">Loading logs…</p>}
       <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
         <Table>
