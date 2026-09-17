@@ -17,7 +17,6 @@ import {
   BadgeCheck,
   UserPlus,
   UserMinus,
-  ListChecks,
   Activity,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";

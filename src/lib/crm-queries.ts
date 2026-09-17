@@ -349,6 +349,16 @@ export async function addMatch(input: {
     status: "recommended",
   });
   if (error) throw error;
+
+  // A brand-new candidate becomes "shortlisted" the moment they enter a client pipeline.
+  const { data: candidate } = await supabase
+    .from("candidates")
+    .select("status")
+    .eq("id", input.candidate_id)
+    .maybeSingle();
+  if (candidate?.status === "new") {
+    await supabase.from("candidates").update({ status: "shortlisted" }).eq("id", input.candidate_id);
+  }
 }
 
 export async function updateMatchStatus(
@@ -364,6 +374,53 @@ export async function updateMatchStatus(
   }
   const { error } = await supabase.from("candidate_matches").update(patch).eq("id", id);
   if (error) throw error;
+
+  if (status === "hired") await confirmPlacementForMatch(id);
+}
+
+/** When a match is marked hired, mark the candidate placed and create the placement row. */
+async function confirmPlacementForMatch(matchId: string): Promise<void> {
+  const { data: match } = await supabase
+    .from("candidate_matches")
+    .select("candidate_id, client_request_id")
+    .eq("id", matchId)
+    .maybeSingle();
+  if (!match) return;
+
+  await supabase.from("candidates").update({ status: "placed" }).eq("id", match.candidate_id);
+
+  const { data: existing } = await supabase
+    .from("placements")
+    .select("id")
+    .eq("candidate_id", match.candidate_id)
+    .eq("client_request_id", match.client_request_id)
+    .maybeSingle();
+  if (existing) return;
+
+  const { data: request } = await supabase
+    .from("client_requests")
+    .select("client_id, role_id, title")
+    .eq("id", match.client_request_id)
+    .maybeSingle();
+  if (!request) return;
+
+  let seatTitle: string | null = request.title ?? null;
+  if (!seatTitle && request.role_id) {
+    const { data: role } = await supabase
+      .from("job_roles")
+      .select("name")
+      .eq("id", request.role_id)
+      .maybeSingle();
+    seatTitle = role?.name ?? null;
+  }
+
+  await supabase.from("placements").insert({
+    candidate_id: match.candidate_id,
+    client_id: request.client_id,
+    client_request_id: match.client_request_id,
+    role_id: request.role_id,
+    seat_title: seatTitle,
+  });
 }
 
 export async function fetchAllMatches(): Promise<CandidateMatchRow[]> {
