@@ -27,7 +27,6 @@ import {
 import { NotificationsBell } from "@/components/notifications-bell";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useAuth, isStaff } from "@/lib/auth";
-import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

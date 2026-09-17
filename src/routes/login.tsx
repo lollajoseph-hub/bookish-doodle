@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
-import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
