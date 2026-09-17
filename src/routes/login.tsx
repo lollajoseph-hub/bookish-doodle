@@ -54,32 +54,28 @@ function LoginPage() {
     navigate({ to: redirect || "/dashboard", replace: true });
   }
 
-  async function sendMagicLink() {
-    if (!email) {
-      toast.error("Enter your email first");
-      return;
-    }
-    const { error } = await supabase.auth.signInWithOtp({ email });
-    if (error) toast.error(error.message);
-    else toast.success("Magic link sent — check your inbox");
-  }
-
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      <div className="login-panel-enter hidden lg:flex flex-col justify-between bg-primary text-primary-foreground p-10">
+      <div className="login-panel-enter relative hidden overflow-hidden bg-primary text-primary-foreground lg:flex lg:flex-col lg:justify-between p-6 lg:p-8">
+        <div aria-hidden="true" className="login-panel-artwork">
+          <span className="login-panel-arc login-panel-arc-one" />
+          <span className="login-panel-arc login-panel-arc-two" />
+          <span className="login-panel-line login-panel-line-one" />
+          <span className="login-panel-line login-panel-line-two" />
+          <span className="login-panel-plane" />
+        </div>
         <img
           src={whiteBrandLogo.url}
           alt="ScaleSource"
-          className="h-14 w-auto max-w-full self-start object-contain drop-shadow-sm"
+          className="relative z-10 h-7 w-auto max-w-full self-start object-contain"
         />
-        <div>
-          <h2 className="text-3xl font-semibold leading-tight">Candidate Review Workstation</h2>
-          <p className="mt-3 max-w-md text-primary-foreground/75">
-            Review the ScaleSource candidate pool by role — CSR, sales support, bookkeeping,
-            executive assistance, office support and marketing.
-          </p>
+        <div className="relative z-10 max-w-lg pb-8">
+          <h1 className="text-5xl font-bold leading-tight lg:text-6xl">Welcome to ScaleSource</h1>
+          <div className="mt-6 h-1 w-16 rounded-full bg-amber" aria-hidden="true" />
         </div>
-        <p className="text-xs text-primary-foreground/60">ScaleSource Candidate Pool Review System</p>
+        <p className="relative z-10 text-xs text-primary-foreground/60">
+          ScaleSource Candidate Pool Review System
+        </p>
       </div>
 
       <div className="flex items-center justify-center px-4 py-12 bg-background">
@@ -89,13 +85,8 @@ function LoginPage() {
             alt="ScaleSource"
             className="mb-8 h-12 w-auto max-w-full object-contain object-left drop-shadow-sm lg:hidden"
           />
-          <h1 className="text-2xl font-semibold leading-tight">
-            Welcome to ScaleSource Candidate Review Workstation
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Sign in to continue to your recruiting workspace.
-          </p>
-          <form onSubmit={onSubmit} className="mt-6 space-y-4">
+          <h2 className="text-lg font-semibold leading-tight">Sign in</h2>
+          <form onSubmit={onSubmit} className="mt-5 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -135,11 +126,8 @@ function LoginPage() {
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Sign in
-            </Button>
-            <Button type="button" variant="outline" className="w-full" onClick={sendMagicLink}>
-              Email me a magic link
+            <Button type="submit" className="login-submit-button w-full" disabled={submitting}>
+              {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Submit
             </Button>
           </form>
         </div>
