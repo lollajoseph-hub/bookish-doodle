@@ -544,6 +544,48 @@ function DashboardPage() {
           </section>
         )}
 
+        {!isAdmin && (
+          <section className="space-y-3">
+            <SectionTitle>My overview</SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard
+                label="My candidates"
+                value={myStats.total}
+                icon={Users}
+                loading={loadingCore}
+              />
+              <StatCard label="Total roles" value={roles.length} icon={Briefcase} loading={rolesQ.isLoading} />
+            </div>
+            <div className="card-amber rounded-2xl border bg-card p-5">
+              <SectionTitle>
+                <span className="flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-primary" /> Recent activity
+                </span>
+              </SectionTitle>
+              <div className="mt-3 space-y-2">
+                {candidatesQ.isLoading && <p className="text-sm text-muted-foreground">Loading activity…</p>}
+                {myCandidates.slice(0, 10).map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3 text-sm"
+                  >
+                    <div className="min-w-0">
+                      <span className="font-medium">{c.full_name}</span>{" "}
+                      <span className="text-muted-foreground">· {labelize(c.status ?? "new")}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
+                    </span>
+                  </div>
+                ))}
+                {!candidatesQ.isLoading && !myCandidates.length && (
+                  <p className="text-sm text-muted-foreground">No recorded activity yet.</p>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
 
         <section className="card-amber rounded-2xl border bg-card p-5">
           <SectionTitle
