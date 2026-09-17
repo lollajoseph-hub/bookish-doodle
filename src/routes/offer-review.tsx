@@ -85,7 +85,7 @@ function OfferReviewPage() {
           Awaiting decision
         </h2>
         {isLoading && <p className="text-sm text-muted-foreground">Loading offers…</p>}
-        <div className="overflow-x-auto rounded-2xl border bg-card">
+        <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
           <Table>
             <TableHeader>
               <TableRow>
@@ -151,7 +151,7 @@ function OfferReviewPage() {
         <p className="text-sm text-muted-foreground">
           The offer was accepted — add the commercial terms to create the placement record.
         </p>
-        <div className="overflow-x-auto rounded-2xl border bg-card">
+        <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
           <Table>
             <TableHeader>
               <TableRow>

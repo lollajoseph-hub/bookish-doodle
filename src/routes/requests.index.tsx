@@ -153,7 +153,7 @@ function RequestsPage() {
               key={r.id}
               to="/requests/$requestId"
               params={{ requestId: r.id }}
-              className="rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-amber hover:shadow-md"
+              className="card-amber rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-amber hover:shadow-md"
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>

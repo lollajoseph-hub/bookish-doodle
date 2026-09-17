@@ -44,7 +44,7 @@ function downloadCsv(name: string, rows: [string, number][]) {
 function ReportCard({ title, rows }: { title: string; rows: [string, number][] }) {
   const total = rows.reduce((s, [, v]) => s + v, 0) || 1;
   return (
-    <div className="rounded-2xl border bg-card p-5">
+    <div className="card-amber rounded-2xl border bg-card p-5">
       <div className="mb-4 flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold">{title}</h2>
         <Button
@@ -119,19 +119,19 @@ function ReportsPage() {
   return (
     <AppShell title="Reports" description="Pipeline summary you can print or export">
       <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border bg-card p-4">
+        <div className="card-amber rounded-2xl border bg-card p-4">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">Placements this month</div>
           <div className="mt-1 text-2xl font-semibold">{placedThisMonth}</div>
         </div>
-        <div className="rounded-2xl border bg-card p-4">
+        <div className="card-amber rounded-2xl border bg-card p-4">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">Placements last month</div>
           <div className="mt-1 text-2xl font-semibold">{placedLastMonth}</div>
         </div>
-        <div className="rounded-2xl border bg-card p-4">
+        <div className="card-amber rounded-2xl border bg-card p-4">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">Total candidates</div>
           <div className="mt-1 text-2xl font-semibold">{candidates.length}</div>
         </div>
-        <div className="rounded-2xl border bg-card p-4">
+        <div className="card-amber rounded-2xl border bg-card p-4">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">Total requests</div>
           <div className="mt-1 text-2xl font-semibold">{requests.length}</div>
         </div>

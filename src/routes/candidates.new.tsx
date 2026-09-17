@@ -33,7 +33,7 @@ function NewCandidatePage() {
         <Link to="/candidates" className="inline-flex items-center text-sm text-primary hover:underline">
           <ArrowLeft className="mr-1 h-4 w-4" /> Back to candidate pool
         </Link>
-        <div className="rounded-2xl border bg-card p-5 sm:p-6">
+        <div className="card-amber rounded-2xl border bg-card p-5 sm:p-6">
           <CandidateForm
             onCancel={() => navigate({ to: "/candidates" })}
             onSaved={(id) => navigate({ to: "/candidates/$candidateId", params: { candidateId: id } })}

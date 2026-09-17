@@ -43,7 +43,7 @@ function ForgotPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/40 to-accent/40 px-4">
-      <div className="w-full max-w-md rounded-2xl border bg-card shadow-xl p-8">
+      <div className="w-full max-w-md card-amber rounded-2xl border bg-card shadow-xl p-8">
         <h1 className="text-2xl font-semibold tracking-tight">Reset password</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           We'll email you a recovery link.

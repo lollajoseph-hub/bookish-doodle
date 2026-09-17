@@ -82,7 +82,7 @@ function StatCard({
 }) {
   const t = TONES[tone];
   return (
-    <div className="rounded-2xl border bg-card p-5 transition-all hover:-translate-y-0.5 hover:shadow-md">
+    <div className="card-amber rounded-2xl border bg-card p-5 transition-all hover:-translate-y-0.5 hover:shadow-md">
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">{label}</span>
         <div className={`grid h-9 w-9 place-items-center rounded-xl ${t.wrap}`}>
@@ -336,7 +336,7 @@ function DashboardPage() {
               <StatCard label="Team members" value={staff.length} icon={Users} loading={staffQ.isLoading} />
               <StatCard label="Total roles" value={roles.length} icon={Briefcase} loading={rolesQ.isLoading} />
             </div>
-            <div className="rounded-2xl border bg-card p-5">
+            <div className="card-amber rounded-2xl border bg-card p-5">
               <SectionTitle>
                 <span className="flex items-center gap-2">
                   <Activity className="h-4 w-4 text-primary" /> Recent activity
@@ -368,7 +368,7 @@ function DashboardPage() {
           </section>
         )}
 
-        <section className="rounded-2xl border bg-card p-5">
+        <section className="card-amber rounded-2xl border bg-card p-5">
           <SectionTitle
             action={
               <Link to="/roles" className="text-sm text-primary hover:underline">
@@ -398,7 +398,7 @@ function DashboardPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border bg-card p-5">
+        <section className="card-amber rounded-2xl border bg-card p-5">
           <SectionTitle>Recently added</SectionTitle>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {recent.map((c) => (

@@ -65,7 +65,7 @@ function NotificationsPage() {
         {items.map((n) => (
           <div
             key={n.id}
-            className={`flex items-start justify-between gap-3 rounded-2xl border bg-card p-4 transition-all hover:border-primary/50 ${
+            className={`flex items-start justify-between gap-3 card-amber rounded-2xl border bg-card p-4 transition-all hover:border-primary/50 ${
               n.read ? "" : "border-amber/60 bg-amber/5"
             }`}
           >

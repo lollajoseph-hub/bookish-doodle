@@ -31,7 +31,7 @@ function formatBytes(bytes: number) {
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-2xl border bg-card p-4">
+    <div className="card-amber rounded-2xl border bg-card p-4">
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="mt-1 text-2xl font-semibold">{value}</div>
     </div>
@@ -90,7 +90,7 @@ function SystemMonitorPage() {
 
       <section>
         <h2 className="mb-3 text-sm font-semibold">Latest activity</h2>
-        <div className="divide-y rounded-2xl border bg-card">
+        <div className="divide-y card-amber rounded-2xl border bg-card">
           {logs.map((l) => (
             <div key={l.id} className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0">

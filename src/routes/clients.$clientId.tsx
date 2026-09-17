@@ -138,7 +138,7 @@ function ClientDetailPage() {
   if (error || !data) {
     return (
       <AppShell title="Client">
-        <div className="rounded-2xl border bg-card p-8 text-center">
+        <div className="card-amber rounded-2xl border bg-card p-8 text-center">
           <p className="font-medium">Client not found</p>
           <Button className="mt-4" onClick={() => navigate({ to: "/clients" })}>
             Back to clients
@@ -174,7 +174,7 @@ function ClientDetailPage() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
-            <section className="rounded-2xl border bg-card p-5">
+            <section className="card-amber rounded-2xl border bg-card p-5">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
                   Open requests
@@ -211,7 +211,7 @@ function ClientDetailPage() {
               </div>
             </section>
 
-            <section className="rounded-2xl border bg-card p-5">
+            <section className="card-amber rounded-2xl border bg-card p-5">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
                 Placements
               </h2>
@@ -237,7 +237,7 @@ function ClientDetailPage() {
           </div>
 
           <div className="space-y-6">
-            <section className="rounded-2xl border bg-card p-5">
+            <section className="card-amber rounded-2xl border bg-card p-5">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
                   Contacts
@@ -290,7 +290,7 @@ function ClientDetailPage() {
               </div>
             </section>
 
-            <section className="rounded-2xl border bg-card p-5 text-sm">
+            <section className="card-amber rounded-2xl border bg-card p-5 text-sm">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
                 Company
               </h2>

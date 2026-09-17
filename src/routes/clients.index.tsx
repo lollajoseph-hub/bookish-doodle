@@ -140,7 +140,7 @@ function ClientsPage() {
             key={c.id}
             to="/clients/$clientId"
             params={{ clientId: c.id }}
-            className="rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-amber hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber"
+            className="card-amber rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-amber hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2">

@@ -120,7 +120,7 @@ function AdminToolsPage() {
             />
           </div>
           {isLoading && <p className="text-sm text-muted-foreground">Loading candidates…</p>}
-          <div className="divide-y rounded-2xl border bg-card">
+          <div className="divide-y card-amber rounded-2xl border bg-card">
             {filtered.map((c) => (
               <button
                 key={c.id}
@@ -144,7 +144,7 @@ function AdminToolsPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border bg-card p-5">
+        <div className="card-amber rounded-2xl border bg-card p-5">
           {!selected ? (
             <p className="text-sm text-muted-foreground">
               Pick a candidate on the left to change status, reassign or archive.

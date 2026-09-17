@@ -74,7 +74,7 @@ function PlacementsPage() {
         {filtered.map((p) => (
           <div
             key={p.id}
-            className="rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
+            className="card-amber rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
           >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="flex items-center gap-2">

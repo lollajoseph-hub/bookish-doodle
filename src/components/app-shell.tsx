@@ -304,7 +304,7 @@ export function AppShell({
   if (!isStaff(profile)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="max-w-md text-center rounded-2xl border bg-card p-8 shadow-sm">
+        <div className="max-w-md text-center card-amber rounded-2xl border bg-card p-8 shadow-sm">
           <ShieldCheck className="mx-auto h-10 w-10 text-primary" />
           <h1 className="mt-4 text-xl font-semibold">Access restricted</h1>
           <p className="mt-2 text-sm text-muted-foreground">
