@@ -262,6 +262,7 @@ function RequestsPage() {
             <DialogDescription>Define the seat and the size of the review batch.</DialogDescription>
           </DialogHeader>
 
+          <ArrowScrollArea>
           <FormSection title="Client & title" first>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
