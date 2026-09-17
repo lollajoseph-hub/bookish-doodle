@@ -386,6 +386,7 @@ function RequestsPage() {
           <FormSection title="Additional notes" description="Anything else the sourcing team should know.">
             <Textarea id="req-notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
           </FormSection>
+          </ArrowScrollArea>
 
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>
