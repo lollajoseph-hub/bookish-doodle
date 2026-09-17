@@ -65,7 +65,7 @@ function LoginPage() {
       </div>
 
       <div className="relative z-10 flex min-h-screen items-center justify-center p-5 sm:p-8 lg:p-12">
-        <main className="relative grid w-full max-w-6xl overflow-hidden rounded-2xl border border-primary-foreground/15 bg-primary-dark/45 shadow-2xl backdrop-blur-md lg:min-h-[620px] lg:grid-cols-[1.15fr_0.85fr]">
+        <main className="login-card-amber-border relative grid w-full max-w-6xl overflow-hidden rounded-2xl bg-primary-dark/45 shadow-2xl backdrop-blur-md lg:min-h-[620px] lg:grid-cols-[1.15fr_0.85fr]">
           <div aria-hidden="true" className="login-panel-artwork login-card-artwork">
             <span className="login-panel-arc login-panel-arc-one" />
             <span className="login-panel-arc login-panel-arc-two" />
@@ -142,7 +142,7 @@ function LoginPage() {
             </form>
             </div>
           </section>
-          <span aria-hidden="true" className="login-card-amber-edge" />
+          
         </main>
       </div>
     </div>
