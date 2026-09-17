@@ -12,6 +12,8 @@ import {
   type EducationInput,
   type WorkHistoryInput,
 } from "@/lib/queries";
+import { uploadCandidateFile } from "@/lib/crm-queries";
+import type { CandidateFileType } from "@/lib/database.types";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +37,13 @@ import {
 } from "@/components/ui/select";
 
 const STATUSES = ["new", "screening", "shortlisted", "placed", "archived"];
+
+const UPLOAD_FIELDS: { key: CandidateFileType; label: string; accept?: string }[] = [
+  { key: "profile_photo", label: "Profile photo", accept: "image/*" },
+  { key: "resume", label: "Resume", accept: ".pdf,.doc,.docx" },
+  { key: "id_document", label: "ID document", accept: "image/*,.pdf" },
+  { key: "other", label: "Other / reference documents" },
+];
 
 function emptyForm(recruiterId: string | null): CandidateFormInput {
   return {
@@ -69,6 +78,7 @@ export function CandidateFormDialog({
   const queryClient = useQueryClient();
   const [form, setForm] = useState<CandidateFormInput>(() => emptyForm(profile?.id ?? null));
   const [skillInput, setSkillInput] = useState("");
+  const [files, setFiles] = useState<Partial<Record<CandidateFileType, File>>>({});
 
   const { data: roles = [] } = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: fetchStaffProfiles });
@@ -109,6 +119,7 @@ export function CandidateFormDialog({
       });
     } else if (!candidateId) {
       setForm(emptyForm(profile?.id ?? null));
+      setFiles({});
     }
   }, [open, candidateId, detail, profile?.id]);
 
@@ -119,12 +130,36 @@ export function CandidateFormDialog({
         await updateCandidate(candidateId, form);
         return candidateId;
       }
-      return createCandidate(form, profile?.id ?? null);
+      const newId = await createCandidate(form, profile?.id ?? null);
+
+      const pending = (Object.entries(files) as [CandidateFileType, File][]).filter(([, f]) => !!f);
+      if (pending.length) {
+        const results = await Promise.all(
+          pending.map(([fileType, file]) =>
+            uploadCandidateFile({ candidateId: newId, file, fileType, uploadedBy: profile?.id ?? null })
+              .then(() => ({ fileType, ok: true as const }))
+              .catch((e: Error) => ({ fileType, ok: false as const, message: e.message })),
+          ),
+        );
+        const ok = results.filter((r) => r.ok);
+        const failed = results.filter((r) => !r.ok);
+        if (ok.length) toast.success(`${ok.length} file${ok.length > 1 ? "s" : ""} uploaded`);
+        for (const f of failed) {
+          toast.error(
+            `${UPLOAD_FIELDS.find((u) => u.key === f.fileType)?.label ?? f.fileType} failed to upload${
+              "message" in f && f.message ? `: ${f.message}` : ""
+            }`,
+          );
+        }
+      }
+      return newId;
     },
     onSuccess: (id) => {
       toast.success(candidateId ? "Candidate updated" : "Candidate added");
       queryClient.invalidateQueries({ queryKey: ["candidates"] });
       queryClient.invalidateQueries({ queryKey: ["candidate", id] });
+      queryClient.invalidateQueries({ queryKey: ["candidate-files", id] });
+      setFiles({});
       onOpenChange(false);
       onSaved?.(id);
     },
@@ -450,7 +485,46 @@ export function CandidateFormDialog({
               </div>
             ))}
           </section>
+
+          {!candidateId && (
+            <section className="space-y-3">
+              <div>
+                <Label>Documents</Label>
+                <p className="text-xs text-muted-foreground">
+                  Optional — attached right after the candidate is created.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {UPLOAD_FIELDS.map((f) => (
+                  <div key={f.key} className="space-y-1.5 rounded-xl border p-3 bg-primary-soft/40">
+                    <Label htmlFor={`file-${f.key}`} className="text-xs">
+                      {f.label}
+                    </Label>
+                    <Input
+                      id={`file-${f.key}`}
+                      type="file"
+                      accept={f.accept}
+                      className="h-9 text-xs"
+                      onChange={(e) =>
+                        setFiles((prev) => {
+                          const next = { ...prev };
+                          const picked = e.target.files?.[0];
+                          if (picked) next[f.key] = picked;
+                          else delete next[f.key];
+                          return next;
+                        })
+                      }
+                    />
+                    {files[f.key] && (
+                      <p className="truncate text-[11px] text-muted-foreground">{files[f.key]!.name}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
+
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
