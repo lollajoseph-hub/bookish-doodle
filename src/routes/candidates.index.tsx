@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Plus, Search, Mail, Phone, UserCheck, Users } from "lucide-react";
+import { z } from "zod";
 import { AppShell } from "@/components/app-shell";
 import { CandidateFormDialog } from "@/components/candidate-form-dialog";
 import { fetchCandidates, fetchJobRoles, type CandidateListItem } from "@/lib/queries";
@@ -10,8 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
+const candidateSearchSchema = z.object({ role: z.string().optional() });
+
 export const Route = createFileRoute("/candidates/")({
   ssr: false,
+  validateSearch: candidateSearchSchema,
   head: () => ({
     meta: [
       { title: "Candidate Pool | ScaleSource Candidate Review Dashboard" },
@@ -132,10 +136,10 @@ function CandidateTile({
 }
 
 function CandidatesPage() {
-  const navigate = useNavigate();
+  const navigate = useNavigate({ from: "/candidates/" });
+  const { role } = Route.useSearch();
   const { profile } = useAuth();
   const [search, setSearch] = useState("");
-  const [activeRole, setActiveRole] = useState<string>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
 
@@ -144,6 +148,14 @@ function CandidatesPage() {
     queryKey: ["candidates"],
     queryFn: fetchCandidates,
   });
+  const activeRole = role ?? "all";
+
+  const selectRole = (nextRole: string) => {
+    navigate({
+      search: nextRole === "all" ? {} : { role: nextRole },
+      replace: true,
+    });
+  };
 
   const roleName = useMemo(() => new Map(roles.map((r) => [r.id, r.name])), [roles]);
 
@@ -202,7 +214,7 @@ function CandidatesPage() {
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => setActiveRole("all")}
+            onClick={() => selectRole("all")}
             className={`rounded-full border px-3 py-1.5 text-sm transition-all ${
               activeRole === "all"
                 ? "border-amber bg-amber text-amber-foreground font-medium"
@@ -217,7 +229,7 @@ function CandidatesPage() {
               <button
                 key={r.id}
                 type="button"
-                onClick={() => setActiveRole(r.id)}
+                onClick={() => selectRole(r.id)}
                 className={`rounded-full border px-3 py-1.5 text-sm transition-all ${
                   activeRole === r.id
                     ? "border-amber bg-amber text-amber-foreground font-medium"
