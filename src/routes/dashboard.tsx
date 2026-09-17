@@ -17,7 +17,6 @@ import {
   BadgeCheck,
   UserPlus,
   UserMinus,
-  ListChecks,
   Activity,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -144,7 +143,6 @@ function DashboardPage() {
     return {
       total: candidates.length,
       newThisWeek: candidates.filter((c) => new Date(c.created_at).getTime() >= weekAgo).length,
-      screening: byStatus("screening"),
       shortlisted: byStatus("shortlisted"),
       placed: byStatus("placed"),
       mine: candidates.filter((c) => c.recruiter_id === profile?.id).length,
@@ -225,7 +223,6 @@ function DashboardPage() {
               hint="Added in the last 7 days"
               loading={loadingCore}
             />
-            <StatCard label="Screening" value={stats.screening} icon={ListChecks} loading={loadingCore} />
             <StatCard
               label="Shortlisted"
               value={stats.shortlisted}
