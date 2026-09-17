@@ -6,13 +6,13 @@ export const Route = createFileRoute("/roles")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Roles | Candidate Review System" },
+      { title: "Roles | ScaleSource Candidate Review Dashboard" },
       {
         name: "description",
         content: "Manage the roles candidates are grouped by, from CSR to marketing positions.",
       },
-      { property: "og:title", content: "Roles | Candidate Review System" },
-      { property: "og:description", content: "Manage candidate roles in the pool." },
+      { property: "og:title", content: "Roles | ScaleSource" },
+      { property: "og:description", content: "Manage candidate roles in the ScaleSource pool." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

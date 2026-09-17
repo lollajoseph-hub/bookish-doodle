@@ -38,16 +38,16 @@ export const Route = createFileRoute("/dashboard")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Operations overview | Candidate Review System" },
+      { title: "Operations overview | ScaleSource Candidate Review Dashboard" },
       {
         name: "description",
         content:
-          "Operations overview of the pipeline: candidates, client requests, matches and placements.",
+          "Operations overview of the ScaleSource pipeline: candidates, client requests, matches and placements.",
       },
-      { property: "og:title", content: "Operations overview | Candidate Review System" },
+      { property: "og:title", content: "Operations overview | ScaleSource" },
       {
         property: "og:description",
-        content: "Candidate, client and placement pipeline overview for staff.",
+        content: "Candidate, client and placement pipeline overview for ScaleSource staff.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -186,11 +186,15 @@ function DashboardPage() {
   return (
     <AppShell
       title={
-        profile?.full_name
-          ? `Welcome ${profile.full_name.split(" ")[0]}`
-          : "Welcome"
+        profile?.role === "admin" || profile?.role === "recruiter"
+          ? profile?.full_name
+            ? `Welcome, ${profile.full_name.split(" ")[0]}, to your ${profile.role} dashboard`
+            : `Welcome to your ${profile.role} dashboard`
+          : profile?.full_name
+            ? `Welcome, ${profile.full_name.split(" ")[0]}`
+            : "Welcome"
       }
-      description="Candidate Review System"
+      description="ScaleSource Candidate Pool Review System"
       actions={null}
     >
       <div className="space-y-8">

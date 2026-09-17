@@ -25,12 +25,12 @@ export const Route = createFileRoute("/recruiters")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Team | Candidate Review System" },
+      { title: "Team | ScaleSource Candidate Review Dashboard" },
       {
         name: "description",
-        content: "recruiters and admins, with the candidates each one owns.",
+        content: "ScaleSource recruiters and admins, with the candidates each one owns.",
       },
-      { property: "og:title", content: "Team | Candidate Review System" },
+      { property: "og:title", content: "Team | ScaleSource" },
       { property: "og:description", content: "Recruiters and admins in the candidate review system." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

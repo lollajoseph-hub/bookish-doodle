@@ -1,5 +1,5 @@
 /**
- * Types for the Candidate Review System schema
+ * Types for the ScaleSource Candidate Pool Review System schema
  * (Supabase project kjpozzjeddvctcabtnzg).
  */
 

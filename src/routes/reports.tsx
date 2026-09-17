@@ -11,10 +11,10 @@ export const Route = createFileRoute("/reports")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Reports | Candidate Review System" },
+      { title: "Reports | ScaleSource Candidate Review Dashboard" },
       { name: "description", content: "Summary of candidates, requests, matches and placements." },
-      { property: "og:title", content: "Reports | Candidate Review System" },
-      { property: "og:description", content: "Exportable summary of pipeline activity." },
+      { property: "og:title", content: "Reports | ScaleSource" },
+      { property: "og:description", content: "Exportable summary of ScaleSource pipeline activity." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
