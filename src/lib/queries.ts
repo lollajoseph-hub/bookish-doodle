@@ -275,6 +275,7 @@ export async function createCandidate(
       headline: input.headline,
       years_experience: input.years_experience,
       country: input.country,
+      intro_video_url: input.intro_video_url,
       created_by: createdBy,
     })
     .select("id")
@@ -296,6 +297,7 @@ export async function updateCandidate(id: string, input: CandidateFormInput): Pr
       headline: input.headline,
       years_experience: input.years_experience,
       country: input.country,
+      intro_video_url: input.intro_video_url,
     })
     .eq("id", id);
   if (error) throw error;
