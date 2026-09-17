@@ -1,13 +1,11 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
-  UserPlus,
   LayoutDashboard,
   Users,
   LogOut,
   Menu,
   ShieldCheck,
-  Briefcase,
   UserCog,
   Building2,
   ClipboardList,
@@ -25,7 +23,7 @@ import {
   History,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useAuth, isStaff } from "@/lib/auth";
 import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -75,8 +73,6 @@ const navGroups: Array<{ label: string; items: NavItem[]; adminOnly?: boolean }>
       { to: "/candidates", label: "Candidate Pool", icon: Users },
       { to: "/recruiters", label: "Recruiter Pool", icon: UserCog, adminOnly: true },
       { to: "/clients", label: "Client Pool", icon: Building2 },
-      { to: "/roles", label: "Roles", icon: Briefcase, adminOnly: true },
-      { to: "/team", label: "Add to Team", icon: UserPlus, adminOnly: true },
     ],
   },
   {
@@ -116,7 +112,14 @@ function initials(name?: string | null, email?: string | null) {
   return src.slice(0, 2).toUpperCase();
 }
 
+// Lives outside the component so it survives the remount on every navigation.
+let navScrollTop = 0;
+
 function SidebarNav({ onNav, isAdmin }: { onNav?: () => void; isAdmin: boolean }) {
+  const navRef = useRef<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    if (navRef.current) navRef.current.scrollTop = navScrollTop;
+  }, []);
   const path = useRouterState({ select: (s) => s.location.pathname });
   const roleSearch = useRouterState({
     select: (s) => (s.location.search as { role?: string }).role,
@@ -183,7 +186,13 @@ function SidebarNav({ onNav, isAdmin }: { onNav?: () => void; isAdmin: boolean }
 
 
   return (
-    <nav className="flex-1 space-y-1 px-3 py-4">
+    <nav
+      ref={navRef}
+      onScroll={(e) => {
+        navScrollTop = (e.currentTarget as HTMLElement).scrollTop;
+      }}
+      className="flex-1 space-y-1 overflow-y-auto px-3 py-4"
+    >
       {renderItem(dashboardItem)}
       {navGroups
         .filter((group) => !group.adminOnly || isAdmin)
@@ -280,7 +289,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen flex bg-background">
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col">{sidebar}</aside>
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col lg:flex">{sidebar}</aside>
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="p-0 w-72 bg-sidebar border-sidebar-border">
