@@ -13,6 +13,7 @@ import {
   Upload,
   Video,
   ExternalLink,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
@@ -29,6 +30,7 @@ import {
 } from "@/lib/crm-queries";
 import {
   addRecruiterNote,
+  deleteCandidate,
   fetchCandidateDetail,
   fetchJobRoles,
   fetchStaffProfiles,
@@ -41,6 +43,16 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -104,6 +116,7 @@ function CandidateDetailPage() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [note, setNote] = useState("");
   const [tab, setTab] = useState("overview");
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -174,6 +187,24 @@ function CandidateDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["candidate", candidateId] });
     },
     onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteCand = useMutation({
+    mutationFn: () => deleteCandidate(candidateId),
+    onSuccess: () => {
+      toast.success("Candidate deleted");
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      navigate({ to: "/candidates" });
+    },
+    onError: (e: Error & { code?: string }) => {
+      if (e.code === "23503" || /foreign key/i.test(e.message)) {
+        toast.error(
+          "This candidate has a placement on record and can't be deleted — archive them from Admin Tools instead.",
+        );
+      } else {
+        toast.error(e.message || "Delete failed");
+      }
+    },
   });
 
   if (isLoading) {
@@ -335,6 +366,15 @@ function CandidateDetailPage() {
                     </Select>
                   </div>
                 )}
+                {isAdmin && (
+                  <Button
+                    className="w-full justify-start"
+                    variant="destructive"
+                    onClick={() => setDeleteOpen(true)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete candidate
+                  </Button>
+                )}
               </div>
             </section>
           </div>
@@ -493,6 +533,32 @@ function CandidateDetailPage() {
       </div>
 
       <CandidateFormDialog open={editOpen} onOpenChange={setEditOpen} candidateId={candidateId} />
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {c.full_name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes their profile, files, notes, and match history. This can't
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteCand.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteCand.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                deleteCand.mutate(undefined, { onSettled: () => setDeleteOpen(false) });
+              }}
+            >
+              {deleteCand.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }

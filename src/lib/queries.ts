@@ -319,6 +319,11 @@ export async function updateCandidate(id: string, input: CandidateFormInput): Pr
   await syncChildren(id, input);
 }
 
+export async function deleteCandidate(id: string): Promise<void> {
+  const { error } = await supabase.from("candidates").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function addRecruiterNote(
   candidateId: string,
   recruiterId: string,
