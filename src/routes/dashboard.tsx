@@ -110,6 +110,7 @@ function SectionTitle({ children, action }: { children: React.ReactNode; action?
 
 function DashboardPage() {
   const { profile } = useAuth();
+  const isAdmin = profile?.role === "admin";
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -123,6 +124,7 @@ function DashboardPage() {
   const auditQ = useQuery({
     queryKey: ["audit-logs"],
     queryFn: () => fetchAuditLogs(20),
+    enabled: isAdmin,
   });
 
   const candidates = candidatesQ.data ?? [];
