@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-export const Route = createFileRoute("/recruiters")({
+export const Route = createFileRoute("/recruiters/")({
   ssr: false,
   head: () => ({
     meta: [
