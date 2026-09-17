@@ -194,8 +194,9 @@ export function CandidateForm({
   }
 
   return (
-    <div className="space-y-6">
-      <section className="grid gap-4 sm:grid-cols-2">
+    <div>
+      <FormSection title="Personal information" description="Basic contact details and assignment.">
+        <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="full_name">Full name *</Label>
           <Input
