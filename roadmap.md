@@ -12,3 +12,4 @@
 - [x] Restyle login as one floating purple card based on Lola’s supplied reference
 
 - [ ] Segment sidebar navigation, add admin toolkit and role deep-links
+- [ ] Implement approved segmented sidebar and synchronized role links
