@@ -197,7 +197,7 @@ function RequestsPage() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>New client request</DialogTitle>
             <DialogDescription>Define the seat and the size of the review batch.</DialogDescription>
