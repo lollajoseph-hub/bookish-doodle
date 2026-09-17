@@ -66,8 +66,22 @@ export function CandidateFilesCard({
     mutationFn: (file: File) =>
       uploadCandidateFile({ candidateId, file, fileType, uploadedBy: profile?.id ?? null }),
     onSuccess: () => {
-      toast.success("File uploaded");
       queryClient.invalidateQueries({ queryKey: ["candidate-files", candidateId] });
+      if (fileType === "resume") {
+        toast.success(
+          "Resume uploaded — AI is re-analyzing it, this page will update automatically in about 15-20 seconds."
+        );
+        // The AI pipeline re-processes the resume asynchronously; staggered
+        // invalidations pick up the newly-extracted data once it finishes.
+        for (const delay of [8000, 16000, 26000]) {
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ["candidate", candidateId] });
+            queryClient.invalidateQueries({ queryKey: ["candidate-ai", candidateId] });
+          }, delay);
+        }
+      } else {
+        toast.success("File uploaded");
+      }
     },
     onError: (e: Error) => toast.error(e.message || "Upload failed"),
   });
