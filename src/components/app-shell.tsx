@@ -59,7 +59,8 @@ type NavItem = {
     | "/system-monitor"
     | "/reports"
     | "/notifications"
-    | "/recruiter-activity";
+    | "/recruiter-activity"
+    | "/team";
   label: string;
   icon: typeof LayoutDashboard;
   adminOnly?: boolean;
