@@ -1,7 +1,19 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { ArrowLeft, Mail, Phone, Globe, Pencil, Lock, Loader2 } from "lucide-react";
+import { useRef, useState } from "react";
+import {
+  ArrowLeft,
+  Mail,
+  Phone,
+  Globe,
+  Pencil,
+  Lock,
+  Loader2,
+  Camera,
+  Upload,
+  Video,
+  ExternalLink,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { CandidateFormDialog } from "@/components/candidate-form-dialog";
@@ -9,21 +21,26 @@ import { CandidateFilesCard } from "@/components/candidate-files-card";
 import { MatchStatusBadge } from "@/components/match-status";
 import {
   fetchCandidateAiProfile,
+  fetchCandidateMedia,
   fetchMatchesForCandidate,
   labelize,
   saveApprovedSummary,
+  uploadCandidateFile,
 } from "@/lib/crm-queries";
 import {
   addRecruiterNote,
   fetchCandidateDetail,
   fetchJobRoles,
   fetchStaffProfiles,
+  type CandidateDetail,
 } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -54,11 +71,31 @@ export const Route = createFileRoute("/candidates/$candidateId")({
 });
 
 function dateRange(start?: string | null, end?: string | null) {
-  const f = (d?: string | null) => (d ? new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "short" }) : null);
+  const f = (d?: string | null) =>
+    d ? new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "short" }) : null;
   const s = f(start);
   const e = f(end);
   if (!s && !e) return "";
   return `${s ?? "?"} – ${e ?? "Present"}`;
+}
+
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
+function isDirectVideo(url: string) {
+  return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+}
+
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-2xl border bg-card p-5">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">{title}</h2>
+      <div className="mt-3">{children}</div>
+    </section>
+  );
 }
 
 function CandidateDetailPage() {
@@ -68,6 +105,8 @@ function CandidateDetailPage() {
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [note, setNote] = useState("");
+  const [tab, setTab] = useState("overview");
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["candidate", candidateId],
@@ -83,10 +122,30 @@ function CandidateDetailPage() {
     queryKey: ["candidate-ai", candidateId],
     queryFn: () => fetchCandidateAiProfile(candidateId),
   });
+  const { data: media } = useQuery({
+    queryKey: ["candidate-media", candidateId],
+    queryFn: () => fetchCandidateMedia(candidateId),
+  });
 
   const isAdmin = profile?.role === "admin";
   const isOwner = !!data && data.candidate.recruiter_id === profile?.id;
   const canEdit = isAdmin || isOwner;
+
+  const uploadPhoto = useMutation({
+    mutationFn: (file: File) =>
+      uploadCandidateFile({
+        candidateId,
+        file,
+        fileType: "profile_photo",
+        uploadedBy: profile?.id ?? null,
+      }),
+    onSuccess: () => {
+      toast.success("Photo updated");
+      queryClient.invalidateQueries({ queryKey: ["candidate-media", candidateId] });
+      queryClient.invalidateQueries({ queryKey: ["candidate-files", candidateId] });
+    },
+    onError: (e: Error) => toast.error(e.message || "Upload failed"),
+  });
 
   const reassign = useMutation({
     mutationFn: async (recruiterId: string | null) => {
@@ -153,7 +212,7 @@ function CandidateDetailPage() {
       actions={
         canEdit ? (
           <Button onClick={() => setEditOpen(true)}>
-            <Pencil className="h-4 w-4 mr-1" /> Edit
+            <Pencil className="mr-1 h-4 w-4" /> Edit
           </Button>
         ) : (
           <Badge variant="secondary" className="gap-1">
@@ -164,214 +223,357 @@ function CandidateDetailPage() {
     >
       <div className="space-y-6">
         <Link to="/candidates" className="inline-flex items-center text-sm text-primary hover:underline">
-          <ArrowLeft className="h-4 w-4 mr-1" /> Back to candidate pool
+          <ArrowLeft className="mr-1 h-4 w-4" /> Back to candidate pool
         </Link>
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="space-y-6 lg:col-span-2">
-            <section className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
-                Contact
-              </h2>
-              <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-primary" /> {c.email || "—"}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-primary" /> {c.phone || "—"}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-primary" /> {c.country || "—"}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Experience:</span>
-                  {c.years_experience != null ? `${c.years_experience} yrs` : "—"}
-                </div>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {roleNames.map((r) => (
-                  <span key={r} className="rounded-full bg-primary-soft px-2.5 py-1 text-xs text-primary">
-                    {r}
-                  </span>
-                ))}
-                {c.status && (
-                  <Badge variant="secondary" className="capitalize">
-                    {c.status}
-                  </Badge>
+        <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+          {/* ------------------------------ left rail ------------------------------ */}
+          <div className="space-y-6">
+            <section className="rounded-2xl border bg-card p-5 text-center">
+              <div className="relative mx-auto w-fit">
+                <Avatar className="h-28 w-28 border-2 border-primary-soft">
+                  {media?.photoUrl && <AvatarImage src={media.photoUrl} alt={c.full_name} />}
+                  <AvatarFallback className="bg-primary text-xl text-primary-foreground">
+                    {initials(c.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+                {canEdit && (
+                  <>
+                    <input
+                      ref={photoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) uploadPhoto.mutate(f);
+                        e.target.value = "";
+                      }}
+                    />
+                    <button
+                      type="button"
+                      aria-label="Upload photo"
+                      onClick={() => photoInputRef.current?.click()}
+                      disabled={uploadPhoto.isPending}
+                      className="absolute bottom-0 right-0 grid h-9 w-9 place-items-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow-md transition-transform hover:scale-105"
+                    >
+                      {uploadPhoto.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Camera className="h-4 w-4" />
+                      )}
+                    </button>
+                  </>
                 )}
               </div>
-            </section>
+              <h2 className="mt-3 text-lg font-semibold">{c.full_name}</h2>
+              {c.email && <p className="truncate text-sm text-muted-foreground">{c.email}</p>}
+              {c.status && (
+                <Badge variant="secondary" className="mt-2 capitalize">
+                  {c.status}
+                </Badge>
+              )}
 
-            <section className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">Skills</h2>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {data.skills.length ? (
-                  data.skills.map((s) => (
-                    <Badge key={s.id} variant="outline">
-                      {s.name}
-                    </Badge>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">No skills recorded.</p>
-                )}
-              </div>
-            </section>
-
-            <section className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
-                Work history
-              </h2>
-              <div className="mt-3 space-y-4">
-                {data.workHistory.length ? (
-                  data.workHistory.map((w) => (
-                    <div key={w.id} className="border-l-2 border-primary/40 pl-3">
-                      <div className="font-medium">{w.title || "Role"}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {w.company} {dateRange(w.start_date, w.end_date) && `· ${dateRange(w.start_date, w.end_date)}`}
-                      </div>
-                      {w.description && <p className="mt-1 text-sm">{w.description}</p>}
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">No work history recorded.</p>
-                )}
-              </div>
+              <dl className="mt-4 space-y-2 border-t pt-4 text-left text-sm">
+                <div className="flex justify-between gap-2">
+                  <dt className="text-muted-foreground">Role(s)</dt>
+                  <dd className="text-right">{roleNames.join(", ") || "—"}</dd>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <dt className="text-muted-foreground">Recruiter</dt>
+                  <dd className="text-right">{recruiterName}</dd>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <dt className="text-muted-foreground">Experience</dt>
+                  <dd>{c.years_experience != null ? `${c.years_experience} yrs` : "—"}</dd>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <dt className="text-muted-foreground">Added</dt>
+                  <dd>{new Date(c.created_at).toLocaleDateString()}</dd>
+                </div>
+              </dl>
             </section>
 
             <section className="rounded-2xl border bg-card p-5">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
-                Education
-              </h2>
-              <div className="mt-3 space-y-3">
-                {data.education.length ? (
-                  data.education.map((e) => (
-                    <div key={e.id} className="border-l-2 border-primary/40 pl-3">
-                      <div className="font-medium">{e.degree || "Studies"}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {[e.institution, e.field].filter(Boolean).join(" · ")}{" "}
-                        {dateRange(e.start_date, e.end_date)}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">No education recorded.</p>
-                )}
-              </div>
-            </section>
-
-            <CandidateFilesCard candidateId={candidateId} canEdit={canEdit} />
-
-            <section className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
-                Client pipeline
+                Quick actions
               </h2>
               <div className="mt-3 space-y-2">
-                {matches.length ? (
-                  matches.map((m) => (
-                    <Link
-                      key={m.id}
-                      to="/requests/$requestId"
-                      params={{ requestId: m.client_request_id }}
-                      className="block rounded-xl border p-3 transition-all hover:border-amber hover:bg-amber/5"
+                <Button
+                  className="w-full justify-start"
+                  variant="outline"
+                  disabled={!canEdit}
+                  onClick={() => setEditOpen(true)}
+                >
+                  <Pencil className="mr-2 h-4 w-4" /> Edit candidate
+                </Button>
+                <Button
+                  className="w-full justify-start"
+                  variant="outline"
+                  onClick={() => setTab("documents")}
+                >
+                  <Upload className="mr-2 h-4 w-4" /> Upload documents
+                </Button>
+                {isAdmin && (
+                  <div className="space-y-1.5 pt-1">
+                    <p className="text-xs text-muted-foreground">Reassign recruiter</p>
+                    <Select
+                      value={c.recruiter_id ?? "unassigned"}
+                      onValueChange={(v: string) => reassign.mutate(v === "unassigned" ? null : v)}
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-medium">
-                          {m.requestTitle || m.roleName || "Request"}
-                        </span>
-                        <MatchStatusBadge status={m.status} />
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {m.clientName ?? "Client"}
-                        {m.status === "rejected" ? ` · ${labelize(m.rejection_reason)}` : ""}
-                      </p>
-                    </Link>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Not in any client review batch yet.
-                  </p>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Reassign recruiter" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unassigned">Unassigned</SelectItem>
+                        {staff.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.full_name || s.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 )}
               </div>
             </section>
-
-            <AiSummaryCard
-              candidateId={candidateId}
-              canEdit={canEdit}
-              recruiterSummary={aiProfile?.recruiter_summary ?? null}
-              approvedSummary={aiProfile?.approved_summary ?? null}
-              rankScore={aiProfile?.rank_score ?? null}
-            />
           </div>
 
+          {/* ------------------------------- tabs ---------------------------------- */}
+          <div className="rounded-2xl border bg-card p-4 sm:p-5">
+            <Tabs value={tab} onValueChange={setTab}>
+              <TabsList className="flex w-full flex-wrap justify-start">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="documents">Documents</TabsTrigger>
+                <TabsTrigger value="ai">AI Profile</TabsTrigger>
+                <TabsTrigger value="pipeline">Client Pipeline</TabsTrigger>
+                <TabsTrigger value="notes">Notes</TabsTrigger>
+              </TabsList>
 
-          <div className="space-y-6">
-            <section className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
-                Recruiter ownership
-              </h2>
-              <p className="mt-2 text-sm">{recruiterName}</p>
-              {isAdmin ? (
-                <div className="mt-3 space-y-2">
-                  <Select
-                    value={c.recruiter_id ?? "unassigned"}
-                    onValueChange={(v: string) => reassign.mutate(v === "unassigned" ? null : v)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Reassign recruiter" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unassigned">Unassigned</SelectItem>
-                      {staff.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
-                          {s.full_name || s.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">Admins only: reassign ownership.</p>
-                </div>
-              ) : (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Only an admin can reassign this candidate.
-                </p>
-              )}
-            </section>
-
-            <section className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">Notes</h2>
-              {canEdit && (
-                <div className="mt-3 space-y-2">
-                  <Textarea
-                    value={note}
-                    placeholder="Add a recruiter note…"
-                    onChange={(e) => setNote(e.target.value)}
-                  />
-                  <Button size="sm" onClick={() => saveNote.mutate()} disabled={saveNote.isPending}>
-                    {saveNote.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Add note
-                  </Button>
-                </div>
-              )}
-              <div className="mt-4 space-y-3">
-                {data.notes.length ? (
-                  data.notes.map((n) => (
-                    <div key={n.id} className="rounded-xl bg-primary-soft/60 p-3 text-sm">
-                      <p>{n.note}</p>
-                      <p className="mt-1 text-[11px] text-muted-foreground">
-                        {new Date(n.created_at).toLocaleString()}
-                      </p>
+              <TabsContent value="overview" className="mt-4 space-y-5">
+                <SectionCard title="Contact">
+                  <div className="grid gap-2 text-sm sm:grid-cols-2">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-primary" /> {c.email || "—"}
                     </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">No notes yet.</p>
-                )}
-              </div>
-            </section>
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-primary" /> {c.phone || "—"}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-primary" /> {c.country || "—"}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">Experience:</span>
+                      {c.years_experience != null ? `${c.years_experience} yrs` : "—"}
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {roleNames.map((r) => (
+                      <span
+                        key={r}
+                        className="rounded-full bg-primary-soft px-2.5 py-1 text-xs text-primary"
+                      >
+                        {r}
+                      </span>
+                    ))}
+                  </div>
+                </SectionCard>
+
+                <IntroVideoCard videoUrl={media?.videoUrl ?? null} linkUrl={c.intro_video_url} />
+
+                <SkillsSection skills={data.skills} />
+                <WorkHistorySection workHistory={data.workHistory} />
+                <EducationSection education={data.education} />
+              </TabsContent>
+
+              <TabsContent value="documents" className="mt-4">
+                <CandidateFilesCard candidateId={candidateId} canEdit={canEdit} />
+              </TabsContent>
+
+              <TabsContent value="ai" className="mt-4 space-y-5">
+                <section className="flex items-center gap-4 rounded-2xl border bg-card p-5">
+                  <Avatar className="h-16 w-16">
+                    {media?.photoUrl && <AvatarImage src={media.photoUrl} alt={c.full_name} />}
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {initials(c.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-semibold">{c.full_name}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {c.headline || roleNames.join(", ") || "No headline"}
+                    </p>
+                  </div>
+                </section>
+
+                <AiSummaryCard
+                  candidateId={candidateId}
+                  canEdit={canEdit}
+                  recruiterSummary={aiProfile?.recruiter_summary ?? null}
+                  approvedSummary={aiProfile?.approved_summary ?? null}
+                  rankScore={aiProfile?.rank_score ?? null}
+                />
+
+                <SkillsSection skills={data.skills} />
+                <WorkHistorySection workHistory={data.workHistory} />
+                <EducationSection education={data.education} />
+              </TabsContent>
+
+              <TabsContent value="pipeline" className="mt-4">
+                <SectionCard title="Client pipeline">
+                  <div className="space-y-2">
+                    {matches.length ? (
+                      matches.map((m) => (
+                        <Link
+                          key={m.id}
+                          to="/requests/$requestId"
+                          params={{ requestId: m.client_request_id }}
+                          className="block rounded-xl border p-3 transition-all hover:border-amber hover:bg-amber/5"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="font-medium">
+                              {m.requestTitle || m.roleName || "Request"}
+                            </span>
+                            <MatchStatusBadge status={m.status} />
+                          </div>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {m.clientName ?? "Client"}
+                            {m.status === "rejected" ? ` · ${labelize(m.rejection_reason)}` : ""}
+                          </p>
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Not in any client review batch yet.
+                      </p>
+                    )}
+                  </div>
+                </SectionCard>
+              </TabsContent>
+
+              <TabsContent value="notes" className="mt-4">
+                <SectionCard title="Recruiter notes">
+                  {canEdit && (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={note}
+                        placeholder="Add a recruiter note…"
+                        onChange={(e) => setNote(e.target.value)}
+                      />
+                      <Button size="sm" onClick={() => saveNote.mutate()} disabled={saveNote.isPending}>
+                        {saveNote.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Add note
+                      </Button>
+                    </div>
+                  )}
+                  <div className="mt-4 space-y-3">
+                    {data.notes.length ? (
+                      data.notes.map((n) => (
+                        <div key={n.id} className="rounded-xl bg-primary-soft/60 p-3 text-sm">
+                          <p>{n.note}</p>
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            {new Date(n.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No notes yet.</p>
+                    )}
+                  </div>
+                </SectionCard>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>
 
       <CandidateFormDialog open={editOpen} onOpenChange={setEditOpen} candidateId={candidateId} />
     </AppShell>
+  );
+}
+
+function IntroVideoCard({ videoUrl, linkUrl }: { videoUrl: string | null; linkUrl: string | null }) {
+  if (!videoUrl && !linkUrl) return null;
+  const source = videoUrl ?? linkUrl!;
+  const embeddable = !!videoUrl || (linkUrl ? isDirectVideo(linkUrl) : false);
+  return (
+    <SectionCard title="Introduction video">
+      {embeddable ? (
+        <video src={source} controls className="w-full rounded-xl border bg-black" />
+      ) : (
+        <a
+          href={source}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm text-primary transition-colors hover:border-amber hover:bg-amber/5"
+        >
+          <Video className="h-4 w-4" /> Open intro video
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+      )}
+    </SectionCard>
+  );
+}
+
+function SkillsSection({ skills }: { skills: CandidateDetail["skills"] }) {
+  return (
+    <SectionCard title="Skills">
+      <div className="flex flex-wrap gap-2">
+        {skills.length ? (
+          skills.map((s) => (
+            <Badge key={s.id} variant="outline">
+              {s.name}
+            </Badge>
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">No skills recorded.</p>
+        )}
+      </div>
+    </SectionCard>
+  );
+}
+
+function WorkHistorySection({ workHistory }: { workHistory: CandidateDetail["workHistory"] }) {
+  return (
+    <SectionCard title="Work history">
+      <div className="space-y-4">
+        {workHistory.length ? (
+          workHistory.map((w) => (
+            <div key={w.id} className="border-l-2 border-primary/40 pl-3">
+              <div className="font-medium">{w.title || "Role"}</div>
+              <div className="text-sm text-muted-foreground">
+                {w.company}{" "}
+                {dateRange(w.start_date, w.end_date) && `· ${dateRange(w.start_date, w.end_date)}`}
+              </div>
+              {w.description && <p className="mt-1 text-sm">{w.description}</p>}
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">No work history recorded.</p>
+        )}
+      </div>
+    </SectionCard>
+  );
+}
+
+function EducationSection({ education }: { education: CandidateDetail["education"] }) {
+  return (
+    <SectionCard title="Education">
+      <div className="space-y-3">
+        {education.length ? (
+          education.map((e) => (
+            <div key={e.id} className="border-l-2 border-primary/40 pl-3">
+              <div className="font-medium">{e.degree || "Studies"}</div>
+              <div className="text-sm text-muted-foreground">
+                {[e.institution, e.field].filter(Boolean).join(" · ")}{" "}
+                {dateRange(e.start_date, e.end_date)}
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">No education recorded.</p>
+        )}
+      </div>
+    </SectionCard>
   );
 }
 
@@ -410,25 +612,35 @@ function AiSummaryCard({
         </h2>
         {rankScore != null && <Badge variant="secondary">Rank {rankScore}</Badge>}
       </div>
-      {recruiterSummary && (
-        <p className="mt-3 rounded-xl bg-primary-soft/60 p-3 text-sm">{recruiterSummary}</p>
-      )}
-      {canEdit ? (
-        <div className="mt-3 space-y-2">
-          <Textarea
-            value={value}
-            placeholder="Approved summary shared with clients…"
-            onChange={(e) => setDraft(e.target.value)}
-          />
-          <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
-            {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save summary
-          </Button>
-        </div>
-      ) : (
-        <p className="mt-3 text-sm text-muted-foreground">
-          {approvedSummary || "No approved summary yet."}
+      <div className="mt-3 space-y-1">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          AI-generated recruiter summary
         </p>
-      )}
+        <p className="rounded-xl bg-primary-soft/60 p-3 text-sm">
+          {recruiterSummary || "No AI summary generated yet."}
+        </p>
+      </div>
+      <div className="mt-4 space-y-2">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          Approved client-facing summary
+        </p>
+        {canEdit ? (
+          <>
+            <Textarea
+              value={value}
+              placeholder="Approved summary shared with clients…"
+              onChange={(e) => setDraft(e.target.value)}
+            />
+            <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
+              {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save summary
+            </Button>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {approvedSummary || "No approved summary yet."}
+          </p>
+        )}
+      </div>
     </section>
   );
 }
