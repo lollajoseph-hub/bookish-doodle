@@ -5,6 +5,14 @@ import { ArrowLeft, Mail, Phone, Globe, Pencil, Lock, Loader2 } from "lucide-rea
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { CandidateFormDialog } from "@/components/candidate-form-dialog";
+import { CandidateFilesCard } from "@/components/candidate-files-card";
+import { MatchStatusBadge } from "@/components/match-status";
+import {
+  fetchCandidateAiProfile,
+  fetchMatchesForCandidate,
+  labelize,
+  saveApprovedSummary,
+} from "@/lib/crm-queries";
 import {
   addRecruiterNote,
   fetchCandidateDetail,
