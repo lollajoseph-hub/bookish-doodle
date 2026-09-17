@@ -90,6 +90,8 @@ const navGroups: Array<{ label: string; items: NavItem[]; adminOnly?: boolean }>
     adminOnly: true,
     items: [
       { to: "/admin-tools", label: "Admin Tools", icon: Wrench },
+      { to: "/team", label: "Add to Team", icon: UserPlus },
+      { to: "/roles", label: "Roles", icon: ShieldCheck },
       { to: "/system-monitor", label: "System Monitor", icon: Activity },
       { to: "/reports", label: "Reports", icon: BarChart3 },
     ],
