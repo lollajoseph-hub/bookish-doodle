@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { Plus, Search, Mail, Phone, UserCheck, Users } from "lucide-react";
 import { z } from "zod";
 import { AppShell } from "@/components/app-shell";
-import { CandidateFormDialog } from "@/components/candidate-form-dialog";
 import { fetchCandidates, fetchJobRoles, type CandidateListItem } from "@/lib/queries";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -139,7 +138,6 @@ function CandidatesPage() {
   const { role } = Route.useSearch();
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [formOpen, setFormOpen] = useState(false);
 
   const { data: roles = [] } = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
   const { data: candidates = [], isLoading } = useQuery({
@@ -181,7 +179,7 @@ function CandidatesPage() {
       title="Candidate Pool"
       description="All candidates, grouped by role"
       actions={
-        <Button onClick={() => setFormOpen(true)}>
+        <Button onClick={() => navigate({ to: "/candidates/new" })}>
           <Plus className="h-4 w-4 mr-1" /> Add candidate
         </Button>
       }
@@ -211,7 +209,7 @@ function CandidatesPage() {
             <p className="text-sm text-muted-foreground">
               Add your first candidate to start building the pool.
             </p>
-            <Button className="mt-4" onClick={() => setFormOpen(true)}>
+            <Button className="mt-4" onClick={() => navigate({ to: "/candidates/new" })}>
               <Plus className="h-4 w-4 mr-1" /> Add candidate
             </Button>
           </div>
@@ -245,12 +243,6 @@ function CandidatesPage() {
           </section>
         ))}
       </div>
-
-      <CandidateFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        onSaved={(id) => navigate({ to: "/candidates/$candidateId", params: { candidateId: id } })}
-      />
     </AppShell>
   );
 }

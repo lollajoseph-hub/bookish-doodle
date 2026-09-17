@@ -562,3 +562,20 @@ export async function fetchAuditLogs(limit = 200): Promise<AuditLogView[]> {
     userName: l.user_id ? (byId.get(l.user_id) ?? null) : null,
   }));
 }
+
+/* ----------------------- candidate media (photo/video) -------------------- */
+
+export async function fetchCandidateMedia(candidateId: string): Promise<{
+  photoUrl: string | null;
+  videoUrl: string | null;
+  videoName: string | null;
+}> {
+  const files = await fetchCandidateFiles(candidateId);
+  const photo = files.find((f) => f.file_type === "profile_photo") ?? null;
+  const video = files.find((f) => f.file_type === "intro_video") ?? null;
+  const [photoUrl, videoUrl] = await Promise.all([
+    photo ? getCandidateFileUrl(photo).catch(() => null) : Promise.resolve(null),
+    video ? getCandidateFileUrl(video).catch(() => null) : Promise.resolve(null),
+  ]);
+  return { photoUrl, videoUrl, videoName: video?.file_name ?? null };
+}

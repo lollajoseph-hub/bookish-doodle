@@ -45,6 +45,7 @@ export interface CandidateRow {
   years_experience: number | null;
   country: string | null;
   timezone: string | null;
+  intro_video_url: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string | null;
