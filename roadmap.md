@@ -10,3 +10,5 @@
 - [x] Replace the bounded login card with one full-bleed purple artwork surface and a compact glass sign-in panel.
 
 - [x] Restyle login as one floating purple card based on Lola’s supplied reference
+
+- [ ] Segment sidebar navigation, add admin toolkit and role deep-links
