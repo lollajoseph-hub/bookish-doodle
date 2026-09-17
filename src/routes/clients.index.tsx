@@ -113,7 +113,7 @@ function ClientsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const { data: profile } = useAuth();
+  const { profile } = useAuth();
   const isAdmin = profile?.role === "admin";
 
   return (
