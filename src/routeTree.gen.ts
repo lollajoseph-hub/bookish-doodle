@@ -21,6 +21,7 @@ import { Route as CandidatesRouteImport } from './routes/candidates'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClientsIndexRouteImport } from './routes/clients.index'
 import { Route as CandidatesIndexRouteImport } from './routes/candidates.index'
+import { Route as ClientsClientIdRouteImport } from './routes/clients.$clientId'
 import { Route as CandidatesCandidateIdRouteImport } from './routes/candidates.$candidateId'
 
 const RolesRoute = RolesRouteImport.update({
@@ -83,6 +84,11 @@ const CandidatesIndexRoute = CandidatesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CandidatesRoute,
 } as any)
+const ClientsClientIdRoute = ClientsClientIdRouteImport.update({
+  id: '/$clientId',
+  path: '/$clientId',
+  getParentRoute: () => ClientsRoute,
+} as any)
 const CandidatesCandidateIdRoute = CandidatesCandidateIdRouteImport.update({
   id: '/$candidateId',
   path: '/$candidateId',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
   '/candidates/$candidateId': typeof CandidatesCandidateIdRoute
+  '/clients/$clientId': typeof ClientsClientIdRoute
   '/candidates/': typeof CandidatesIndexRoute
   '/clients/': typeof ClientsIndexRoute
 }
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
   '/candidates/$candidateId': typeof CandidatesCandidateIdRoute
+  '/clients/$clientId': typeof ClientsClientIdRoute
   '/candidates': typeof CandidatesIndexRoute
   '/clients': typeof ClientsIndexRoute
 }
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
   '/candidates/$candidateId': typeof CandidatesCandidateIdRoute
+  '/clients/$clientId': typeof ClientsClientIdRoute
   '/candidates/': typeof CandidatesIndexRoute
   '/clients/': typeof ClientsIndexRoute
 }
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/roles'
     | '/candidates/$candidateId'
+    | '/clients/$clientId'
     | '/candidates/'
     | '/clients/'
   fileRoutesByTo: FileRoutesByTo
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/roles'
     | '/candidates/$candidateId'
+    | '/clients/$clientId'
     | '/candidates'
     | '/clients'
   id:
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/roles'
     | '/candidates/$candidateId'
+    | '/clients/$clientId'
     | '/candidates/'
     | '/clients/'
   fileRoutesById: FileRoutesById
@@ -278,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CandidatesIndexRouteImport
       parentRoute: typeof CandidatesRoute
     }
+    '/clients/$clientId': {
+      id: '/clients/$clientId'
+      path: '/$clientId'
+      fullPath: '/clients/$clientId'
+      preLoaderRoute: typeof ClientsClientIdRouteImport
+      parentRoute: typeof ClientsRoute
+    }
     '/candidates/$candidateId': {
       id: '/candidates/$candidateId'
       path: '/$candidateId'
@@ -303,10 +322,12 @@ const CandidatesRouteWithChildren = CandidatesRoute._addFileChildren(
 )
 
 interface ClientsRouteChildren {
+  ClientsClientIdRoute: typeof ClientsClientIdRoute
   ClientsIndexRoute: typeof ClientsIndexRoute
 }
 
 const ClientsRouteChildren: ClientsRouteChildren = {
+  ClientsClientIdRoute: ClientsClientIdRoute,
   ClientsIndexRoute: ClientsIndexRoute,
 }
 
