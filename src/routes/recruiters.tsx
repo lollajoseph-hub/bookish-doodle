@@ -5,6 +5,7 @@ import { Mail, Phone, Plus, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { fetchCandidates, fetchStaffProfiles } from "@/lib/queries";
+import { labelize } from "@/lib/crm-queries";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
@@ -64,6 +65,16 @@ function invokeError(error: unknown, data: unknown): string | null {
   return null;
 }
 
+const PIPELINE_STATUSES = [
+  "new",
+  "shortlisted",
+  "interviewed",
+  "hired",
+  "placed",
+  "rejected",
+  "archived",
+];
+
 function TeamPage() {
   const { profile } = useAuth();
   const isAdmin = profile?.role === "admin";
@@ -92,8 +103,8 @@ function TeamPage() {
 
   return (
     <AppShell
-      title="Team"
-      description="Recruiters and admins"
+      title="Recruiter Pool"
+      description="Recruiters and admins, and the candidates each one carries"
       actions={
         isAdmin ? (
           <Button onClick={() => setAddOpen(true)}>
@@ -105,7 +116,12 @@ function TeamPage() {
       {isLoading && <p className="text-sm text-muted-foreground">Loading team…</p>}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {staff.map((s) => {
-          const owned = candidates.filter((c) => c.recruiter_id === s.id).length;
+          const ownedList = candidates.filter((c) => c.recruiter_id === s.id);
+          const owned = ownedList.length;
+          const breakdown = PIPELINE_STATUSES.map((status) => ({
+            status,
+            count: ownedList.filter((c) => (c.status ?? "new") === status).length,
+          })).filter((b) => b.count > 0);
           const pendingInvite = signinStatus ? signinStatus[s.id] === false : true;
           return (
             <div
@@ -142,6 +158,16 @@ function TeamPage() {
                     <div className="text-[11px] text-muted-foreground">candidates</div>
                   </div>
                 </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {breakdown.map((b) => (
+                  <Badge key={b.status} variant="outline" className="text-[11px] font-normal">
+                    {b.count} {labelize(b.status).toLowerCase()}
+                  </Badge>
+                ))}
+                {!breakdown.length && (
+                  <span className="text-xs text-muted-foreground">No candidates assigned yet.</span>
+                )}
               </div>
               <div className="mt-3 space-y-1 text-xs text-muted-foreground">
                 {s.email && (
