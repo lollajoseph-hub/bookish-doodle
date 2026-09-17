@@ -1,16 +1,17 @@
-# Full-bleed glass login revision
+# Segmented sidebar and candidate role links
 
 ## Changes
-- Make the entire login viewport one continuous `primary` purple surface with the existing abstract artwork spanning behind all content.
-- Place the existing welcome content directly in the left side without a panel, border, or separate background.
-- Replace the solid sign-in area with a compact translucent glass panel aligned on the right, using light text and translucent inputs.
-- Keep the mobile color logo above the form inside the glass panel and preserve all copy, controls, animations, authentication behavior, and the corrected purple tokens.
+- Reorganize the sidebar into Dashboard plus labeled Candidate Pool, Clients, Placements, and Admin Toolkit groups, with dividers and compact uppercase labels.
+- Keep the entire Admin Toolkit hidden for recruiters; rename the existing Roles link to Manage Roles without changing its page.
+- Load active job roles in the sidebar and show All roles plus an indented link for each role under Candidate Pool.
+- Make each role link open the candidate pool with its role selected, including correct active styling for both parent and nested links.
+- Add typed `role` search handling to the candidate pool and keep the URL synchronized when staff use the existing role chips.
 
 ## Technical details
-- Restructure only the layout and presentation classes in `src/routes/login.tsx`.
-- Reuse the existing `.login-panel-artwork` unchanged as a page-level background layer.
-- Use standard backdrop blur utilities without manually adding browser-prefixed CSS.
+- Reuse the existing `fetchJobRoles` query and shared TanStack Query cache.
+- Validate the optional role search parameter with the project’s TanStack Router/Zod pattern.
+- Preserve all existing routes, permissions, candidate filtering, and page content.
 
-## Validation
-- Verify desktop and mobile layouts in the running preview.
-- Confirm artwork remains visible around and behind the glass panel, controls stay readable, and no browser errors appear.
+## Verification
+- Check the sidebar and role filtering in the live preview, including admin and recruiter visibility when sessions are available.
+- Confirm role links update the URL and selected filter, all links resolve, and the browser console remains clean.
