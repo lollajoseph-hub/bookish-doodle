@@ -485,7 +485,46 @@ export function CandidateFormDialog({
               </div>
             ))}
           </section>
+
+          {!candidateId && (
+            <section className="space-y-3">
+              <div>
+                <Label>Documents</Label>
+                <p className="text-xs text-muted-foreground">
+                  Optional — attached right after the candidate is created.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {UPLOAD_FIELDS.map((f) => (
+                  <div key={f.key} className="space-y-1.5 rounded-xl border p-3 bg-primary-soft/40">
+                    <Label htmlFor={`file-${f.key}`} className="text-xs">
+                      {f.label}
+                    </Label>
+                    <Input
+                      id={`file-${f.key}`}
+                      type="file"
+                      accept={f.accept}
+                      className="h-9 text-xs"
+                      onChange={(e) =>
+                        setFiles((prev) => {
+                          const next = { ...prev };
+                          const picked = e.target.files?.[0];
+                          if (picked) next[f.key] = picked;
+                          else delete next[f.key];
+                          return next;
+                        })
+                      }
+                    />
+                    {files[f.key] && (
+                      <p className="truncate text-[11px] text-muted-foreground">{files[f.key]!.name}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
+
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
