@@ -60,6 +60,7 @@ function LoginPage() {
         <div aria-hidden="true" className="login-panel-artwork">
           <span className="login-panel-arc login-panel-arc-one" />
           <span className="login-panel-arc login-panel-arc-two" />
+          <span className="login-panel-arc login-panel-arc-three" />
           <span className="login-panel-line login-panel-line-one" />
           <span className="login-panel-line login-panel-line-two" />
           <span className="login-panel-plane" />
