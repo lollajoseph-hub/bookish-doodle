@@ -116,15 +116,14 @@ function RequestsPage() {
   });
 
   return (
-    <AppShell
-      title="Client requests"
-      description="Hiring requests to source review batches for"
-      actions={
+    <AppShell title="Client requests" description="Hiring requests to source review batches for">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">Hiring requests to source review batches for</p>
         <Button onClick={() => setOpen(true)}>
           <Plus className="mr-1 h-4 w-4" /> New request
         </Button>
-      }
-    >
+      </div>
+
       <div className="mb-5 flex flex-wrap gap-2">
         {STATUS_TABS.map((s) => (
           <button
