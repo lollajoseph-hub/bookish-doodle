@@ -19,7 +19,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const CANDIDATE_STATUSES = ["new", "shortlisted", "placed", "archived"];
+const CANDIDATE_STATUSES = [
+  "new",
+  "shortlisted",
+  "interviewed",
+  "hired",
+  "placed",
+  "rejected",
+  "archived",
+];
 
 export const Route = createFileRoute("/admin-tools")({
   ssr: false,

@@ -375,36 +375,62 @@ export async function updateMatchStatus(
   const { error } = await supabase.from("candidate_matches").update(patch).eq("id", id);
   if (error) throw error;
 
-  if (status === "hired") await confirmPlacementForMatch(id);
+  await applyCandidateStatusForMatch(id, status);
 }
 
-/** When a match is marked hired, mark the candidate placed and create the placement row. */
-async function confirmPlacementForMatch(matchId: string): Promise<void> {
+/**
+ * Candidate lifecycle: new -> shortlisted / rejected -> interviewed -> hired -> placed.
+ * "placed" is only set when an admin creates the actual placement record.
+ */
+async function applyCandidateStatusForMatch(matchId: string, status: MatchStatus): Promise<void> {
+  if (!["interview_completed", "rejected", "hired"].includes(status)) return;
+
   const { data: match } = await supabase
     .from("candidate_matches")
-    .select("candidate_id, client_request_id")
+    .select("candidate_id")
     .eq("id", matchId)
     .maybeSingle();
   if (!match) return;
 
-  await supabase.from("candidates").update({ status: "placed" }).eq("id", match.candidate_id);
-
-  const { data: existing } = await supabase
-    .from("placements")
-    .select("id")
-    .eq("candidate_id", match.candidate_id)
-    .eq("client_request_id", match.client_request_id)
+  const { data: candidate } = await supabase
+    .from("candidates")
+    .select("status")
+    .eq("id", match.candidate_id)
     .maybeSingle();
-  if (existing) return;
+  const current = candidate?.status ?? null;
 
-  const { data: request } = await supabase
+  let next: string | null = null;
+  if (status === "interview_completed" && current === "shortlisted") next = "interviewed";
+  if (status === "rejected" && (current === "shortlisted" || current === "interviewed")) {
+    next = "rejected";
+  }
+  if (status === "hired") next = "hired";
+  if (!next) return;
+
+  await supabase.from("candidates").update({ status: next }).eq("id", match.candidate_id);
+}
+
+export interface CreatePlacementInput {
+  candidateId: string;
+  clientRequestId: string;
+  seatTitle?: string | null;
+  billingStartDate?: string | null;
+  monthlyRate?: number | null;
+  guaranteeWindowExpires?: string | null;
+  notes?: string | null;
+}
+
+/** Creates the commercial placement record and moves the candidate to "placed". */
+export async function createPlacement(input: CreatePlacementInput): Promise<string> {
+  const { data: request, error: requestError } = await supabase
     .from("client_requests")
     .select("client_id, role_id, title")
-    .eq("id", match.client_request_id)
+    .eq("id", input.clientRequestId)
     .maybeSingle();
-  if (!request) return;
+  if (requestError) throw requestError;
+  if (!request) throw new Error("Client request not found");
 
-  let seatTitle: string | null = request.title ?? null;
+  let seatTitle = input.seatTitle?.trim() || request.title || null;
   if (!seatTitle && request.role_id) {
     const { data: role } = await supabase
       .from("job_roles")
@@ -414,13 +440,25 @@ async function confirmPlacementForMatch(matchId: string): Promise<void> {
     seatTitle = role?.name ?? null;
   }
 
-  await supabase.from("placements").insert({
-    candidate_id: match.candidate_id,
-    client_id: request.client_id,
-    client_request_id: match.client_request_id,
-    role_id: request.role_id,
-    seat_title: seatTitle,
-  });
+  const { data, error } = await supabase
+    .from("placements")
+    .insert({
+      candidate_id: input.candidateId,
+      client_id: request.client_id,
+      client_request_id: input.clientRequestId,
+      role_id: request.role_id,
+      seat_title: seatTitle,
+      billing_start_date: input.billingStartDate || null,
+      monthly_rate: input.monthlyRate ?? null,
+      guarantee_window_expires: input.guaranteeWindowExpires || null,
+      notes: input.notes?.trim() || null,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+
+  await supabase.from("candidates").update({ status: "placed" }).eq("id", input.candidateId);
+  return data.id;
 }
 
 export async function fetchAllMatches(): Promise<CandidateMatchRow[]> {

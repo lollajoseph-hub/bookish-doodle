@@ -18,6 +18,9 @@ import {
   UserPlus,
   UserMinus,
   Activity,
+  UserCog,
+  LifeBuoy,
+  FileCheck,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { fetchCandidates, fetchJobRoles, fetchStaffProfiles } from "@/lib/queries";
@@ -136,22 +139,34 @@ function DashboardPage() {
 
   const stats = useMemo(() => {
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const byStatus = (s: string) => candidates.filter((c) => c.status === s).length;
-    const interviewing = matches.filter((m) =>
-      ["interview_requested", "interview_confirmed", "interview_completed"].includes(m.status ?? ""),
-    ).length;
+    const byStatus = (st: string) => candidates.filter((c) => (c.status ?? "new") === st).length;
+    const byMatch = (...sts: string[]) =>
+      matches.filter((m) => sts.includes(m.status ?? "")).length;
     return {
       total: candidates.length,
       newThisWeek: candidates.filter((c) => new Date(c.created_at).getTime() >= weekAgo).length,
+      new: byStatus("new"),
       shortlisted: byStatus("shortlisted"),
+      interviewed: byStatus("interviewed"),
+      hiredCandidates: byStatus("hired"),
       placed: byStatus("placed"),
+      rejected: byStatus("rejected"),
       mine: candidates.filter((c) => c.recruiter_id === profile?.id).length,
       unassigned: candidates.filter((c) => !c.recruiter_id).length,
       openRequests: requests.filter((r) => r.status === "open").length,
-      interviewing,
-      hired: matches.filter((m) => m.status === "hired").length,
+      needsAttention: requests.filter((r) => r.status === "needs_attention").length,
+      recruiters: staff.filter((p) => p.role === "recruiter").length,
+      pendingOffers: byMatch("offer_extended"),
+      upcomingInterviews: byMatch("interview_requested", "interview_confirmed"),
+      interviewing: byMatch(
+        "interview_requested",
+        "interview_confirmed",
+        "interview_completed",
+      ),
+      hired: byMatch("hired"),
+      activePlacements: placements.filter((p) => (p.status ?? "active") === "active").length,
     };
-  }, [candidates, matches, requests, profile?.id]);
+  }, [candidates, matches, requests, staff, placements, profile?.id]);
 
   const recent = useMemo(() => candidates.slice(0, 6), [candidates]);
 
@@ -223,6 +238,7 @@ function DashboardPage() {
               hint="Added in the last 7 days"
               loading={loadingCore}
             />
+            <StatCard label="New" value={stats.new} icon={Sparkles} loading={loadingCore} />
             <StatCard
               label="Shortlisted"
               value={stats.shortlisted}
@@ -230,7 +246,21 @@ function DashboardPage() {
               tone="warning"
               loading={loadingCore}
             />
-            <StatCard label="Placed" value={stats.placed} icon={CalendarCheck} tone="success" loading={loadingCore} />
+            <StatCard
+              label="Interviewed"
+              value={stats.interviewed}
+              icon={CalendarCheck}
+              loading={loadingCore}
+            />
+            <StatCard
+              label="Hired"
+              value={stats.hiredCandidates}
+              icon={UserCheck}
+              tone="success"
+              loading={loadingCore}
+            />
+            <StatCard label="Placed" value={stats.placed} icon={Sparkles} tone="success" loading={loadingCore} />
+            <StatCard label="Rejected" value={stats.rejected} icon={UserMinus} loading={loadingCore} />
             <StatCard label="Assigned to me" value={stats.mine} icon={UserCheck} loading={loadingCore} />
             <StatCard
               label="Unassigned"
@@ -253,12 +283,18 @@ function DashboardPage() {
           >
             Client &amp; placement pipeline
           </SectionTitle>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
               label="Active clients"
               value={clients.length}
               icon={Building2}
               loading={clientsQ.isLoading}
+            />
+            <StatCard
+              label="Recruiters"
+              value={stats.recruiters}
+              icon={UserCog}
+              loading={staffQ.isLoading}
             />
             <StatCard
               label="Open requests"
@@ -268,21 +304,35 @@ function DashboardPage() {
               loading={requestsQ.isLoading}
             />
             <StatCard
+              label="Needs attention"
+              value={stats.needsAttention}
+              icon={LifeBuoy}
+              tone="warning"
+              hint="CS queue"
+              loading={requestsQ.isLoading}
+            />
+            <StatCard
               label="Candidates matched"
               value={matches.length}
               icon={GitCompareArrows}
               loading={matchesQ.isLoading}
             />
             <StatCard
-              label="Interviews in progress"
-              value={stats.interviewing}
+              label="Upcoming interviews"
+              value={stats.upcomingInterviews}
               icon={CalendarCheck}
               loading={matchesQ.isLoading}
             />
-            <StatCard label="Hired" value={stats.hired} icon={BadgeCheck} tone="success" loading={matchesQ.isLoading} />
             <StatCard
-              label="Placements confirmed"
-              value={placements.length}
+              label="Pending offers"
+              value={stats.pendingOffers}
+              icon={FileCheck}
+              tone="warning"
+              loading={matchesQ.isLoading}
+            />
+            <StatCard
+              label="Active placements"
+              value={stats.activePlacements}
               icon={Sparkles}
               tone="success"
               loading={placementsQ.isLoading}

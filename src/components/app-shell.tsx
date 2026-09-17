@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
+  UserPlus,
   LayoutDashboard,
   Users,
   LogOut,
@@ -58,7 +59,8 @@ type NavItem = {
     | "/system-monitor"
     | "/reports"
     | "/notifications"
-    | "/recruiter-activity";
+    | "/recruiter-activity"
+    | "/team";
   label: string;
   icon: typeof LayoutDashboard;
   adminOnly?: boolean;
@@ -74,6 +76,7 @@ const navGroups: Array<{ label: string; items: NavItem[]; adminOnly?: boolean }>
       { to: "/recruiters", label: "Recruiter Pool", icon: UserCog, adminOnly: true },
       { to: "/clients", label: "Client Pool", icon: Building2 },
       { to: "/roles", label: "Roles", icon: Briefcase, adminOnly: true },
+      { to: "/team", label: "Add to Team", icon: UserPlus, adminOnly: true },
     ],
   },
   {
