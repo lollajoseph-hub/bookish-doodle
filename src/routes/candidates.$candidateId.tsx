@@ -327,16 +327,16 @@ function CandidateDetailPage() {
               </h2>
               <div className="mt-3 space-y-2">
                 <Button
-                  className="w-full justify-start"
-                  variant="outline"
+                  className="w-full justify-start rounded-xl bg-transparent px-3 py-2 text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-foreground hover:translate-x-0.5 hover:border-transparent border-transparent"
+                  variant="ghost"
                   disabled={!canEdit}
                   onClick={() => setEditOpen(true)}
                 >
                   <Pencil className="mr-2 h-4 w-4" /> Edit candidate
                 </Button>
                 <Button
-                  className="w-full justify-start"
-                  variant="outline"
+                  className="w-full justify-start rounded-xl bg-transparent px-3 py-2 text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-foreground hover:translate-x-0.5 hover:border-transparent border-transparent"
+                  variant="ghost"
                   onClick={() => setTab("documents")}
                 >
                   <Upload className="mr-2 h-4 w-4" /> Upload documents
