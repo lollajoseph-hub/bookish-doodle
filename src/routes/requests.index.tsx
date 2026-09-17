@@ -201,56 +201,119 @@ function RequestsPage() {
             <DialogTitle>New client request</DialogTitle>
             <DialogDescription>Define the seat and the size of the review batch.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Client *</Label>
-                <Select value={clientId} onValueChange={setClientId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Role *</Label>
-                <Select value={roleId} onValueChange={setRoleId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roles.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
+          <div className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="req-title">Title</Label>
-              <Input id="req-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+                Client &amp; title
+              </h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Client *</Label>
+                  <Select value={clientId} onValueChange={setClientId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clients.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="req-title">Title</Label>
+                  <Input id="req-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                </div>
+              </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="wanted">Candidates wanted</Label>
-                <Input
-                  id="wanted"
-                  type="number"
-                  min={1}
-                  value={candidatesWanted}
-                  onChange={(e) => setCandidatesWanted(e.target.value)}
-                />
+            <div className="space-y-2 border-t pt-4">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+                Matching criteria *
+              </h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Role *</Label>
+                  <Select value={roleId} onValueChange={setRoleId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map((r) => (
+                        <SelectItem key={r.id} value={r.id}>
+                          {r.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Engagement type *</Label>
+                  <Select value={engagement} onValueChange={setEngagement}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="full_time">Full time</SelectItem>
+                      <SelectItem value="part_time">Part time</SelectItem>
+                      <SelectItem value="project">Project</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="hours">Hours needed *</Label>
+                  <Input id="hours" placeholder="20 hrs/week" value={hours} onChange={(e) => setHours(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tz">Timezone requirement *</Label>
+                  <Input id="tz" placeholder="US Eastern" value={tz} onChange={(e) => setTz(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="minyears">Min years experience *</Label>
+                  <Input
+                    id="minyears"
+                    type="number"
+                    min={0}
+                    value={minYears}
+                    onChange={(e) => setMinYears(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="start">Desired start date *</Label>
+                  <Input id="start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                </div>
               </div>
+              <div className="space-y-2">
+                <Label>Days needed *</Label>
+                <div className="flex flex-wrap gap-2">
+                  {DAYS.map((d) => {
+                    const on = days.includes(d);
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setDays(on ? days.filter((x) => x !== d) : [...days, d])}
+                        className={`rounded-full border px-3 py-1 text-xs transition-all ${
+                          on ? "border-amber bg-amber/20 text-amber-foreground" : "hover:border-primary/50"
+                        }`}
+                      >
+                        {d}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2 border-t pt-4">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+                Other details
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Optional — how many people the client is hiring for this seat
+              </p>
               <div className="space-y-2">
                 <Label htmlFor="hires">Hires needed</Label>
                 <Input
@@ -261,69 +324,12 @@ function RequestsPage() {
                   onChange={(e) => setHiresNeeded(e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Engagement</Label>
-                <Select value={engagement} onValueChange={setEngagement}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="full_time">Full time</SelectItem>
-                    <SelectItem value="part_time">Part time</SelectItem>
-                    <SelectItem value="project">Project</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="hours">Hours needed</Label>
-                <Input id="hours" placeholder="20 hrs/week" value={hours} onChange={(e) => setHours(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tz">Timezone requirement</Label>
-                <Input id="tz" placeholder="US Eastern" value={tz} onChange={(e) => setTz(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="minyears">Min years experience</Label>
-                <Input
-                  id="minyears"
-                  type="number"
-                  min={0}
-                  value={minYears}
-                  onChange={(e) => setMinYears(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="start">Desired start date</Label>
-                <Input id="start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Days needed</Label>
-              <div className="flex flex-wrap gap-2">
-                {DAYS.map((d) => {
-                  const on = days.includes(d);
-                  return (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => setDays(on ? days.filter((x) => x !== d) : [...days, d])}
-                      className={`rounded-full border px-3 py-1 text-xs transition-all ${
-                        on ? "border-amber bg-amber/20 text-amber-foreground" : "hover:border-primary/50"
-                      }`}
-                    >
-                      {d}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="req-notes">Notes</Label>
+            <div className="space-y-2 border-t pt-4">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+                Additional notes
+              </h3>
               <Textarea id="req-notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
           </div>
