@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RolesRouteImport } from './routes/roles'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RecruitersRouteImport } from './routes/recruiters'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -33,6 +34,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RecruitersRoute = RecruitersRouteImport.update({
   id: '/recruiters',
   path: '/recruiters',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/recruiters': typeof RecruitersRoute
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/recruiters': typeof RecruitersRoute
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/recruiters': typeof RecruitersRoute
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/forgot-password'
     | '/login'
+    | '/notifications'
     | '/recruiters'
     | '/reset-password'
     | '/roles'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/forgot-password'
     | '/login'
+    | '/notifications'
     | '/recruiters'
     | '/reset-password'
     | '/roles'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/forgot-password'
     | '/login'
+    | '/notifications'
     | '/recruiters'
     | '/reset-password'
     | '/roles'
@@ -151,6 +163,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  NotificationsRoute: typeof NotificationsRoute
   RecruitersRoute: typeof RecruitersRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RolesRoute: typeof RolesRoute
@@ -177,6 +190,13 @@ declare module '@tanstack/react-router' {
       path: '/recruiters'
       fullPath: '/recruiters'
       preLoaderRoute: typeof RecruitersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -251,6 +271,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  NotificationsRoute: NotificationsRoute,
   RecruitersRoute: RecruitersRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RolesRoute: RolesRoute,
