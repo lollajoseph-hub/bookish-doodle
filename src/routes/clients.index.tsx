@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { fetchClients } from "@/lib/crm-queries";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
