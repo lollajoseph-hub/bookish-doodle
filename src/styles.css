@@ -409,5 +409,5 @@
 
 /* Shared solid brand-purple border for main content cards (matches the Add Candidate page) */
 @utility card-amber {
-  border-color: #431867;
+  border-color: var(--amber);
 }
