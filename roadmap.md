@@ -6,4 +6,4 @@
 - [x] Add professional entrance and interaction motion with reduced-motion support.
 - [x] Verify login and candidate interactions across desktop and mobile.
 - [x] Restyle the login screen with simplified password-only sign-in and subtle branded artwork.
-- [ ] Place both login sections inside one centered shared card and update the primary purple palette.
+- [x] Place both login sections inside one centered shared card and update the primary purple palette.
