@@ -110,7 +110,6 @@ function SectionTitle({ children, action }: { children: React.ReactNode; action?
 
 function DashboardPage() {
   const { profile } = useAuth();
-  const isAdmin = profile?.role === "admin";
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -124,7 +123,6 @@ function DashboardPage() {
   const auditQ = useQuery({
     queryKey: ["audit-logs"],
     queryFn: () => fetchAuditLogs(20),
-    enabled: isAdmin,
   });
 
   const candidates = candidatesQ.data ?? [];
@@ -329,9 +327,8 @@ function DashboardPage() {
           </div>
         </section>
 
-        {isAdmin && (
-          <section className="space-y-3">
-            <SectionTitle>Admin overview</SectionTitle>
+        <section className="space-y-3">
+          <SectionTitle>Admin overview</SectionTitle>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <StatCard label="Team members" value={staff.length} icon={Users} loading={staffQ.isLoading} />
               <StatCard label="Total roles" value={roles.length} icon={Briefcase} loading={rolesQ.isLoading} />
