@@ -80,7 +80,7 @@ function FormSection({
     <section className={cn("space-y-4", !first && "mt-6 pt-5")}>
       {!first && (
         <div
-          className="-mt-6 mb-5 h-px bg-amber/70 shadow-[0_0_6px_0_rgb(245_158_11_/_0.55),0_0_14px_2px_rgb(245_158_11_/_0.25)]"
+          className="-mt-6 h-px bg-amber/70 shadow-[0_0_6px_0_rgb(245_158_11_/_0.55),0_0_14px_2px_rgb(245_158_11_/_0.25)]"
           aria-hidden
         />
       )}
