@@ -124,6 +124,7 @@ function CandidateDetailPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["candidate", candidateId],
     queryFn: () => fetchCandidateDetail(candidateId),
+    staleTime: 30_000,
   });
   const { data: roles = [] } = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: fetchStaffProfiles });
@@ -210,7 +211,60 @@ function CandidateDetailPage() {
   if (isLoading) {
     return (
       <AppShell title="Candidate">
-        <p className="text-sm text-muted-foreground">Loading profile…</p>
+        <div className="space-y-6">
+          <div className="h-4 w-40 animate-pulse rounded bg-primary/10" />
+          <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+            <div className="space-y-6">
+              <section className="card-amber rounded-2xl border bg-card p-5 text-center">
+                <div className="mx-auto h-28 w-28 animate-pulse rounded-full bg-primary/10" />
+                <div className="mx-auto mt-3 h-5 w-40 animate-pulse rounded bg-primary/10" />
+                <div className="mx-auto mt-2 h-4 w-52 animate-pulse rounded bg-primary/10" />
+                <div className="mt-4 space-y-2 border-t pt-4">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className="h-4 animate-pulse rounded bg-primary/10" />
+                  ))}
+                </div>
+              </section>
+              <section className="card-amber rounded-2xl border bg-card p-5">
+                <div className="h-4 w-28 animate-pulse rounded bg-primary/10" />
+                <div className="mt-3 space-y-2">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="h-9 animate-pulse rounded-xl bg-primary/10" />
+                  ))}
+                </div>
+              </section>
+            </div>
+            <div className="card-amber rounded-2xl border bg-card p-4 sm:p-5">
+              <div className="flex flex-wrap gap-1">
+                {["Overview", "Documents", "AI Profile", "Client Pipeline", "Notes"].map(
+                  (label, i) => (
+                    <span
+                      key={label}
+                      className={`rounded-xl px-3 py-2 text-sm font-medium ${
+                        i === 0
+                          ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-amber/70"
+                          : "text-foreground/70"
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  ),
+                )}
+              </div>
+              <div className="mt-4 space-y-5">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="card-amber rounded-2xl border bg-card p-5">
+                    <div className="h-4 w-24 animate-pulse rounded bg-primary/10" />
+                    <div className="mt-3 space-y-2">
+                      <div className="h-4 animate-pulse rounded bg-primary/10" />
+                      <div className="h-4 w-3/4 animate-pulse rounded bg-primary/10" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </AppShell>
     );
   }
