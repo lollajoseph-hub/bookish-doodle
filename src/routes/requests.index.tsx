@@ -66,7 +66,7 @@ function ArrowScrollArea({ children }: { children: ReactNode }) {
     ref.current?.scrollBy({ top: dir * 160, behavior: "smooth" });
 
   return (
-    <div className="flex min-h-0 flex-col">
+    <div className="relative flex min-h-0 flex-col">
       <div
         ref={ref}
         onScroll={updateScrollState}
