@@ -407,10 +407,10 @@
   }
 }
 
-/* Shared amber-glow border for main content cards (matches the Add Candidate page) */
+/* Shared dark-purple glow border for main content cards (matches the Add Candidate page) */
 @utility card-amber {
-  border-color: color-mix(in oklab, var(--amber) 45%, transparent);
+  border-color: color-mix(in oklab, var(--primary-dark) 45%, transparent);
   box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--amber) 12%, transparent),
-    0 0 18px -6px color-mix(in oklab, var(--amber) 32%, transparent);
+    0 0 0 1px color-mix(in oklab, var(--primary-dark) 12%, transparent),
+    0 0 18px -6px color-mix(in oklab, var(--primary-dark) 32%, transparent);
 }
