@@ -19,3 +19,8 @@
 - [x] Left-rail + tabbed candidate detail layout
 - [x] Full-page /candidates/new create flow
 - [x] Admin "Add staff" invite + resend invite on Team page
+
+## Sidebar regroup + pipeline/ops pages (done)
+- [x] Sidebar: Pools / Pipeline / Operations / Activity groups, admin-only items
+- [x] Add Client dialog wired to admin-create-client (primary contact + invite)
+- [x] /interview-review, /offer-review, /cs-queue, /admin-tools, /system-monitor, /reports, /recruiter-activity
