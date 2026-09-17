@@ -165,9 +165,9 @@ const RequestsRequestIdRoute = RequestsRequestIdRouteImport.update({
   getParentRoute: () => RequestsRoute,
 } as any)
 const RecruitersStaffIdRoute = RecruitersStaffIdRouteImport.update({
-  id: '/$staffId',
-  path: '/$staffId',
-  getParentRoute: () => RecruitersRoute,
+  id: '/recruiters/$staffId',
+  path: '/recruiters/$staffId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ClientsClientIdRoute = ClientsClientIdRouteImport.update({
   id: '/$clientId',
@@ -390,6 +390,7 @@ export interface RootRouteChildren {
   RolesRoute: typeof RolesRoute
   SystemMonitorRoute: typeof SystemMonitorRoute
   TeamRoute: typeof TeamRoute
+  RecruitersStaffIdRoute: typeof RecruitersStaffIdRoute
   RecruitersIndexRoute: typeof RecruitersIndexRoute
 }
 
@@ -572,10 +573,10 @@ declare module '@tanstack/react-router' {
     }
     '/recruiters/$staffId': {
       id: '/recruiters/$staffId'
-      path: '/$staffId'
+      path: '/recruiters/$staffId'
       fullPath: '/recruiters/$staffId'
       preLoaderRoute: typeof RecruitersStaffIdRouteImport
-      parentRoute: typeof RecruitersRoute
+      parentRoute: typeof rootRouteImport
     }
     '/clients/$clientId': {
       id: '/clients/$clientId'
@@ -665,6 +666,7 @@ const rootRouteChildren: RootRouteChildren = {
   RolesRoute: RolesRoute,
   SystemMonitorRoute: SystemMonitorRoute,
   TeamRoute: TeamRoute,
+  RecruitersStaffIdRoute: RecruitersStaffIdRoute,
   RecruitersIndexRoute: RecruitersIndexRoute,
 }
 export const routeTree = rootRouteImport
