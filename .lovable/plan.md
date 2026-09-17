@@ -1,12 +1,12 @@
-# Login and app polish
+# Login screen restyle
 
 ## Changes
-- Promote #5C4080 to the primary app color, retaining #7A59A3 as a secondary accent.
-- Replace the remote logo with the uploaded transparent artwork and create a matching favicon.
-- Enlarge unboxed logo treatments in the sidebar and login screen.
-- Refresh login copy with a warmer, product-specific welcome.
-- Add restrained entrance, hover, press, and candidate selection transitions with reduced-motion support.
+- Keep the current split layout, password authentication, forgot-password link, logo variants, and entrance animations.
+- Reduce and reposition the white logo on the purple panel.
+- Move the welcome message to the purple panel and remove all explanatory copy.
+- Simplify the light card to a compact “Sign in” label, email and password fields, and one submit button.
+- Remove the magic-link action and button.
+- Add a subtle brand-colored geometric background layer behind the left-panel content using lightweight CSS shapes and line work.
 
 ## Validation
-- Check the login screen and candidate-card styles at desktop and mobile sizes.
-- Confirm every content route retains unique metadata.
+- Verify desktop and mobile layouts, sign-in controls, logo usage, and browser console output.
