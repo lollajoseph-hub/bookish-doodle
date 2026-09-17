@@ -507,7 +507,7 @@ export function CandidateForm({
             <div className="space-y-1.5 rounded-xl border bg-primary-soft/40 p-3">
               <Input
                 type="file"
-                accept="video/*"
+                accept="video/mp4,video/webm,video/quicktime,video/ogg"
                 className="h-9 text-xs"
                 onChange={(e) => pickFile("intro_video", e.target.files?.[0])}
               />
