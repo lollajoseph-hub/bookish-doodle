@@ -12,6 +12,8 @@ import {
   ClipboardList,
   BriefcaseBusiness,
   ScrollText,
+  Check,
+  ChevronDown,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { useEffect, useState, type ReactNode } from "react";
@@ -109,35 +111,42 @@ function SidebarNav({ onNav, isAdmin }: { onNav?: () => void; isAdmin: boolean }
             <div className="space-y-1">
               {group.items.map(renderItem)}
               {group.label === "Candidate Pool" && (
-                <div className="space-y-0.5 pt-1">
-                  <Link
-                    to="/candidates"
-                    search={{}}
-                    onClick={onNav}
-                    className={`block rounded-lg py-1.5 pl-9 pr-3 text-xs transition-colors ${
-                      path.startsWith("/candidates") && !roleSearch
-                        ? "bg-sidebar-accent text-sidebar-foreground font-semibold"
-                        : "text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                    }`}
-                  >
-                    All roles
-                  </Link>
-                  {activeRoles.map((role) => (
-                    <Link
-                      key={role.id}
-                      to="/candidates"
-                      search={{ role: role.id }}
-                      onClick={onNav}
-                      className={`block rounded-lg py-1.5 pl-9 pr-3 text-xs transition-colors ${
-                        path.startsWith("/candidates") && roleSearch === role.id
-                          ? "bg-sidebar-accent text-sidebar-foreground font-semibold"
-                          : "text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                      }`}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="h-8 w-full justify-between px-3 pl-9 text-xs font-normal text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                     >
-                      {role.name}
-                    </Link>
-                  ))}
-                </div>
+                      <span className="truncate">
+                        {activeRoles.find((role) => role.id === roleSearch)?.name ?? "All roles"}
+                      </span>
+                      <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent side="right" align="start" className="w-56">
+                    <DropdownMenuLabel>Role categories</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/candidates" search={{}} onClick={onNav} className="flex justify-between">
+                        All roles
+                        {!roleSearch && <Check className="h-4 w-4" />}
+                      </Link>
+                    </DropdownMenuItem>
+                    {activeRoles.map((role) => (
+                      <DropdownMenuItem key={role.id} asChild>
+                        <Link
+                          to="/candidates"
+                          search={{ role: role.id }}
+                          onClick={onNav}
+                          className="flex justify-between"
+                        >
+                          <span className="truncate">{role.name}</span>
+                          {roleSearch === role.id && <Check className="h-4 w-4" />}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
           </div>

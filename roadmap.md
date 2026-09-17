@@ -13,3 +13,4 @@
 
 - [x] Segment sidebar navigation, add admin toolkit and role deep-links
 - [x] Implement approved segmented sidebar and synchronized role links
+- [x] Replace candidate role chips with a sidebar role dropdown
