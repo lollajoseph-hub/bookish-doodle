@@ -17,10 +17,10 @@ export const Route = createFileRoute("/audit-logs")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Audit logs | ScaleSource Candidate Review Dashboard" },
+      { title: "Audit logs | Candidate Review System" },
       { name: "description", content: "Admin-only record of changes made across the candidate review system." },
       { property: "og:title", content: "Audit logs | ScaleSource" },
-      { property: "og:description", content: "Admin-only change history for the ScaleSource dashboard." },
+      { property: "og:description", content: "Admin-only change history for the dashboard." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

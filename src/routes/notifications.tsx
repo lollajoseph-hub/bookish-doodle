@@ -15,10 +15,10 @@ export const Route = createFileRoute("/notifications")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Notifications | ScaleSource Candidate Review Dashboard" },
+      { title: "Notifications | Candidate Review System" },
       { name: "description", content: "Your alerts about candidate matches, requests and placements." },
       { property: "og:title", content: "Notifications | ScaleSource" },
-      { property: "og:description", content: "Alerts for ScaleSource recruiters and admins." },
+      { property: "og:description", content: "Alerts for recruiters and admins." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

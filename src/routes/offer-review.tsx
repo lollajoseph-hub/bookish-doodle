@@ -38,7 +38,7 @@ export const Route = createFileRoute("/offer-review")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Offer review | ScaleSource Candidate Review Dashboard" },
+      { title: "Offer review | Candidate Review System" },
       { name: "description", content: "Offers awaiting a decision and hires awaiting a placement record." },
       { property: "og:title", content: "Offer review | ScaleSource" },
       { property: "og:description", content: "Decide on offers and confirm placements." },

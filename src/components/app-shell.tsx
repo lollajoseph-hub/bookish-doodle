@@ -308,7 +308,7 @@ export function AppShell({
           <ShieldCheck className="mx-auto h-10 w-10 text-primary" />
           <h1 className="mt-4 text-xl font-semibold">Access restricted</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            The Candidate Review Dashboard is for ScaleSource staff (admins and recruiters). Your
+            The Candidate Review Dashboard is for staff (admins and recruiters). Your
             account doesn't have access.
           </p>
           <Button

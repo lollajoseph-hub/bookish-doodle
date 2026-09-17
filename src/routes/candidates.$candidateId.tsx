@@ -53,7 +53,7 @@ export const Route = createFileRoute("/candidates/$candidateId")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Candidate profile | ScaleSource Candidate Review Dashboard" },
+      { title: "Candidate profile | Candidate Review System" },
       {
         name: "description",
         content: "Full candidate profile: contact details, roles, skills, work history and notes.",
@@ -61,7 +61,7 @@ export const Route = createFileRoute("/candidates/$candidateId")({
       { property: "og:title", content: "Candidate profile | ScaleSource" },
       {
         property: "og:description",
-        content: "Full candidate profile in the ScaleSource Candidate Pool Review System.",
+        content: "Full candidate profile in the Candidate Review System.",
       },
       { property: "og:type", content: "profile" },
       { name: "twitter:card", content: "summary" },

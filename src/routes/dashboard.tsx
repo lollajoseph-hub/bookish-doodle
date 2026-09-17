@@ -38,16 +38,16 @@ export const Route = createFileRoute("/dashboard")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Operations overview | ScaleSource Candidate Review Dashboard" },
+      { title: "Operations overview | Candidate Review System" },
       {
         name: "description",
         content:
-          "Operations overview of the ScaleSource pipeline: candidates, client requests, matches and placements.",
+          "Operations overview of the pipeline: candidates, client requests, matches and placements.",
       },
       { property: "og:title", content: "Operations overview | ScaleSource" },
       {
         property: "og:description",
-        content: "Candidate, client and placement pipeline overview for ScaleSource staff.",
+        content: "Candidate, client and placement pipeline overview for staff.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -194,7 +194,7 @@ function DashboardPage() {
             ? `Welcome, ${profile.full_name.split(" ")[0]}`
             : "Welcome"
       }
-      description="ScaleSource Candidate Pool Review System"
+      description="Candidate Review System"
       actions={null}
     >
       <div className="space-y-8">

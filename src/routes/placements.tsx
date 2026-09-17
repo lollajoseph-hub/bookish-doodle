@@ -13,8 +13,8 @@ export const Route = createFileRoute("/placements")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Placements | ScaleSource Candidate Review Dashboard" },
-      { name: "description", content: "Active and completed candidate placements with ScaleSource clients." },
+      { title: "Placements | Candidate Review System" },
+      { name: "description", content: "Active and completed candidate placements with clients." },
       { property: "og:title", content: "Placements | ScaleSource" },
       { property: "og:description", content: "Track placed candidates, seats and billing start dates." },
       { property: "og:type", content: "website" },

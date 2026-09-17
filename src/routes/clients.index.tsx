@@ -31,10 +31,10 @@ export const Route = createFileRoute("/clients/")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Clients | ScaleSource Candidate Review Dashboard" },
-      { name: "description", content: "Companies ScaleSource places candidates with, their contacts and open requests." },
+      { title: "Clients | Candidate Review System" },
+      { name: "description", content: "Companies places candidates with, their contacts and open requests." },
       { property: "og:title", content: "Clients | ScaleSource" },
-      { property: "og:description", content: "Manage ScaleSource client companies and their hiring requests." },
+      { property: "og:description", content: "Manage client companies and their hiring requests." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

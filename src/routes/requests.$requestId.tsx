@@ -41,7 +41,7 @@ export const Route = createFileRoute("/requests/$requestId")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Request pipeline | ScaleSource Candidate Review Dashboard" },
+      { title: "Request pipeline | Candidate Review System" },
       { name: "description", content: "Candidate pipeline for a client hiring request, from recommended to hired." },
       { property: "og:title", content: "Request pipeline | ScaleSource" },
       { property: "og:description", content: "Track candidate matches through the review pipeline." },

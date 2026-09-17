@@ -16,15 +16,15 @@ export const Route = createFileRoute("/login")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Sign in | ScaleSource Candidate Review Dashboard" },
+      { title: "Sign in | Candidate Review System" },
       {
         name: "description",
-        content: "Sign in to the ScaleSource Candidate Pool Review System.",
+        content: "Sign in to the Candidate Review System.",
       },
-      { property: "og:title", content: "Sign in | ScaleSource Candidate Review" },
+      { property: "og:title", content: "Sign in | Candidate Review System" },
       {
         property: "og:description",
-        content: "Sign in to the ScaleSource Candidate Pool Review System.",
+        content: "Sign in to the Candidate Review System.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -88,7 +88,7 @@ function LoginPage() {
               </p>
             </div>
             <p className="text-xs text-primary-foreground/60">
-              ScaleSource Candidate Pool Review System
+              Candidate Review System
             </p>
           </section>
 
