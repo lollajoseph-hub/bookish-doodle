@@ -414,7 +414,40 @@ export function CandidateForm({
               onChange={(e) => set("earliest_start_date", e.target.value || null)}
             />
           </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="languages">Languages</Label>
+            <Input
+              id="languages"
+              placeholder="Type a language and press Enter"
+              value={languageDraft}
+              onChange={(e) => setLanguageDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === ",") {
+                  e.preventDefault();
+                  addLanguage(languageDraft);
+                } else if (e.key === "Backspace" && !languageDraft && form.languageNames.length) {
+                  removeLanguage(form.languageNames[form.languageNames.length - 1]!);
+                }
+              }}
+              onBlur={() => addLanguage(languageDraft)}
+            />
+            {form.languageNames.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {form.languageNames.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => removeLanguage(name)}
+                    className="rounded-full border-amber bg-amber-soft px-3 py-0.5 text-xs font-medium text-amber-foreground transition-colors hover:bg-amber/80"
+                  >
+                    {name} ✕
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
+
       </FormSection>
 
       <FormSection
