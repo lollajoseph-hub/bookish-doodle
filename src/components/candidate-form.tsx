@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   createCandidate,
@@ -17,6 +17,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TimezoneSelect } from "@/components/timezone-select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -257,28 +267,68 @@ export function CandidateForm({
 
       <section className="space-y-2">
         <Label>Roles</Label>
-        <div className="flex flex-wrap gap-2">
-          {roles.map((r) => {
-            const on = form.roleIds.includes(r.id);
-            return (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => toggleRole(r.id)}
-                className={`rounded-full border px-3 py-1 text-xs transition-all ${
-                  on
-                    ? "border-amber bg-amber-soft text-amber-foreground font-medium"
-                    : "border-border bg-card hover:border-primary hover:text-primary"
-                }`}
-              >
-                {r.name}
-              </button>
-            );
-          })}
-          {!roles.length && (
-            <p className="text-xs text-muted-foreground">No roles yet — add one on the Roles page.</p>
-          )}
-        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              role="combobox"
+              className="h-9 w-full justify-between font-normal sm:w-[280px]"
+            >
+              <span className="truncate">
+                {form.roleIds.length
+                  ? form.roleIds
+                      .map((id) => roles.find((r) => r.id === id)?.name)
+                      .filter(Boolean)
+                      .join(", ")
+                  : "Select roles"}
+              </span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[280px] p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search roles…" />
+              <CommandList>
+                <CommandEmpty>No roles yet — add one on the Roles page.</CommandEmpty>
+                <CommandGroup>
+                  {roles.map((r) => {
+                    const on = form.roleIds.includes(r.id);
+                    return (
+                      <CommandItem key={r.id} onSelect={() => toggleRole(r.id)}>
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            on ? "opacity-100 text-primary" : "opacity-0",
+                          )}
+                        />
+                        {r.name}
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+        {form.roleIds.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {form.roleIds.map((id) => {
+              const role = roles.find((r) => r.id === id);
+              if (!role) return null;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => toggleRole(id)}
+                  className="rounded-full border-amber bg-amber-soft px-3 py-0.5 text-xs font-medium text-amber-foreground transition-colors hover:bg-amber/80"
+                >
+                  {role.name} ✕
+                </button>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       <section className="space-y-3">
