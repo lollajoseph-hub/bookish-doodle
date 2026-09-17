@@ -407,8 +407,8 @@
   }
 }
 
-/* Shared amber border for main content cards (matches the Add Candidate page) */
+/* Shared #431867 border for main content cards (amber stays for highlights) */
 @utility card-amber {
-  border-color: var(--amber);
+  border-color: var(--primary);
   border-width: 2px;
 }
