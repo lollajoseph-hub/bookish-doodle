@@ -65,28 +65,29 @@ function LoginPage() {
         <span className="login-panel-plane" />
       </div>
 
-      <div className="relative z-10 grid min-h-screen lg:grid-cols-2">
-        <div className="login-panel-enter hidden p-6 lg:flex lg:flex-col lg:justify-between lg:p-8">
-          <img
-            src={whiteBrandLogo.url}
-            alt="ScaleSource"
-            className="h-7 w-auto max-w-full self-start object-contain"
-          />
-          <div className="max-w-lg pb-8">
-            <h1 className="text-5xl font-bold leading-tight lg:text-6xl">Welcome to ScaleSource</h1>
-            <div className="mt-6 h-1 w-16 rounded-full bg-amber" aria-hidden="true" />
-            <p className="mt-6 max-w-md text-primary-foreground/75">
-              Review the candidate pool, manage client requests, and track placements — everything
-              you need in one place.
+      <div className="relative z-10 flex min-h-screen items-center justify-center p-5 sm:p-8 lg:p-12">
+        <main className="grid w-full max-w-6xl overflow-hidden rounded-2xl border border-primary-foreground/15 bg-primary-dark/45 shadow-2xl backdrop-blur-md lg:min-h-[620px] lg:grid-cols-[1.15fr_0.85fr]">
+          <section className="login-panel-enter flex min-h-[340px] flex-col justify-between p-7 sm:p-10 lg:min-h-0 lg:p-12">
+            <img
+              src={whiteBrandLogo.url}
+              alt="ScaleSource"
+              className="h-7 w-auto max-w-full self-start object-contain"
+            />
+            <div className="max-w-lg py-12 lg:py-8">
+              <h1 className="text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">Welcome to ScaleSource</h1>
+              <div className="mt-6 h-1 w-16 rounded-full bg-amber" aria-hidden="true" />
+              <p className="mt-6 max-w-md text-primary-foreground/75">
+                Review the candidate pool, manage client requests, and track placements — everything
+                you need in one place.
+              </p>
+            </div>
+            <p className="text-xs text-primary-foreground/60">
+              ScaleSource Candidate Pool Review System
             </p>
-          </div>
-          <p className="text-xs text-primary-foreground/60">
-            ScaleSource Candidate Pool Review System
-          </p>
-        </div>
+          </section>
 
-        <div className="flex items-center justify-center p-6 sm:p-10 lg:justify-end lg:p-12">
-          <div className="login-form-enter w-full max-w-sm rounded-2xl border border-primary-foreground/20 bg-primary-foreground/10 p-6 shadow-xl backdrop-blur-xl sm:p-8">
+          <section className="flex items-center justify-center p-6 sm:p-10 lg:p-12">
+            <div className="login-form-enter w-full max-w-sm rounded-2xl border border-primary-foreground/20 bg-primary-foreground/10 p-6 shadow-xl backdrop-blur-xl sm:p-8">
             <img
               src={colorBrandLogo.url}
               alt="ScaleSource"
@@ -138,8 +139,9 @@ function LoginPage() {
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Submit
               </Button>
             </form>
-          </div>
-        </div>
+            </div>
+          </section>
+        </main>
       </div>
     </div>
   );
