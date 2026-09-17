@@ -15,7 +15,7 @@ export const Route = createFileRoute("/placements")({
     meta: [
       { title: "Placements | Candidate Review System" },
       { name: "description", content: "Active and completed candidate placements with clients." },
-      { property: "og:title", content: "Placements | ScaleSource" },
+      { property: "og:title", content: "Placements | Candidate Review System" },
       { property: "og:description", content: "Track placed candidates, seats and billing start dates." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

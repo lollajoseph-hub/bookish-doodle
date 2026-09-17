@@ -13,7 +13,7 @@ export const Route = createFileRoute("/system-monitor")({
     meta: [
       { title: "System monitor | Candidate Review System" },
       { name: "description", content: "Row counts, stored file usage and the latest system activity." },
-      { property: "og:title", content: "System monitor | ScaleSource" },
+      { property: "og:title", content: "System monitor | Candidate Review System" },
       { property: "og:description", content: "A lightweight health snapshot of the dashboard data." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

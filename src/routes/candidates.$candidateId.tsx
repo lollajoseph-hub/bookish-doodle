@@ -58,7 +58,7 @@ export const Route = createFileRoute("/candidates/$candidateId")({
         name: "description",
         content: "Full candidate profile: contact details, roles, skills, work history and notes.",
       },
-      { property: "og:title", content: "Candidate profile | ScaleSource" },
+      { property: "og:title", content: "Candidate profile | Candidate Review System" },
       {
         property: "og:description",
         content: "Full candidate profile in the Candidate Review System.",

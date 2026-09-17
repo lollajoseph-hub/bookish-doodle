@@ -41,7 +41,7 @@ export const Route = createFileRoute("/clients/$clientId")({
     meta: [
       { title: "Client | Candidate Review System" },
       { name: "description", content: "Client company profile: contacts, open requests and placements." },
-      { property: "og:title", content: "Client | ScaleSource" },
+      { property: "og:title", content: "Client | Candidate Review System" },
       { property: "og:description", content: "Client profile in the Candidate Review System." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

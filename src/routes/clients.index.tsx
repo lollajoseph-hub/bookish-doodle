@@ -33,7 +33,7 @@ export const Route = createFileRoute("/clients/")({
     meta: [
       { title: "Clients | Candidate Review System" },
       { name: "description", content: "Companies places candidates with, their contacts and open requests." },
-      { property: "og:title", content: "Clients | ScaleSource" },
+      { property: "og:title", content: "Clients | Candidate Review System" },
       { property: "og:description", content: "Manage client companies and their hiring requests." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -115,7 +115,7 @@ function ClientsPage() {
   return (
     <AppShell
       title="Clients"
-      description="Companies hiring through ScaleSource"
+      description="Companies hiring through the Candidate Review System"
       actions={
         <Button onClick={() => setOpen(true)}>
           <Plus className="mr-1 h-4 w-4" /> Add client

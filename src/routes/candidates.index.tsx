@@ -21,7 +21,7 @@ export const Route = createFileRoute("/candidates/")({
         name: "description",
         content: "Browse the candidate pool grouped by role, with recruiter ownership.",
       },
-      { property: "og:title", content: "Candidate Pool | ScaleSource" },
+      { property: "og:title", content: "Candidate Pool | Candidate Review System" },
       {
         property: "og:description",
         content: "Browse the candidate pool grouped by role.",

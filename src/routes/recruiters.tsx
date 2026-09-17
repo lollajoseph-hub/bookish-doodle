@@ -30,7 +30,7 @@ export const Route = createFileRoute("/recruiters")({
         name: "description",
         content: "recruiters and admins, with the candidates each one owns.",
       },
-      { property: "og:title", content: "Team | ScaleSource" },
+      { property: "og:title", content: "Team | Candidate Review System" },
       { property: "og:description", content: "Recruiters and admins in the candidate review system." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -17,7 +17,7 @@ export const Route = createFileRoute("/notifications")({
     meta: [
       { title: "Notifications | Candidate Review System" },
       { name: "description", content: "Your alerts about candidate matches, requests and placements." },
-      { property: "og:title", content: "Notifications | ScaleSource" },
+      { property: "og:title", content: "Notifications | Candidate Review System" },
       { property: "og:description", content: "Alerts for recruiters and admins." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -23,7 +23,7 @@ export const Route = createFileRoute("/cs-queue")({
     meta: [
       { title: "CS queue | Candidate Review System" },
       { name: "description", content: "Client requests flagged as needing attention from the team." },
-      { property: "og:title", content: "CS queue | ScaleSource" },
+      { property: "og:title", content: "CS queue | Candidate Review System" },
       { property: "og:description", content: "Client requests that need attention." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

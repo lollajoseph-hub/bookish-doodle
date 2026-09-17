@@ -19,7 +19,7 @@ export const Route = createFileRoute("/audit-logs")({
     meta: [
       { title: "Audit logs | Candidate Review System" },
       { name: "description", content: "Admin-only record of changes made across the candidate review system." },
-      { property: "og:title", content: "Audit logs | ScaleSource" },
+      { property: "og:title", content: "Audit logs | Candidate Review System" },
       { property: "og:description", content: "Admin-only change history for the dashboard." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

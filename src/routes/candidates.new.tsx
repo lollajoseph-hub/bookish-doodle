@@ -12,7 +12,7 @@ export const Route = createFileRoute("/candidates/new")({
         name: "description",
         content: "Add a new candidate to the pool with contact details, skills and documents.",
       },
-      { property: "og:title", content: "Add candidate | ScaleSource" },
+      { property: "og:title", content: "Add candidate | Candidate Review System" },
       {
         property: "og:description",
         content: "Create a candidate record with documents and an introduction video.",

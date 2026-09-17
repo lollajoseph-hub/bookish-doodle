@@ -9,7 +9,7 @@ export const Route = createFileRoute("/team")({
     meta: [
       { title: "Add to team | Candidate Review System" },
       { name: "description", content: "Invite and manage admin accounts." },
-      { property: "og:title", content: "Add to team | ScaleSource" },
+      { property: "og:title", content: "Add to team | Candidate Review System" },
       { property: "og:description", content: "Invite other admins to the dashboard." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

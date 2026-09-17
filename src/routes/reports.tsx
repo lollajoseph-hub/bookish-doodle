@@ -13,7 +13,7 @@ export const Route = createFileRoute("/reports")({
     meta: [
       { title: "Reports | Candidate Review System" },
       { name: "description", content: "Summary of candidates, requests, matches and placements." },
-      { property: "og:title", content: "Reports | ScaleSource" },
+      { property: "og:title", content: "Reports | Candidate Review System" },
       { property: "og:description", content: "Exportable summary of pipeline activity." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

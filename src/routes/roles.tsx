@@ -11,7 +11,7 @@ export const Route = createFileRoute("/roles")({
         name: "description",
         content: "Manage the roles candidates are grouped by, from CSR to marketing positions.",
       },
-      { property: "og:title", content: "Roles | ScaleSource" },
+      { property: "og:title", content: "Roles | Candidate Review System" },
       { property: "og:description", content: "Manage candidate roles in the pool." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

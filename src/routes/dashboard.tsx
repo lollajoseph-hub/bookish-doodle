@@ -44,7 +44,7 @@ export const Route = createFileRoute("/dashboard")({
         content:
           "Operations overview of the pipeline: candidates, client requests, matches and placements.",
       },
-      { property: "og:title", content: "Operations overview | ScaleSource" },
+      { property: "og:title", content: "Operations overview | Candidate Review System" },
       {
         property: "og:description",
         content: "Candidate, client and placement pipeline overview for staff.",

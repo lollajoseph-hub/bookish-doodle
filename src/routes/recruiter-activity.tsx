@@ -20,7 +20,7 @@ export const Route = createFileRoute("/recruiter-activity")({
     meta: [
       { title: "Recruiter activity | Candidate Review System" },
       { name: "description", content: "Recent actions taken by recruiters." },
-      { property: "og:title", content: "Recruiter activity | ScaleSource" },
+      { property: "og:title", content: "Recruiter activity | Candidate Review System" },
       { property: "og:description", content: "Track what recruiters have been doing in the system." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
