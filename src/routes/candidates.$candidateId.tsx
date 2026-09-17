@@ -497,8 +497,23 @@ function CandidateDetailPage() {
   );
 }
 
-function IntroVideoCard({ videoUrl, linkUrl }: { videoUrl: string | null; linkUrl: string | null }) {
-  if (!videoUrl && !linkUrl) return null;
+function IntroVideoCard({
+  videoUrl,
+  linkUrl,
+  showEmpty = false,
+}: {
+  videoUrl: string | null;
+  linkUrl: string | null;
+  showEmpty?: boolean;
+}) {
+  if (!videoUrl && !linkUrl) {
+    if (!showEmpty) return null;
+    return (
+      <SectionCard title="Introduction video">
+        <p className="text-sm text-muted-foreground">No intro video yet</p>
+      </SectionCard>
+    );
+  }
   const source = videoUrl ?? linkUrl!;
   const embeddable = !!videoUrl || (linkUrl ? isDirectVideo(linkUrl) : false);
   return (
