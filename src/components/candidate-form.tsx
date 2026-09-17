@@ -8,6 +8,7 @@ import {
   fetchJobRoles,
   fetchStaffProfiles,
   updateCandidate,
+  LANGUAGE_CATEGORY,
   type CandidateFormInput,
 } from "@/lib/queries";
 import { uploadCandidateFile } from "@/lib/crm-queries";
@@ -109,6 +110,7 @@ export function CandidateForm({
   const [form, setForm] = useState<CandidateFormInput>(() => emptyForm(profile?.id ?? null));
   const [files, setFiles] = useState<Partial<Record<CandidateFileType, File>>>({});
   const [videoMode, setVideoMode] = useState<"upload" | "link">("link");
+  const [languageDraft, setLanguageDraft] = useState("");
 
   const { data: roles = [] } = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: fetchStaffProfiles });
