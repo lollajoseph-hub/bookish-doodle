@@ -1,12 +1,16 @@
-# Login screen restyle
+# Login card structure and brand purple correction
 
 ## Changes
-- Keep the current split layout, password authentication, forgot-password link, logo variants, and entrance animations.
-- Reduce and reposition the white logo on the purple panel.
-- Move the welcome message to the purple panel and remove all explanatory copy.
-- Simplify the light card to a compact “Sign in” label, email and password fields, and one submit button.
-- Remove the magic-link action and button.
-- Add a subtle brand-colored geometric background layer behind the left-panel content using lightweight CSS shapes and line work.
+- Replace the full-viewport two-column login layout with a neutral `primary-soft` page canvas and one centered, bounded, rounded outer card.
+- Keep the purple welcome panel and white sign-in area as the two children of that shared card, preserving their copy, artwork, logos, animations, controls, and mobile behavior.
+- Remove only the sign-in area’s independent border, rounding, and shadow so the shared outer card owns that treatment.
+- Change the primary brand purple to `#431867` across light and dark design tokens, use `#2E1049` for the darker shade, and update related ring/sidebar tokens consistently while retaining `#7A59A3` as the secondary accent.
+
+## Technical details
+- Update `src/routes/login.tsx` layout classes only; authentication behavior remains untouched.
+- Update semantic variables in `src/styles.css`, including primary, primary-dark, ring, sidebar, sidebar-primary, and sidebar-accent values in both themes.
+- Keep `primary-soft`, existing artwork definitions, motion utilities, logo imports, and form content unchanged.
 
 ## Validation
-- Verify desktop and mobile layouts, sign-in controls, logo usage, and browser console output.
+- Check desktop and mobile layouts in the running preview.
+- Confirm the shared card has visible outer spacing, the mobile layout stacks cleanly, and no browser errors appear.
