@@ -121,7 +121,6 @@ function RequestsPage() {
 
   const [clientId, setClientId] = useState("");
   const [roleId, setRoleId] = useState("");
-  const [title, setTitle] = useState("");
   const [hiresNeeded, setHiresNeeded] = useState("1");
   const [engagement, setEngagement] = useState("full_time");
   const [hours, setHours] = useState("");
@@ -156,7 +155,7 @@ function RequestsPage() {
       return createClientRequest({
         client_id: clientId,
         role_id: roleId,
-        title,
+        title: null,
         candidates_wanted: Math.max(4, hires * 4),
         hires_needed: hires,
         engagement_type: engagement,
