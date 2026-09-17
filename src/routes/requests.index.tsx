@@ -118,7 +118,7 @@ function RequestsPage() {
   return (
     <AppShell title="Client requests" description="Hiring requests to source review batches for">
       <div className="mb-5 flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">Hiring requests to source review batches for</p>
+        <p className="text-sm text-muted-foreground">Open seats waiting on candidate batches</p>
         <Button onClick={() => setOpen(true)}>
           <Plus className="mr-1 h-4 w-4" /> New request
         </Button>
