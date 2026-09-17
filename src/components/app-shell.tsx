@@ -13,6 +13,7 @@ import {
   ScrollText,
   Check,
   ChevronDown,
+  ChevronUp,
   CalendarCheck,
   FileCheck,
   LifeBuoy,
