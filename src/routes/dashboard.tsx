@@ -169,6 +169,34 @@ function DashboardPage() {
 
   const recent = useMemo(() => candidates.slice(0, 6), [candidates]);
 
+  const myCandidates = useMemo(
+    () => candidates.filter((c) => c.recruiter_id === profile?.id),
+    [candidates, profile?.id],
+  );
+  const myStats = useMemo(() => {
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const byStatus = (st: string) => myCandidates.filter((c) => (c.status ?? "new") === st).length;
+    const myCandidateIds = new Set(myCandidates.map((c) => c.id));
+    const myMatchesList = matches.filter((m) => myCandidateIds.has(m.candidate_id));
+    const byMatch = (...sts: string[]) => myMatchesList.filter((m) => sts.includes(m.status ?? "")).length;
+    return {
+      total: myCandidates.length,
+      newThisWeek: myCandidates.filter((c) => new Date(c.created_at).getTime() >= weekAgo).length,
+      new: byStatus("new"),
+      shortlisted: byStatus("shortlisted"),
+      interviewed: byStatus("interviewed"),
+      hiredCandidates: byStatus("hired"),
+      placed: byStatus("placed"),
+      rejected: byStatus("rejected"),
+      upcomingInterviews: byMatch("interview_requested", "interview_confirmed"),
+      pendingOffers: byMatch("offer_extended"),
+      activePlacements: placements.filter(
+        (p) => myCandidateIds.has(p.candidate_id) && (p.status ?? "active") === "active",
+      ).length,
+    };
+  }, [myCandidates, matches, placements]);
+  const myRecent = useMemo(() => myCandidates.slice(0, 6), [myCandidates]);
+
   async function refreshAll() {
     setRefreshing(true);
     try {
