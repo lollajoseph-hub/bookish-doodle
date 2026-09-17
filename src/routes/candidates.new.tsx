@@ -7,12 +7,12 @@ export const Route = createFileRoute("/candidates/new")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Add candidate | ScaleSource Candidate Review Dashboard" },
+      { title: "Add candidate | Candidate Review System" },
       {
         name: "description",
-        content: "Add a new candidate to the ScaleSource pool with contact details, skills and documents.",
+        content: "Add a new candidate to the pool with contact details, skills and documents.",
       },
-      { property: "og:title", content: "Add candidate | ScaleSource" },
+      { property: "og:title", content: "Add candidate | Candidate Review System" },
       {
         property: "og:description",
         content: "Create a candidate record with documents and an introduction video.",

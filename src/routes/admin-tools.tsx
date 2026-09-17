@@ -33,9 +33,9 @@ export const Route = createFileRoute("/admin-tools")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Admin tools | ScaleSource Candidate Review Dashboard" },
+      { title: "Admin tools | Candidate Review System" },
       { name: "description", content: "Admin interventions: change candidate status, reassign or archive." },
-      { property: "og:title", content: "Admin tools | ScaleSource" },
+      { property: "og:title", content: "Admin tools | Candidate Review System" },
       { property: "og:description", content: "Direct admin interventions on candidate records." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

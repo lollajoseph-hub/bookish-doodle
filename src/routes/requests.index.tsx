@@ -42,9 +42,9 @@ export const Route = createFileRoute("/requests/")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Client requests | ScaleSource Candidate Review Dashboard" },
-      { name: "description", content: "The queue of open hiring requests from ScaleSource clients." },
-      { property: "og:title", content: "Client requests | ScaleSource" },
+      { title: "Client requests | Candidate Review System" },
+      { name: "description", content: "The queue of open hiring requests from clients." },
+      { property: "og:title", content: "Client requests | Candidate Review System" },
       { property: "og:description", content: "Work the queue of client hiring requests and their candidate batches." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -28,9 +28,9 @@ export const Route = createFileRoute("/interview-review")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Interview review | ScaleSource Candidate Review Dashboard" },
+      { title: "Interview review | Candidate Review System" },
       { name: "description", content: "Candidates currently moving through client interview stages." },
-      { property: "og:title", content: "Interview review | ScaleSource" },
+      { property: "og:title", content: "Interview review | Candidate Review System" },
       { property: "og:description", content: "Advance candidates through interview stages." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

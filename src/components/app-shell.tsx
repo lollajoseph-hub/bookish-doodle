@@ -27,7 +27,6 @@ import {
 import { NotificationsBell } from "@/components/notifications-bell";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useAuth, isStaff } from "@/lib/auth";
-import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -263,11 +262,9 @@ function Brand({ role }: { role?: string | null }) {
     role === "admin" ? "Admin workspace" : role === "recruiter" ? "Recruiter workspace" : "Staff workspace";
   return (
     <div className="border-b border-sidebar-border px-5 py-5">
-      <img
-        src={whiteBrandLogo.url}
-        alt="ScaleSource"
-        className="h-auto w-full max-w-[190px] object-contain object-left drop-shadow-sm"
-      />
+      <div className="text-[15px] font-bold leading-tight tracking-tight text-white">
+        Candidate Review <span className="text-brand-accent">System</span>
+      </div>
       <div className="mt-2 text-[11px] uppercase tracking-wider text-sidebar-foreground/70">{subtitle}</div>
     </div>
   );
@@ -308,7 +305,7 @@ export function AppShell({
           <ShieldCheck className="mx-auto h-10 w-10 text-primary" />
           <h1 className="mt-4 text-xl font-semibold">Access restricted</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            The Candidate Review Dashboard is for ScaleSource staff (admins and recruiters). Your
+            The Candidate Review Dashboard is for staff (admins and recruiters). Your
             account doesn't have access.
           </p>
           <Button

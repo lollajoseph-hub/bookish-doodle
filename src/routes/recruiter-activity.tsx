@@ -18,9 +18,9 @@ export const Route = createFileRoute("/recruiter-activity")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Recruiter activity | ScaleSource Candidate Review Dashboard" },
-      { name: "description", content: "Recent actions taken by ScaleSource recruiters." },
-      { property: "og:title", content: "Recruiter activity | ScaleSource" },
+      { title: "Recruiter activity | Candidate Review System" },
+      { name: "description", content: "Recent actions taken by recruiters." },
+      { property: "og:title", content: "Recruiter activity | Candidate Review System" },
       { property: "og:description", content: "Track what recruiters have been doing in the system." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

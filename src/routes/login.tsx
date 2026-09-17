@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
-import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,15 +15,15 @@ export const Route = createFileRoute("/login")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Sign in | ScaleSource Candidate Review Dashboard" },
+      { title: "Sign in | Candidate Review System" },
       {
         name: "description",
-        content: "Sign in to the ScaleSource Candidate Pool Review System.",
+        content: "Sign in to the Candidate Review System.",
       },
-      { property: "og:title", content: "Sign in | ScaleSource Candidate Review" },
+      { property: "og:title", content: "Sign in | Candidate Review System" },
       {
         property: "og:description",
-        content: "Sign in to the ScaleSource Candidate Pool Review System.",
+        content: "Sign in to the Candidate Review System.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -75,11 +74,9 @@ function LoginPage() {
             <span className="login-panel-plane" />
           </div>
           <section className="login-panel-enter relative z-10 flex min-h-[340px] flex-col justify-between p-7 sm:p-10 lg:min-h-0 lg:px-16 lg:py-12">
-            <img
-              src={whiteBrandLogo.url}
-              alt="ScaleSource"
-              className="h-5 w-auto max-w-full self-start object-contain"
-            />
+            <div className="text-sm font-bold leading-tight tracking-tight text-white">
+              Candidate Review <span className="text-brand-accent">System</span>
+            </div>
             <div className="max-w-lg py-12 lg:py-8">
               <h1 className="text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">Welcome!</h1>
               <p className="mt-6 max-w-md text-primary-foreground/75">
@@ -88,7 +85,7 @@ function LoginPage() {
               </p>
             </div>
             <p className="text-xs text-primary-foreground/60">
-              ScaleSource Candidate Pool Review System
+              Candidate Review System
             </p>
           </section>
 

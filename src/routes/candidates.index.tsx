@@ -16,15 +16,15 @@ export const Route = createFileRoute("/candidates/")({
   validateSearch: candidateSearchSchema,
   head: () => ({
     meta: [
-      { title: "Candidate Pool | ScaleSource Candidate Review Dashboard" },
+      { title: "Candidate Pool | Candidate Review System" },
       {
         name: "description",
-        content: "Browse the ScaleSource candidate pool grouped by role, with recruiter ownership.",
+        content: "Browse the candidate pool grouped by role, with recruiter ownership.",
       },
-      { property: "og:title", content: "Candidate Pool | ScaleSource" },
+      { property: "og:title", content: "Candidate Pool | Candidate Review System" },
       {
         property: "og:description",
-        content: "Browse the ScaleSource candidate pool grouped by role.",
+        content: "Browse the candidate pool grouped by role.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
