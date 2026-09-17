@@ -189,72 +189,148 @@
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(145deg, transparent 38%, color-mix(in oklab, var(--brand-accent) 32%, transparent) 100%),
-    linear-gradient(35deg, color-mix(in oklab, var(--primary-dark) 58%, transparent), transparent 55%);
+    radial-gradient(
+      ellipse 90% 80% at 78% 18%,
+      color-mix(in oklab, var(--brand-accent) 38%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(145deg, transparent 42%, color-mix(in oklab, var(--brand-accent) 40%, transparent) 100%),
+    linear-gradient(35deg, color-mix(in oklab, var(--primary-dark) 72%, transparent), transparent 58%);
 }
 
+/* Bold overlapping gradient-filled circles */
 .login-panel-arc {
   position: absolute;
   display: block;
-  border: 1px solid color-mix(in oklab, var(--primary-foreground) 15%, transparent);
   border-radius: 50%;
 }
 
 .login-panel-arc-one {
-  width: 34rem;
-  height: 34rem;
-  top: 9%;
-  right: -16rem;
+  width: 36rem;
+  height: 36rem;
+  top: 4%;
+  right: -17rem;
+  background: radial-gradient(
+    circle at 32% 32%,
+    color-mix(in oklab, var(--brand-accent) 68%, transparent),
+    color-mix(in oklab, var(--brand-accent) 22%, transparent) 58%,
+    transparent 78%
+  );
 }
 
 .login-panel-arc-two {
-  width: 24rem;
-  height: 24rem;
-  top: 20%;
-  right: -10rem;
+  width: 25rem;
+  height: 25rem;
+  top: 26%;
+  right: -9rem;
+  background: radial-gradient(
+    circle at 68% 30%,
+    color-mix(in oklab, var(--primary-foreground) 24%, transparent),
+    color-mix(in oklab, var(--primary-glow, var(--brand-accent)) 18%, transparent) 55%,
+    transparent 75%
+  );
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--primary-foreground) 22%, transparent),
+    0 0 60px -12px color-mix(in oklab, var(--brand-accent) 55%, transparent);
 }
 
+.login-panel-arc-three {
+  width: 14rem;
+  height: 14rem;
+  bottom: -4rem;
+  left: -3.5rem;
+  background: radial-gradient(
+    circle at 40% 35%,
+    color-mix(in oklab, var(--primary-foreground) 16%, transparent),
+    color-mix(in oklab, var(--brand-accent) 20%, transparent) 60%,
+    transparent 80%
+  );
+}
+
+/* Thin accent lines */
 .login-panel-line {
   position: absolute;
   display: block;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--primary-foreground) 20%, transparent), transparent);
+  height: 1.5px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--primary-foreground) 40%, transparent),
+    transparent
+  );
   transform-origin: center;
 }
 
 .login-panel-line-one {
-  width: 80%;
+  width: 82%;
   top: 34%;
   left: -18%;
   transform: rotate(-28deg);
 }
 
 .login-panel-line-two {
-  width: 70%;
+  width: 72%;
   right: -12%;
   bottom: 23%;
   transform: rotate(24deg);
 }
 
+/* Thick glossy diagonal capsule crossing the panel */
 .login-panel-plane {
   position: absolute;
   display: block;
-  width: 20rem;
-  height: 28rem;
-  right: -7rem;
-  bottom: -10rem;
-  transform: rotate(32deg);
-  background: linear-gradient(145deg, color-mix(in oklab, var(--brand-accent) 34%, transparent), transparent 72%);
-  border-left: 1px solid color-mix(in oklab, var(--primary-foreground) 12%, transparent);
+  width: 46rem;
+  height: 7.5rem;
+  right: -12rem;
+  bottom: 16%;
+  transform: rotate(-24deg);
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      105deg,
+      color-mix(in oklab, var(--brand-accent) 85%, transparent) 0%,
+      color-mix(in oklab, var(--primary-glow, var(--brand-accent)) 55%, transparent) 45%,
+      color-mix(in oklab, var(--brand-accent) 75%, transparent) 100%
+    );
+  box-shadow:
+    inset 0 2px 3px color-mix(in oklab, var(--primary-foreground) 45%, transparent),
+    inset 0 -6px 14px color-mix(in oklab, var(--primary-dark) 70%, transparent),
+    0 24px 60px -20px color-mix(in oklab, var(--brand-accent) 60%, transparent);
+}
+
+.login-panel-plane::after {
+  content: "";
+  position: absolute;
+  inset: 0.55rem 1.5rem auto;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--primary-foreground) 55%, transparent) 45%,
+    transparent
+  );
+  filter: blur(1px);
 }
 
 .login-submit-button {
-  background-image: linear-gradient(110deg, var(--primary-dark), var(--brand-accent));
-  box-shadow: 0 8px 20px -12px color-mix(in oklab, var(--primary) 60%, transparent);
+  background-image: linear-gradient(
+    110deg,
+    var(--primary-dark) 0%,
+    var(--brand-accent) 48%,
+    var(--amber) 115%
+  );
+  box-shadow: 0 10px 26px -10px color-mix(in oklab, var(--brand-accent) 70%, transparent);
 }
 
 .login-submit-button:hover {
-  background-image: linear-gradient(110deg, var(--primary), var(--brand-accent));
+  background-image: linear-gradient(
+    110deg,
+    var(--primary) 0%,
+    color-mix(in oklab, var(--brand-accent) 92%, var(--amber)) 48%,
+    var(--amber) 115%
+  );
+  box-shadow: 0 14px 32px -10px color-mix(in oklab, var(--amber) 55%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {

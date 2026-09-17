@@ -60,6 +60,7 @@ function LoginPage() {
         <div aria-hidden="true" className="login-panel-artwork">
           <span className="login-panel-arc login-panel-arc-one" />
           <span className="login-panel-arc login-panel-arc-two" />
+          <span className="login-panel-arc login-panel-arc-three" />
           <span className="login-panel-line login-panel-line-one" />
           <span className="login-panel-line login-panel-line-two" />
           <span className="login-panel-plane" />
@@ -72,6 +73,10 @@ function LoginPage() {
         <div className="relative z-10 max-w-lg pb-8">
           <h1 className="text-5xl font-bold leading-tight lg:text-6xl">Welcome to ScaleSource</h1>
           <div className="mt-6 h-1 w-16 rounded-full bg-amber" aria-hidden="true" />
+          <p className="mt-6 max-w-md text-primary-foreground/75">
+            Review the candidate pool, manage client requests, and track placements — everything
+            you need in one place.
+          </p>
         </div>
         <p className="relative z-10 text-xs text-primary-foreground/60">
           ScaleSource Candidate Pool Review System
