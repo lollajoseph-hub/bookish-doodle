@@ -59,9 +59,8 @@ function emptyForm(recruiterId: string | null): CandidateFormInput {
     earliest_start_date: null,
     intro_video_url: null,
     roleIds: [],
-    skillNames: [],
-    workHistory: [],
-    education: [],
+    languageNames: [],
+
   };
 }
 
