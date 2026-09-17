@@ -137,21 +137,10 @@ export function CandidateForm({
         earliest_start_date: detail.candidate.earliest_start_date ?? null,
         intro_video_url: detail.candidate.intro_video_url ?? null,
         roleIds: detail.roleIds,
-        skillNames: detail.skills.map((s) => s.name),
-        workHistory: detail.workHistory.map((w) => ({
-          company: w.company ?? "",
-          title: w.title ?? "",
-          start_date: w.start_date,
-          end_date: w.end_date,
-          description: w.description,
-        })),
-        education: detail.education.map((e) => ({
-          institution: e.institution ?? "",
-          degree: e.degree ?? "",
-          field: e.field,
-          start_date: e.start_date,
-          end_date: e.end_date,
-        })),
+        languageNames: detail.skills
+          .filter((s) => s.category === LANGUAGE_CATEGORY)
+          .map((s) => s.name),
+
       });
     } else if (!candidateId) {
       setForm(emptyForm(profile?.id ?? null));
