@@ -55,8 +55,9 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
-      <div className="login-panel-enter relative hidden overflow-hidden bg-primary text-primary-foreground lg:flex lg:flex-col lg:justify-between p-6 lg:p-8">
+    <div className="flex min-h-screen items-center justify-center bg-primary-soft p-6 lg:p-12">
+      <div className="grid w-full max-w-6xl overflow-hidden rounded-3xl bg-card shadow-xl lg:min-h-[680px] lg:grid-cols-2">
+        <div className="login-panel-enter relative hidden overflow-hidden bg-primary p-6 text-primary-foreground lg:flex lg:flex-col lg:justify-between lg:p-8">
         <div aria-hidden="true" className="login-panel-artwork">
           <span className="login-panel-arc login-panel-arc-one" />
           <span className="login-panel-arc login-panel-arc-two" />
@@ -81,10 +82,10 @@ function LoginPage() {
         <p className="relative z-10 text-xs text-primary-foreground/60">
           ScaleSource Candidate Pool Review System
         </p>
-      </div>
+        </div>
 
-      <div className="flex items-center justify-center px-4 py-12 bg-background">
-        <div className="login-form-enter w-full max-w-md rounded-2xl border bg-card shadow-sm p-8">
+        <div className="login-form-enter flex items-center justify-center bg-card px-6 py-12 sm:px-10 lg:px-12">
+          <div className="w-full max-w-md">
           <img
             src={colorBrandLogo.url}
             alt="ScaleSource"
@@ -135,6 +136,7 @@ function LoginPage() {
               {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Submit
             </Button>
           </form>
+          </div>
         </div>
       </div>
     </div>
