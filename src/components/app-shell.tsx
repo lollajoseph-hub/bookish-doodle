@@ -330,7 +330,7 @@ export function AppShell({
       <Brand role={profile?.role} />
       <SidebarNav onNav={() => setMobileOpen(false)} isAdmin={isAdmin} />
       <div className="px-5 py-4 border-t border-sidebar-border text-[11px] text-sidebar-foreground/60">
-        Candidate Pool Review System
+        Candidate Review System
       </div>
     </div>
   );
