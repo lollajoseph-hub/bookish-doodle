@@ -142,6 +142,7 @@ function LoginPage() {
             </form>
             </div>
           </section>
+          <span aria-hidden="true" className="login-card-amber-edge" />
         </main>
       </div>
     </div>
