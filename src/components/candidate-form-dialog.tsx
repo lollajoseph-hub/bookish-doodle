@@ -38,6 +38,13 @@ import {
 
 const STATUSES = ["new", "screening", "shortlisted", "placed", "archived"];
 
+const UPLOAD_FIELDS: { key: CandidateFileType; label: string; accept?: string }[] = [
+  { key: "profile_photo", label: "Profile photo", accept: "image/*" },
+  { key: "resume", label: "Resume", accept: ".pdf,.doc,.docx" },
+  { key: "id_document", label: "ID document", accept: "image/*,.pdf" },
+  { key: "other", label: "Other / reference documents" },
+];
+
 function emptyForm(recruiterId: string | null): CandidateFormInput {
   return {
     full_name: "",
