@@ -1,7 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
-  UserPlus,
   LayoutDashboard,
   Users,
   LogOut,
@@ -291,7 +290,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen flex bg-background">
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col">{sidebar}</aside>
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col lg:flex">{sidebar}</aside>
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="p-0 w-72 bg-sidebar border-sidebar-border">
