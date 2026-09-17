@@ -21,6 +21,7 @@ import {
   BarChart3,
   Bell,
   History,
+  UserPlus,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
@@ -90,6 +91,8 @@ const navGroups: Array<{ label: string; items: NavItem[]; adminOnly?: boolean }>
     adminOnly: true,
     items: [
       { to: "/admin-tools", label: "Admin Tools", icon: Wrench },
+      { to: "/team", label: "Add to Team", icon: UserPlus },
+      { to: "/roles", label: "Roles", icon: ShieldCheck },
       { to: "/system-monitor", label: "System Monitor", icon: Activity },
       { to: "/reports", label: "Reports", icon: BarChart3 },
     ],
