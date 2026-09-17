@@ -364,8 +364,8 @@ function CandidateDetailPage() {
                 )}
                 {isAdmin && (
                   <Button
-                    className="w-full justify-start"
-                    variant="destructive"
+                    className="w-full justify-start rounded-xl bg-transparent px-3 py-2 text-destructive hover:bg-destructive/10 hover:text-destructive hover:translate-x-0.5 border-transparent hover:border-transparent"
+                    variant="ghost"
                     onClick={() => setDeleteOpen(true)}
                   >
                     <Trash2 className="mr-2 h-4 w-4" /> Delete candidate
@@ -378,12 +378,37 @@ function CandidateDetailPage() {
           {/* ------------------------------- tabs ---------------------------------- */}
           <div className="card-amber rounded-2xl border bg-card p-4 sm:p-5">
             <Tabs value={tab} onValueChange={setTab}>
-              <TabsList className="flex w-full flex-wrap justify-start">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
-                <TabsTrigger value="ai">AI Profile</TabsTrigger>
-                <TabsTrigger value="pipeline">Client Pipeline</TabsTrigger>
-                <TabsTrigger value="notes">Notes</TabsTrigger>
+              <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 border-0 bg-transparent p-0">
+                <TabsTrigger
+                  value="overview"
+                  className="rounded-xl px-3 py-2 text-sidebar-foreground/90 hover:bg-sidebar-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
+                >
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger
+                  value="documents"
+                  className="rounded-xl px-3 py-2 text-sidebar-foreground/90 hover:bg-sidebar-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
+                >
+                  Documents
+                </TabsTrigger>
+                <TabsTrigger
+                  value="ai"
+                  className="rounded-xl px-3 py-2 text-sidebar-foreground/90 hover:bg-sidebar-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
+                >
+                  AI Profile
+                </TabsTrigger>
+                <TabsTrigger
+                  value="pipeline"
+                  className="rounded-xl px-3 py-2 text-sidebar-foreground/90 hover:bg-sidebar-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
+                >
+                  Client Pipeline
+                </TabsTrigger>
+                <TabsTrigger
+                  value="notes"
+                  className="rounded-xl px-3 py-2 text-sidebar-foreground/90 hover:bg-sidebar-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
+                >
+                  Notes
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="mt-4 space-y-5">
