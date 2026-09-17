@@ -207,22 +207,6 @@ export async function syncLanguages(candidateId: string, languageNames: string[]
 
 /* ------------------------------ candidate CRUD ------------------------------ */
 
-export interface WorkHistoryInput {
-  company: string;
-  title: string;
-  start_date: string | null;
-  end_date: string | null;
-  description: string | null;
-}
-
-export interface EducationInput {
-  institution: string;
-  degree: string;
-  field: string | null;
-  start_date: string | null;
-  end_date: string | null;
-}
-
 export interface CandidateFormInput {
   full_name: string;
   email: string | null;
@@ -239,14 +223,16 @@ export interface CandidateFormInput {
   earliest_start_date: string | null;
   intro_video_url: string | null;
   roleIds: string[];
-  skillNames: string[];
-  workHistory: WorkHistoryInput[];
-  education: EducationInput[];
+  /** Recruiter-entered languages; stored as Languages-category skills. */
+  languageNames: string[];
 }
 
+/**
+ * Sync only the child records the form actually owns.
+ * Skills (other than Languages), work history and education are AI-extracted
+ * from the resume and must never be wiped by a form submit.
+ */
 async function syncChildren(candidateId: string, input: CandidateFormInput) {
-  const skillIds = await resolveSkillIds(input.skillNames);
-
   await supabase.from("candidate_roles").delete().eq("candidate_id", candidateId);
   if (input.roleIds.length) {
     const { error } = await supabase.from("candidate_roles").insert(
@@ -259,46 +245,9 @@ async function syncChildren(candidateId: string, input: CandidateFormInput) {
     if (error) throw error;
   }
 
-  await supabase.from("candidate_skills").delete().eq("candidate_id", candidateId);
-  if (skillIds.length) {
-    const { error } = await supabase
-      .from("candidate_skills")
-      .insert(skillIds.map((skill_id) => ({ candidate_id: candidateId, skill_id })));
-    if (error) throw error;
-  }
-
-  await supabase.from("candidate_work_history").delete().eq("candidate_id", candidateId);
-  const wh = input.workHistory.filter((w) => w.company.trim() || w.title.trim());
-  if (wh.length) {
-    const { error } = await supabase.from("candidate_work_history").insert(
-      wh.map((w) => ({
-        candidate_id: candidateId,
-        company: w.company || null,
-        title: w.title || null,
-        start_date: w.start_date || null,
-        end_date: w.end_date || null,
-        description: w.description || null,
-      })),
-    );
-    if (error) throw error;
-  }
-
-  await supabase.from("candidate_education").delete().eq("candidate_id", candidateId);
-  const edu = input.education.filter((e) => e.institution.trim() || e.degree.trim());
-  if (edu.length) {
-    const { error } = await supabase.from("candidate_education").insert(
-      edu.map((e) => ({
-        candidate_id: candidateId,
-        institution: e.institution || null,
-        degree: e.degree || null,
-        field: e.field || null,
-        start_date: e.start_date || null,
-        end_date: e.end_date || null,
-      })),
-    );
-    if (error) throw error;
-  }
+  await syncLanguages(candidateId, input.languageNames ?? []);
 }
+
 
 export async function createCandidate(
   input: CandidateFormInput,
