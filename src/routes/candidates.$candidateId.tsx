@@ -374,3 +374,61 @@ function CandidateDetailPage() {
     </AppShell>
   );
 }
+
+function AiSummaryCard({
+  candidateId,
+  canEdit,
+  recruiterSummary,
+  approvedSummary,
+  rankScore,
+}: {
+  candidateId: string;
+  canEdit: boolean;
+  recruiterSummary: string | null;
+  approvedSummary: string | null;
+  rankScore: number | null;
+}) {
+  const queryClient = useQueryClient();
+  const [draft, setDraft] = useState<string | null>(null);
+  const value = draft ?? approvedSummary ?? "";
+
+  const save = useMutation({
+    mutationFn: () => saveApprovedSummary(candidateId, value),
+    onSuccess: () => {
+      toast.success("Summary saved");
+      setDraft(null);
+      queryClient.invalidateQueries({ queryKey: ["candidate-ai", candidateId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <section className="rounded-2xl border bg-card p-5">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+          Candidate summary
+        </h2>
+        {rankScore != null && <Badge variant="secondary">Rank {rankScore}</Badge>}
+      </div>
+      {recruiterSummary && (
+        <p className="mt-3 rounded-xl bg-primary-soft/60 p-3 text-sm">{recruiterSummary}</p>
+      )}
+      {canEdit ? (
+        <div className="mt-3 space-y-2">
+          <Textarea
+            value={value}
+            placeholder="Approved summary shared with clients…"
+            onChange={(e) => setDraft(e.target.value)}
+          />
+          <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
+            {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save summary
+          </Button>
+        </div>
+      ) : (
+        <p className="mt-3 text-sm text-muted-foreground">
+          {approvedSummary || "No approved summary yet."}
+        </p>
+      )}
+    </section>
+  );
+}
