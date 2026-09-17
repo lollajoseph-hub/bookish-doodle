@@ -60,7 +60,7 @@ function DashboardPage() {
       title={
         profile?.role === "admin" || profile?.role === "recruiter"
           ? profile?.full_name
-            ? `Welcome, ${profile.full_name.split(" ")[0]} — here's your ${profile.role} dashboard`
+            ? `Welcome, ${profile.full_name.split(" ")[0]}, to your ${profile.role} dashboard`
             : `Welcome to your ${profile.role} dashboard`
           : profile?.full_name
             ? `Welcome, ${profile.full_name.split(" ")[0]}`
