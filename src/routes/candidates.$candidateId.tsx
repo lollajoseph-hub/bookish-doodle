@@ -414,6 +414,12 @@ function CandidateDetailPage() {
                   rankScore={aiProfile?.rank_score ?? null}
                 />
 
+                <IntroVideoCard
+                  videoUrl={media?.videoUrl ?? null}
+                  linkUrl={c.intro_video_url}
+                  showEmpty
+                />
+
                 <SkillsSection skills={data.skills} />
                 <WorkHistorySection workHistory={data.workHistory} />
                 <EducationSection education={data.education} />
