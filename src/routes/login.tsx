@@ -82,7 +82,6 @@ function LoginPage() {
             />
             <div className="max-w-lg py-12 lg:py-8">
               <h1 className="text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">Welcome!</h1>
-              <div className="mt-6 h-1 w-16 rounded-full bg-amber" aria-hidden="true" />
               <p className="mt-6 max-w-md text-primary-foreground/75">
                 Review the candidate pool, manage client requests, and track placements — everything
                 you need in one place.
@@ -143,6 +142,7 @@ function LoginPage() {
             </form>
             </div>
           </section>
+          <span aria-hidden="true" className="login-card-amber-edge" />
         </main>
       </div>
     </div>
