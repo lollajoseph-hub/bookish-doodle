@@ -186,13 +186,9 @@ function DashboardPage() {
   return (
     <AppShell
       title={
-        profile?.role === "admin" || profile?.role === "recruiter"
-          ? profile?.full_name
-            ? `Welcome, ${profile.full_name.split(" ")[0]}, to your ${profile.role} dashboard`
-            : `Welcome to your ${profile.role} dashboard`
-          : profile?.full_name
-            ? `Welcome, ${profile.full_name.split(" ")[0]}`
-            : "Welcome"
+        profile?.full_name
+          ? `Welcome ${profile.full_name.split(" ")[0]}`
+          : "Welcome"
       }
       description="Candidate Review System"
       actions={null}

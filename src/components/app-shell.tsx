@@ -262,11 +262,9 @@ function Brand({ role }: { role?: string | null }) {
     role === "admin" ? "Admin workspace" : role === "recruiter" ? "Recruiter workspace" : "Staff workspace";
   return (
     <div className="border-b border-sidebar-border px-5 py-5">
-      <img
-        src={whiteBrandLogo.url}
-        alt="ScaleSource"
-        className="h-auto w-full max-w-[190px] object-contain object-left drop-shadow-sm"
-      />
+      <div className="text-[15px] font-bold leading-tight tracking-tight text-white">
+        Candidate Review <span className="text-brand-accent">System</span>
+      </div>
       <div className="mt-2 text-[11px] uppercase tracking-wider text-sidebar-foreground/70">{subtitle}</div>
     </div>
   );
