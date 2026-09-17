@@ -15,7 +15,6 @@ import { Route as RolesRouteImport } from './routes/roles'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as ReportsRouteImport } from './routes/reports'
-import { Route as RecruitersRouteImport } from './routes/recruiters'
 import { Route as RecruiterActivityRouteImport } from './routes/recruiter-activity'
 import { Route as PlacementsRouteImport } from './routes/placements'
 import { Route as OfferReviewRouteImport } from './routes/offer-review'
@@ -31,6 +30,7 @@ import { Route as AuditLogsRouteImport } from './routes/audit-logs'
 import { Route as AdminToolsRouteImport } from './routes/admin-tools'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RequestsIndexRouteImport } from './routes/requests.index'
+import { Route as RecruitersIndexRouteImport } from './routes/recruiters.index'
 import { Route as ClientsIndexRouteImport } from './routes/clients.index'
 import { Route as CandidatesIndexRouteImport } from './routes/candidates.index'
 import { Route as RequestsRequestIdRouteImport } from './routes/requests.$requestId'
@@ -67,11 +67,6 @@ const RequestsRoute = RequestsRouteImport.update({
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecruitersRoute = RecruitersRouteImport.update({
-  id: '/recruiters',
-  path: '/recruiters',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecruiterActivityRoute = RecruiterActivityRouteImport.update({
@@ -149,6 +144,11 @@ const RequestsIndexRoute = RequestsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => RequestsRoute,
 } as any)
+const RecruitersIndexRoute = RecruitersIndexRouteImport.update({
+  id: '/recruiters/',
+  path: '/recruiters/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClientsIndexRoute = ClientsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -200,7 +200,6 @@ export interface FileRoutesByFullPath {
   '/offer-review': typeof OfferReviewRoute
   '/placements': typeof PlacementsRoute
   '/recruiter-activity': typeof RecruiterActivityRoute
-  '/recruiters': typeof RecruitersRouteWithChildren
   '/reports': typeof ReportsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -214,6 +213,7 @@ export interface FileRoutesByFullPath {
   '/requests/$requestId': typeof RequestsRequestIdRoute
   '/candidates/': typeof CandidatesIndexRoute
   '/clients/': typeof ClientsIndexRoute
+  '/recruiters/': typeof RecruitersIndexRoute
   '/requests/': typeof RequestsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -229,7 +229,6 @@ export interface FileRoutesByTo {
   '/offer-review': typeof OfferReviewRoute
   '/placements': typeof PlacementsRoute
   '/recruiter-activity': typeof RecruiterActivityRoute
-  '/recruiters': typeof RecruitersRouteWithChildren
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
@@ -242,6 +241,7 @@ export interface FileRoutesByTo {
   '/requests/$requestId': typeof RequestsRequestIdRoute
   '/candidates': typeof CandidatesIndexRoute
   '/clients': typeof ClientsIndexRoute
+  '/recruiters': typeof RecruitersIndexRoute
   '/requests': typeof RequestsIndexRoute
 }
 export interface FileRoutesById {
@@ -260,7 +260,6 @@ export interface FileRoutesById {
   '/offer-review': typeof OfferReviewRoute
   '/placements': typeof PlacementsRoute
   '/recruiter-activity': typeof RecruiterActivityRoute
-  '/recruiters': typeof RecruitersRouteWithChildren
   '/reports': typeof ReportsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -274,6 +273,7 @@ export interface FileRoutesById {
   '/requests/$requestId': typeof RequestsRequestIdRoute
   '/candidates/': typeof CandidatesIndexRoute
   '/clients/': typeof ClientsIndexRoute
+  '/recruiters/': typeof RecruitersIndexRoute
   '/requests/': typeof RequestsIndexRoute
 }
 export interface FileRouteTypes {
@@ -293,7 +293,6 @@ export interface FileRouteTypes {
     | '/offer-review'
     | '/placements'
     | '/recruiter-activity'
-    | '/recruiters'
     | '/reports'
     | '/requests'
     | '/reset-password'
@@ -307,6 +306,7 @@ export interface FileRouteTypes {
     | '/requests/$requestId'
     | '/candidates/'
     | '/clients/'
+    | '/recruiters/'
     | '/requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -322,7 +322,6 @@ export interface FileRouteTypes {
     | '/offer-review'
     | '/placements'
     | '/recruiter-activity'
-    | '/recruiters'
     | '/reports'
     | '/reset-password'
     | '/roles'
@@ -335,6 +334,7 @@ export interface FileRouteTypes {
     | '/requests/$requestId'
     | '/candidates'
     | '/clients'
+    | '/recruiters'
     | '/requests'
   id:
     | '__root__'
@@ -352,7 +352,6 @@ export interface FileRouteTypes {
     | '/offer-review'
     | '/placements'
     | '/recruiter-activity'
-    | '/recruiters'
     | '/reports'
     | '/requests'
     | '/reset-password'
@@ -366,6 +365,7 @@ export interface FileRouteTypes {
     | '/requests/$requestId'
     | '/candidates/'
     | '/clients/'
+    | '/recruiters/'
     | '/requests/'
   fileRoutesById: FileRoutesById
 }
@@ -384,13 +384,13 @@ export interface RootRouteChildren {
   OfferReviewRoute: typeof OfferReviewRoute
   PlacementsRoute: typeof PlacementsRoute
   RecruiterActivityRoute: typeof RecruiterActivityRoute
-  RecruitersRoute: typeof RecruitersRouteWithChildren
   ReportsRoute: typeof ReportsRoute
   RequestsRoute: typeof RequestsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   RolesRoute: typeof RolesRoute
   SystemMonitorRoute: typeof SystemMonitorRoute
   TeamRoute: typeof TeamRoute
+  RecruitersIndexRoute: typeof RecruitersIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -435,13 +435,6 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof ReportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recruiters': {
-      id: '/recruiters'
-      path: '/recruiters'
-      fullPath: '/recruiters'
-      preLoaderRoute: typeof RecruitersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recruiter-activity': {
@@ -549,6 +542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RequestsIndexRouteImport
       parentRoute: typeof RequestsRoute
     }
+    '/recruiters/': {
+      id: '/recruiters/'
+      path: '/recruiters'
+      fullPath: '/recruiters/'
+      preLoaderRoute: typeof RecruitersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/clients/': {
       id: '/clients/'
       path: '/'
@@ -630,18 +630,6 @@ const ClientsRouteChildren: ClientsRouteChildren = {
 const ClientsRouteWithChildren =
   ClientsRoute._addFileChildren(ClientsRouteChildren)
 
-interface RecruitersRouteChildren {
-  RecruitersStaffIdRoute: typeof RecruitersStaffIdRoute
-}
-
-const RecruitersRouteChildren: RecruitersRouteChildren = {
-  RecruitersStaffIdRoute: RecruitersStaffIdRoute,
-}
-
-const RecruitersRouteWithChildren = RecruitersRoute._addFileChildren(
-  RecruitersRouteChildren,
-)
-
 interface RequestsRouteChildren {
   RequestsRequestIdRoute: typeof RequestsRequestIdRoute
   RequestsIndexRoute: typeof RequestsIndexRoute
@@ -671,13 +659,13 @@ const rootRouteChildren: RootRouteChildren = {
   OfferReviewRoute: OfferReviewRoute,
   PlacementsRoute: PlacementsRoute,
   RecruiterActivityRoute: RecruiterActivityRoute,
-  RecruitersRoute: RecruitersRouteWithChildren,
   ReportsRoute: ReportsRoute,
   RequestsRoute: RequestsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   RolesRoute: RolesRoute,
   SystemMonitorRoute: SystemMonitorRoute,
   TeamRoute: TeamRoute,
+  RecruitersIndexRoute: RecruitersIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
