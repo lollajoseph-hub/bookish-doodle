@@ -112,16 +112,20 @@ function ClientsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const { data: profile } = useAuth();
+  const isAdmin = profile?.role === "admin";
+
   return (
-    <AppShell
-      title="Clients"
-      description="Companies hiring through ScaleSource"
-      actions={
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-1 h-4 w-4" /> Add client
-        </Button>
-      }
-    >
+    <AppShell title="Clients" description="Companies hiring through ScaleSource">
+      {isAdmin && (
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">Companies and their open requests</p>
+          <Button onClick={() => setOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" /> Add client
+          </Button>
+        </div>
+      )}
+
       <div className="relative mb-5 max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -131,6 +135,7 @@ function ClientsPage() {
           className="pl-9"
         />
       </div>
+
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading clients…</p>}
 
