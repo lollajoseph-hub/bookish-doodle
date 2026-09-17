@@ -1,0 +1,338 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { Loader2, Plus } from "lucide-react";
+import { toast } from "sonner";
+import { AppShell } from "@/components/app-shell";
+import { RequestStatusBadge } from "@/components/match-status";
+import {
+  createClientRequest,
+  fetchClientRequests,
+  fetchClients,
+  labelize,
+} from "@/lib/crm-queries";
+import { fetchJobRoles } from "@/lib/queries";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const STATUS_TABS = ["all", "open", "needs_attention", "fulfilled", "closed"] as const;
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+export const Route = createFileRoute("/requests/")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Client requests | ScaleSource Candidate Review Dashboard" },
+      { name: "description", content: "The queue of open hiring requests from ScaleSource clients." },
+      { property: "og:title", content: "Client requests | ScaleSource" },
+      { property: "og:description", content: "Work the queue of client hiring requests and their candidate batches." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: RequestsPage,
+});
+
+function RequestsPage() {
+  const { profile } = useAuth();
+  const queryClient = useQueryClient();
+  const [tab, setTab] = useState<(typeof STATUS_TABS)[number]>("all");
+  const [open, setOpen] = useState(false);
+
+  const [clientId, setClientId] = useState("");
+  const [roleId, setRoleId] = useState("");
+  const [title, setTitle] = useState("");
+  const [candidatesWanted, setCandidatesWanted] = useState("4");
+  const [hiresNeeded, setHiresNeeded] = useState("1");
+  const [engagement, setEngagement] = useState("full_time");
+  const [hours, setHours] = useState("");
+  const [tz, setTz] = useState("");
+  const [minYears, setMinYears] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [days, setDays] = useState<string[]>([]);
+  const [notes, setNotes] = useState("");
+
+  const { data: requests = [], isLoading } = useQuery({
+    queryKey: ["client-requests"],
+    queryFn: fetchClientRequests,
+  });
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: fetchClients });
+  const { data: roles = [] } = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
+
+  const filtered = useMemo(
+    () => (tab === "all" ? requests : requests.filter((r) => r.status === tab)),
+    [requests, tab],
+  );
+
+  const create = useMutation({
+    mutationFn: async () => {
+      if (!clientId) throw new Error("Pick a client");
+      if (!roleId) throw new Error("Pick a role");
+      return createClientRequest({
+        client_id: clientId,
+        role_id: roleId,
+        title,
+        candidates_wanted: Number(candidatesWanted) || 4,
+        hires_needed: Number(hiresNeeded) || 1,
+        engagement_type: engagement,
+        hours_needed: hours,
+        timezone_requirement: tz,
+        years_experience_min: minYears ? Number(minYears) : null,
+        desired_start_date: startDate,
+        days_of_week_needed: days,
+        notes,
+        created_by: profile?.id ?? null,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Request created");
+      setOpen(false);
+      setTitle("");
+      setNotes("");
+      setDays([]);
+      queryClient.invalidateQueries({ queryKey: ["client-requests"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <AppShell
+      title="Client requests"
+      description="Hiring requests to source review batches for"
+      actions={
+        <Button onClick={() => setOpen(true)}>
+          <Plus className="mr-1 h-4 w-4" /> New request
+        </Button>
+      }
+    >
+      <div className="mb-5 flex flex-wrap gap-2">
+        {STATUS_TABS.map((s) => (
+          <button
+            key={s}
+            onClick={() => setTab(s)}
+            className={`rounded-full border px-3 py-1.5 text-sm transition-all ${
+              tab === s
+                ? "border-amber bg-amber/15 text-amber-foreground shadow-sm"
+                : "bg-card hover:border-primary/50"
+            }`}
+          >
+            {s === "all" ? "All" : labelize(s)}
+          </button>
+        ))}
+      </div>
+
+      {isLoading && <p className="text-sm text-muted-foreground">Loading requests…</p>}
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        {filtered.map((r) => {
+          const pct = r.candidates_wanted
+            ? Math.min(100, Math.round((r.matchCount / r.candidates_wanted) * 100))
+            : 0;
+          return (
+            <Link
+              key={r.id}
+              to="/requests/$requestId"
+              params={{ requestId: r.id }}
+              className="rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-amber hover:shadow-md"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <div className="font-semibold">{r.title || r.roleName || "Request"}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {r.clientName} · {r.roleName} · {labelize(r.engagement_type)}
+                  </div>
+                </div>
+                <RequestStatusBadge status={r.status} />
+              </div>
+
+              <div className="mt-4 space-y-1">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>
+                    {r.matchCount} of {r.candidates_wanted} candidates in batch
+                  </span>
+                  <span>
+                    {r.hiredCount}/{r.hires_needed} hired
+                  </span>
+                </div>
+                <Progress value={pct} />
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
+                {r.desired_start_date && <Badge variant="secondary">Start {r.desired_start_date}</Badge>}
+                {r.timezone_requirement && <Badge variant="outline">{r.timezone_requirement}</Badge>}
+                {r.hours_needed && <Badge variant="outline">{r.hours_needed}</Badge>}
+                {!!r.rejection_count && <Badge variant="outline">{r.rejection_count} rejected</Badge>}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+      {!isLoading && !filtered.length && (
+        <p className="text-sm text-muted-foreground">No requests in this view.</p>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>New client request</DialogTitle>
+            <DialogDescription>Define the seat and the size of the review batch.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Client *</Label>
+                <Select value={clientId} onValueChange={setClientId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select client" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clients.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Role *</Label>
+                <Select value={roleId} onValueChange={setRoleId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="req-title">Title</Label>
+              <Input id="req-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="wanted">Candidates wanted</Label>
+                <Input
+                  id="wanted"
+                  type="number"
+                  min={1}
+                  value={candidatesWanted}
+                  onChange={(e) => setCandidatesWanted(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="hires">Hires needed</Label>
+                <Input
+                  id="hires"
+                  type="number"
+                  min={1}
+                  value={hiresNeeded}
+                  onChange={(e) => setHiresNeeded(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Engagement</Label>
+                <Select value={engagement} onValueChange={setEngagement}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="full_time">Full time</SelectItem>
+                    <SelectItem value="part_time">Part time</SelectItem>
+                    <SelectItem value="project">Project</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="hours">Hours needed</Label>
+                <Input id="hours" placeholder="20 hrs/week" value={hours} onChange={(e) => setHours(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="tz">Timezone requirement</Label>
+                <Input id="tz" placeholder="US Eastern" value={tz} onChange={(e) => setTz(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="minyears">Min years experience</Label>
+                <Input
+                  id="minyears"
+                  type="number"
+                  min={0}
+                  value={minYears}
+                  onChange={(e) => setMinYears(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="start">Desired start date</Label>
+                <Input id="start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Days needed</Label>
+              <div className="flex flex-wrap gap-2">
+                {DAYS.map((d) => {
+                  const on = days.includes(d);
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setDays(on ? days.filter((x) => x !== d) : [...days, d])}
+                      className={`rounded-full border px-3 py-1 text-xs transition-all ${
+                        on ? "border-amber bg-amber/20 text-amber-foreground" : "hover:border-primary/50"
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="req-notes">Notes</Label>
+              <Textarea id="req-notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => create.mutate()} disabled={create.isPending}>
+              {create.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Create request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </AppShell>
+  );
+}

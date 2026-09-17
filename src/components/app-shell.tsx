@@ -1,5 +1,18 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, LogOut, Menu, ShieldCheck, Briefcase, UserCog } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  LogOut,
+  Menu,
+  ShieldCheck,
+  Briefcase,
+  UserCog,
+  Building2,
+  ClipboardList,
+  BriefcaseBusiness,
+  ScrollText,
+} from "lucide-react";
+import { NotificationsBell } from "@/components/notifications-bell";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth, isStaff } from "@/lib/auth";
 import { BRAND_LOGO_URL } from "@/lib/supabase";
@@ -26,8 +39,12 @@ type NavItem = {
 const navItems: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/candidates", label: "Candidate Pool", icon: Users },
+  { to: "/clients", label: "Clients", icon: Building2 },
+  { to: "/requests", label: "Client Requests", icon: ClipboardList },
+  { to: "/placements", label: "Placements", icon: BriefcaseBusiness },
   { to: "/roles", label: "Roles", icon: Briefcase },
   { to: "/recruiters", label: "Team", icon: UserCog, adminOnly: true },
+  { to: "/audit-logs", label: "Audit Logs", icon: ScrollText, adminOnly: true },
 ];
 
 function initials(name?: string | null, email?: string | null) {
@@ -178,6 +195,7 @@ export function AppShell({
           </div>
           <div className="flex items-center gap-2">
             {actions}
+            <NotificationsBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-2 px-2">
