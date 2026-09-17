@@ -200,6 +200,7 @@ export type MatchStatus =
   | "interview_requested"
   | "interview_confirmed"
   | "interview_completed"
+  | "offer_extended"
   | "hired"
   | "rejected";
 export type RejectionReason = "skill_mismatch" | "availability_conflict" | "culture_fit" | "other";

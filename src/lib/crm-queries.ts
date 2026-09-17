@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import type {
+  AppRoleName,
   AuditLogRow,
   CandidateAiProfileRow,
   CandidateFileRow,
@@ -34,6 +35,7 @@ export const MATCH_STATUSES: MatchStatus[] = [
   "interview_requested",
   "interview_confirmed",
   "interview_completed",
+  "offer_extended",
   "hired",
   "rejected",
 ];
@@ -578,4 +580,125 @@ export async function fetchCandidateMedia(candidateId: string): Promise<{
     video ? getCandidateFileUrl(video).catch(() => null) : Promise.resolve(null),
   ]);
   return { photoUrl, videoUrl, videoName: video?.file_name ?? null };
+}
+
+/* --------------------- pipeline views (interview / offer) ----------------- */
+
+export interface MatchPipelineView extends CandidateMatchRow {
+  candidateName: string | null;
+  candidateHeadline: string | null;
+  requestTitle: string | null;
+  clientName: string | null;
+  roleName: string | null;
+}
+
+export async function fetchMatchesByStatus(statuses: MatchStatus[]): Promise<MatchPipelineView[]> {
+  const { data, error } = await supabase
+    .from("candidate_matches")
+    .select("*")
+    .in("status", statuses)
+    .order("updated_at", { ascending: false });
+  if (error) throw error;
+  const matches = (data ?? []) as CandidateMatchRow[];
+  if (!matches.length) return [];
+
+  const [requestsRes, clientsRes, rolesRes, candidatesRes] = await Promise.all([
+    supabase
+      .from("client_requests")
+      .select("id, title, client_id, role_id")
+      .in("id", matches.map((m) => m.client_request_id)),
+    supabase.from("clients").select("id, name"),
+    supabase.from("job_roles").select("id, name"),
+    supabase.from("candidates").select("id, full_name, headline"),
+  ]);
+  const reqById = new Map((requestsRes.data ?? []).map((r) => [r.id, r]));
+  const clientName = new Map((clientsRes.data ?? []).map((c) => [c.id, c.name]));
+  const roleName = new Map((rolesRes.data ?? []).map((r) => [r.id, r.name]));
+  const candidateById = new Map((candidatesRes.data ?? []).map((c) => [c.id, c]));
+
+  return matches.map((m) => {
+    const req = reqById.get(m.client_request_id);
+    return {
+      ...m,
+      candidateName: candidateById.get(m.candidate_id)?.full_name ?? null,
+      candidateHeadline: candidateById.get(m.candidate_id)?.headline ?? null,
+      requestTitle: req?.title ?? null,
+      clientName: req ? (clientName.get(req.client_id) ?? null) : null,
+      roleName: req ? (roleName.get(req.role_id) ?? null) : null,
+    };
+  });
+}
+
+/* ------------------------ audit logs with actor role ---------------------- */
+
+export interface AuditLogActorView extends AuditLogView {
+  userRole: AppRoleName | null;
+}
+
+export async function fetchAuditLogsWithRole(limit = 200): Promise<AuditLogActorView[]> {
+  const [logsRes, profilesRes] = await Promise.all([
+    supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(limit),
+    supabase.from("profiles").select("id, full_name, email, role"),
+  ]);
+  if (logsRes.error) throw logsRes.error;
+  const byId = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
+  return ((logsRes.data ?? []) as AuditLogRow[]).map((l) => {
+    const p = l.user_id ? byId.get(l.user_id) : null;
+    return {
+      ...l,
+      userName: p ? (p.full_name || p.email) : null,
+      userRole: (p?.role as AppRoleName | undefined) ?? null,
+    };
+  });
+}
+
+/* ------------------------- admin candidate actions ------------------------ */
+
+export async function setCandidateStatus(id: string, status: string): Promise<void> {
+  const { error } = await supabase.from("candidates").update({ status }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function setCandidateRecruiter(id: string, recruiterId: string | null): Promise<void> {
+  const { error } = await supabase.from("candidates").update({ recruiter_id: recruiterId }).eq("id", id);
+  if (error) throw error;
+}
+
+/* ----------------------------- system monitor ----------------------------- */
+
+export interface SystemStats {
+  candidates: number;
+  clients: number;
+  requests: number;
+  placements: number;
+  matches: number;
+  files: number;
+  storageBytes: number;
+}
+
+async function countRows(table: string): Promise<number> {
+  const { count, error } = await supabase.from(table).select("*", { count: "exact", head: true });
+  if (error) return 0;
+  return count ?? 0;
+}
+
+export async function fetchSystemStats(): Promise<SystemStats> {
+  const [candidates, clients, requests, placements, matches, filesRes] = await Promise.all([
+    countRows("candidates"),
+    countRows("clients"),
+    countRows("client_requests"),
+    countRows("placements"),
+    countRows("candidate_matches"),
+    supabase.from("candidate_files").select("size_bytes"),
+  ]);
+  const files = filesRes.data ?? [];
+  return {
+    candidates,
+    clients,
+    requests,
+    placements,
+    matches,
+    files: files.length,
+    storageBytes: files.reduce((sum, f) => sum + (f.size_bytes ?? 0), 0),
+  };
 }
