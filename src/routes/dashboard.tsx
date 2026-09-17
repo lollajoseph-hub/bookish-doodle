@@ -249,7 +249,7 @@ function DashboardPage() {
         <section className="space-y-3">
           <SectionTitle
             action={
-              <Link to="/client-requests" className="text-sm text-primary hover:underline">
+              <Link to="/requests" className="text-sm text-primary hover:underline">
                 View requests
               </Link>
             }
