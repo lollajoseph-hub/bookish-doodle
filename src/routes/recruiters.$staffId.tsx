@@ -122,7 +122,7 @@ function RecruiterDetailPage() {
 
   return (
     <AppShell
-      title={member.full_name || member.email}
+      title={member.full_name || member.email || "Recruiter"}
       description="Recruiter workload and owned candidates"
       actions={
         isAdmin && pendingInvite ? (
