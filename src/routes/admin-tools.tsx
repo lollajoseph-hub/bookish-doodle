@@ -18,6 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TeamPanel } from "@/components/team-panel";
+import { RolesPanel } from "@/components/roles-panel";
 
 const CANDIDATE_STATUSES = [
   "new",
@@ -227,6 +230,8 @@ function AdminToolsPage() {
           )}
         </div>
       </div>
+        </TabsContent>
+      </Tabs>
     </AppShell>
   );
 }
