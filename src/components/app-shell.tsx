@@ -34,30 +34,66 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { fetchJobRoles } from "@/lib/queries";
 
 type NavItem = {
-  to: "/dashboard" | "/candidates" | "/clients" | "/requests" | "/placements" | "/roles" | "/recruiters" | "/audit-logs";
+  to:
+    | "/dashboard"
+    | "/candidates"
+    | "/clients"
+    | "/requests"
+    | "/placements"
+    | "/roles"
+    | "/recruiters"
+    | "/audit-logs"
+    | "/interview-review"
+    | "/offer-review"
+    | "/cs-queue"
+    | "/admin-tools"
+    | "/system-monitor"
+    | "/reports"
+    | "/notifications"
+    | "/recruiter-activity";
   label: string;
   icon: typeof LayoutDashboard;
+  adminOnly?: boolean;
 };
 
 const dashboardItem: NavItem = { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard };
 
 const navGroups: Array<{ label: string; items: NavItem[]; adminOnly?: boolean }> = [
-  { label: "Candidate Pool", items: [{ to: "/candidates", label: "Candidate Pool", icon: Users }] },
   {
-    label: "Clients",
+    label: "Pools",
     items: [
-      { to: "/clients", label: "Clients", icon: Building2 },
-      { to: "/requests", label: "Client Requests", icon: ClipboardList },
+      { to: "/candidates", label: "Candidate Pool", icon: Users },
+      { to: "/recruiters", label: "Recruiter Pool", icon: UserCog, adminOnly: true },
+      { to: "/clients", label: "Client Pool", icon: Building2 },
+      { to: "/roles", label: "Roles", icon: Briefcase, adminOnly: true },
     ],
   },
-  { label: "Placements", items: [{ to: "/placements", label: "Placements", icon: BriefcaseBusiness }] },
   {
-    label: "Admin Toolkit",
+    label: "Pipeline",
+    items: [
+      { to: "/requests", label: "Client Requests", icon: ClipboardList },
+      { to: "/interview-review", label: "Interview Review", icon: CalendarCheck },
+      { to: "/offer-review", label: "Offer Review", icon: FileCheck },
+      { to: "/placements", label: "Placements", icon: BriefcaseBusiness },
+      { to: "/cs-queue", label: "CS Queue", icon: LifeBuoy, adminOnly: true },
+    ],
+  },
+  {
+    label: "Operations",
     adminOnly: true,
     items: [
-      { to: "/roles", label: "Manage Roles", icon: Briefcase },
-      { to: "/recruiters", label: "Team", icon: UserCog },
-      { to: "/audit-logs", label: "Audit Logs", icon: ScrollText },
+      { to: "/admin-tools", label: "Admin Tools", icon: Wrench },
+      { to: "/system-monitor", label: "System Monitor", icon: Activity },
+      { to: "/reports", label: "Reports", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Activity",
+    adminOnly: true,
+    items: [
+      { to: "/notifications", label: "Notifications", icon: Bell },
+      { to: "/recruiter-activity", label: "Recruiter Activity", icon: History },
+      { to: "/audit-logs", label: "Activity Log", icon: ScrollText },
     ],
   },
 ];
