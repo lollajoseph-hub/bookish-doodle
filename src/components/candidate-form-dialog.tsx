@@ -78,6 +78,7 @@ export function CandidateFormDialog({
   const queryClient = useQueryClient();
   const [form, setForm] = useState<CandidateFormInput>(() => emptyForm(profile?.id ?? null));
   const [skillInput, setSkillInput] = useState("");
+  const [files, setFiles] = useState<Partial<Record<CandidateFileType, File>>>({});
 
   const { data: roles = [] } = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: fetchStaffProfiles });
