@@ -361,7 +361,7 @@ export function CandidateForm({
       <FormSection title="Availability" description="When and how much this candidate can work.">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="availability">Availability</Label>
+            <Label htmlFor="availability">Schedule</Label>
             <Select
               value={form.availability ?? "available"}
               onValueChange={(v: string) =>
