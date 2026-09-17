@@ -67,8 +67,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "VetPod Staff Portal" },
-      { name: "description", content: "Operations console for VetPod Candidate Pool" },
+      { title: "ScaleSource Candidate Review Dashboard" },
+      { name: "description", content: "Admin and recruiter console for the ScaleSource Candidate Pool Review System" },
       { name: "robots", content: "noindex" },
     ],
     links: [
