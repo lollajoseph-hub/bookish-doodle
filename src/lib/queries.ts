@@ -197,6 +197,7 @@ export interface CandidateFormInput {
   headline: string | null;
   years_experience: number | null;
   country: string | null;
+  intro_video_url: string | null;
   roleIds: string[];
   skillNames: string[];
   workHistory: WorkHistoryInput[];
