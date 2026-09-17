@@ -177,3 +177,151 @@ export interface Database {
     CompositeTypes: Record<string, never>;
   };
 }
+
+/* ------------------------- clients, requests, matches ------------------------ */
+
+export type EngagementType = "full_time" | "part_time" | "project";
+export type RequestStatus = "open" | "needs_attention" | "fulfilled" | "closed";
+export type MatchStatus =
+  | "recommended"
+  | "shortlisted"
+  | "interview_requested"
+  | "interview_confirmed"
+  | "interview_completed"
+  | "hired"
+  | "rejected";
+export type RejectionReason = "skill_mismatch" | "availability_conflict" | "culture_fit" | "other";
+export type PlacementStatus = "active" | "completed" | "terminated";
+export type CandidateFileType =
+  | "resume"
+  | "profile_photo"
+  | "intro_video"
+  | "id_document"
+  | "reference"
+  | "other";
+
+export interface ClientRow {
+  id: string;
+  name: string;
+  parent_client_id: string | null;
+  is_franchise_brand: boolean | null;
+  industry: string | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface ClientMemberRow {
+  client_id: string;
+  profile_id: string;
+  is_primary: boolean | null;
+  client_position: string | null;
+  created_at: string;
+}
+
+export interface ClientRequestRow {
+  id: string;
+  client_id: string;
+  role_id: string;
+  title: string | null;
+  candidates_wanted: number;
+  hires_needed: number;
+  engagement_type: EngagementType;
+  hours_needed: string | null;
+  days_of_week_needed: string[] | null;
+  timezone_requirement: string | null;
+  years_experience_min: number | null;
+  desired_start_date: string | null;
+  notes: string | null;
+  status: RequestStatus;
+  rejection_count: number | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface ClientRequestSkillRow {
+  request_id: string;
+  skill_id: string;
+  is_required: boolean | null;
+}
+
+export interface CandidateMatchRow {
+  id: string;
+  client_request_id: string;
+  candidate_id: string;
+  match_score: number | null;
+  match_reason: string | null;
+  status: MatchStatus;
+  rejection_reason: RejectionReason | null;
+  rejection_reason_note: string | null;
+  rejected_at: string | null;
+  meet_url: string | null;
+  interview_at: string | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface PlacementRow {
+  id: string;
+  candidate_id: string;
+  client_id: string;
+  client_request_id: string | null;
+  role_id: string | null;
+  seat_title: string | null;
+  billing_start_date: string | null;
+  monthly_rate: number | null;
+  guarantee_window_expires: string | null;
+  status: PlacementStatus;
+  notes: string | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface CandidateFileRow {
+  id: string;
+  candidate_id: string;
+  file_type: CandidateFileType;
+  bucket_id: string;
+  storage_path: string;
+  file_name: string | null;
+  mime_type: string | null;
+  size_bytes: number | null;
+  uploaded_by: string | null;
+  created_at: string;
+}
+
+export interface CandidateAiProfileRow {
+  candidate_id: string;
+  recruiter_summary: string | null;
+  approved_summary: string | null;
+  skills: unknown | null;
+  highlights: unknown | null;
+  rank_score: number | null;
+  model_version: string | null;
+  generated_at: string | null;
+  ai_metadata: unknown | null;
+  updated_at: string | null;
+}
+
+export interface NotificationRow {
+  id: string;
+  recipient_id: string;
+  title: string;
+  message: string | null;
+  type: string | null;
+  read: boolean | null;
+  created_at: string;
+  send_email: boolean | null;
+  email_sent_at: string | null;
+}
+
+export interface AuditLogRow {
+  id: string;
+  user_id: string | null;
+  entity_type: string;
+  entity_id: string | null;
+  action: string;
+  old_values: unknown | null;
+  new_values: unknown | null;
+  created_at: string;
+}
