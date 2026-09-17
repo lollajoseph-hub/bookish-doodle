@@ -82,11 +82,33 @@ export const Route = createFileRoute("/candidates/$candidateId")({
   component: CandidateDetailPage,
 });
 
+const MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function formatPartialDate(d?: string | null): string | null {
+  if (!d) return null;
+  const trimmed = d.trim();
+  if (!trimmed) return null;
+  const ym = /^(\d{4})-(\d{2})$/.exec(trimmed);
+  if (ym) {
+    const monthIdx = parseInt(ym[2], 10) - 1;
+    if (monthIdx >= 0 && monthIdx < 12) return `${MONTH_ABBR[monthIdx]} ${ym[1]}`;
+  }
+  const yOnly = /^(\d{4})$/.exec(trimmed);
+  if (yOnly) return yOnly[1];
+  // Full YYYY-MM-DD or other date strings: build the Date from local components
+  // (never pass the raw string into `new Date()`, which parses as UTC and can
+  // roll back a day/month/year once reformatted in the viewer's local timezone).
+  const full = /^(\d{4})-(\d{2})-(\d{2})/.exec(trimmed);
+  if (full) {
+    const dt = new Date(parseInt(full[1], 10), parseInt(full[2], 10) - 1, parseInt(full[3], 10));
+    return dt.toLocaleDateString(undefined, { year: "numeric", month: "short" });
+  }
+  return trimmed; // last resort: show the raw stored value rather than a wrong date
+}
+
 function dateRange(start?: string | null, end?: string | null) {
-  const f = (d?: string | null) =>
-    d ? new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "short" }) : null;
-  const s = f(start);
-  const e = f(end);
+  const s = formatPartialDate(start);
+  const e = end === "Present" ? "Present" : formatPartialDate(end);
   if (!s && !e) return "";
   return `${s ?? "?"} – ${e ?? "Present"}`;
 }
