@@ -5,3 +5,4 @@
 - [x] Refresh login copy with a product-specific welcome.
 - [x] Add professional entrance and interaction motion with reduced-motion support.
 - [x] Verify login and candidate interactions across desktop and mobile.
+- [ ] Restyle the login screen with simplified password-only sign-in and subtle branded artwork.
