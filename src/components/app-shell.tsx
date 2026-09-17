@@ -1,5 +1,18 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, LogOut, Menu, ShieldCheck, Briefcase, UserCog } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  LogOut,
+  Menu,
+  ShieldCheck,
+  Briefcase,
+  UserCog,
+  Building2,
+  ClipboardList,
+  BriefcaseBusiness,
+  ScrollText,
+} from "lucide-react";
+import { NotificationsBell } from "@/components/notifications-bell";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth, isStaff } from "@/lib/auth";
 import { BRAND_LOGO_URL } from "@/lib/supabase";
