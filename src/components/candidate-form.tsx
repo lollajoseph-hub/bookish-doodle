@@ -122,10 +122,7 @@ export function CandidateForm({
   const save = useMutation({
     mutationFn: async () => {
       if (!form.full_name.trim()) throw new Error("Full name is required");
-      const payload: CandidateFormInput = {
-        ...form,
-        intro_video_url: videoMode === "link" ? form.intro_video_url : form.intro_video_url,
-      };
+      const payload: CandidateFormInput = { ...form };
       const id = candidateId
         ? (await updateCandidate(candidateId, payload), candidateId)
         : await createCandidate(payload, profile?.id ?? null);
