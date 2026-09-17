@@ -75,8 +75,6 @@ const navGroups: Array<{ label: string; items: NavItem[]; adminOnly?: boolean }>
       { to: "/candidates", label: "Candidate Pool", icon: Users },
       { to: "/recruiters", label: "Recruiter Pool", icon: UserCog, adminOnly: true },
       { to: "/clients", label: "Client Pool", icon: Building2 },
-      { to: "/roles", label: "Roles", icon: Briefcase, adminOnly: true },
-      { to: "/team", label: "Add to Team", icon: UserPlus, adminOnly: true },
     ],
   },
   {
