@@ -62,7 +62,6 @@ function RequestsPage() {
   const [clientId, setClientId] = useState("");
   const [roleId, setRoleId] = useState("");
   const [title, setTitle] = useState("");
-  const [candidatesWanted, setCandidatesWanted] = useState("4");
   const [hiresNeeded, setHiresNeeded] = useState("1");
   const [engagement, setEngagement] = useState("full_time");
   const [hours, setHours] = useState("");
@@ -88,12 +87,18 @@ function RequestsPage() {
     mutationFn: async () => {
       if (!clientId) throw new Error("Pick a client");
       if (!roleId) throw new Error("Pick a role");
+      if (!hours.trim()) throw new Error("Hours needed is required");
+      if (!tz.trim()) throw new Error("Timezone requirement is required");
+      if (!minYears.trim()) throw new Error("Min years experience is required");
+      if (!startDate) throw new Error("Desired start date is required");
+      if (!days.length) throw new Error("Select at least one day needed");
+      const hires = Number(hiresNeeded) || 1;
       return createClientRequest({
         client_id: clientId,
         role_id: roleId,
         title,
-        candidates_wanted: Number(candidatesWanted) || 4,
-        hires_needed: Number(hiresNeeded) || 1,
+        candidates_wanted: Math.max(4, hires * 4),
+        hires_needed: hires,
         engagement_type: engagement,
         hours_needed: hours,
         timezone_requirement: tz,
