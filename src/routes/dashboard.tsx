@@ -349,72 +349,123 @@ function DashboardPage() {
           </section>
         )}
 
-        <section className="space-y-3">
-          <SectionTitle
-            action={
-              <Link to="/requests" className="text-sm text-primary hover:underline">
-                View requests
-              </Link>
-            }
-          >
-            Client &amp; placement pipeline
-          </SectionTitle>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard
-              label="Active clients"
-              value={clients.length}
-              icon={Building2}
-              loading={clientsQ.isLoading}
-            />
-            <StatCard
-              label="Recruiters"
-              value={stats.recruiters}
-              icon={UserCog}
-              loading={staffQ.isLoading}
-            />
-            <StatCard
-              label="Open requests"
-              value={stats.openRequests}
-              icon={ClipboardList}
-              tone="warning"
-              loading={requestsQ.isLoading}
-            />
-            <StatCard
-              label="Needs attention"
-              value={stats.needsAttention}
-              icon={LifeBuoy}
-              tone="warning"
-              hint="CS queue"
-              loading={requestsQ.isLoading}
-            />
-            <StatCard
-              label="Candidates matched"
-              value={matches.length}
-              icon={GitCompareArrows}
-              loading={matchesQ.isLoading}
-            />
-            <StatCard
-              label="Upcoming interviews"
-              value={stats.upcomingInterviews}
-              icon={CalendarCheck}
-              loading={matchesQ.isLoading}
-            />
-            <StatCard
-              label="Pending offers"
-              value={stats.pendingOffers}
-              icon={FileCheck}
-              tone="warning"
-              loading={matchesQ.isLoading}
-            />
-            <StatCard
-              label="Active placements"
-              value={stats.activePlacements}
-              icon={Sparkles}
-              tone="success"
-              loading={placementsQ.isLoading}
-            />
-          </div>
-        </section>
+        {isAdmin ? (
+          <section className="space-y-3">
+            <SectionTitle
+              action={
+                <Link to="/requests" className="text-sm text-primary hover:underline">
+                  View requests
+                </Link>
+              }
+            >
+              Client &amp; placement pipeline
+            </SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard
+                label="Active clients"
+                value={clients.length}
+                icon={Building2}
+                loading={clientsQ.isLoading}
+              />
+              <StatCard
+                label="Recruiters"
+                value={stats.recruiters}
+                icon={UserCog}
+                loading={staffQ.isLoading}
+              />
+              <StatCard
+                label="Open requests"
+                value={stats.openRequests}
+                icon={ClipboardList}
+                tone="warning"
+                loading={requestsQ.isLoading}
+              />
+              <StatCard
+                label="Needs attention"
+                value={stats.needsAttention}
+                icon={LifeBuoy}
+                tone="warning"
+                hint="CS queue"
+                loading={requestsQ.isLoading}
+              />
+              <StatCard
+                label="Candidates matched"
+                value={matches.length}
+                icon={GitCompareArrows}
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Upcoming interviews"
+                value={stats.upcomingInterviews}
+                icon={CalendarCheck}
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Pending offers"
+                value={stats.pendingOffers}
+                icon={FileCheck}
+                tone="warning"
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Active placements"
+                value={stats.activePlacements}
+                icon={Sparkles}
+                tone="success"
+                loading={placementsQ.isLoading}
+              />
+            </div>
+          </section>
+        ) : (
+          <section className="space-y-3">
+            <SectionTitle
+              action={
+                <Link to="/requests" className="text-sm text-primary hover:underline">
+                  View requests
+                </Link>
+              }
+            >
+              My activity &amp; company snapshot
+            </SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard
+                label="Upcoming interviews"
+                value={myStats.upcomingInterviews}
+                icon={CalendarCheck}
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Pending offers"
+                value={myStats.pendingOffers}
+                icon={FileCheck}
+                tone="warning"
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Active placements"
+                value={myStats.activePlacements}
+                icon={Sparkles}
+                tone="success"
+                loading={placementsQ.isLoading}
+              />
+              <StatCard
+                label="Open requests"
+                value={stats.openRequests}
+                icon={ClipboardList}
+                tone="warning"
+                hint="Company-wide"
+                loading={requestsQ.isLoading}
+              />
+              <StatCard
+                label="Active clients"
+                value={clients.length}
+                icon={Building2}
+                hint="Company-wide"
+                loading={clientsQ.isLoading}
+              />
+            </div>
+          </section>
+        )}
 
         {isAdmin && (
           <section className="space-y-3">
