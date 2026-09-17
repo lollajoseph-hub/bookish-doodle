@@ -171,7 +171,6 @@ function RequestsPage() {
     onSuccess: () => {
       toast.success("Request created");
       setOpen(false);
-      setTitle("");
       setNotes("");
       setDays([]);
       queryClient.invalidateQueries({ queryKey: ["client-requests"] });
@@ -262,27 +261,21 @@ function RequestsPage() {
           </DialogHeader>
 
           <ArrowScrollArea>
-          <FormSection title="Client & title" first>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Client *</Label>
-                <Select value={clientId} onValueChange={setClientId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="req-title">Title</Label>
-                <Input id="req-title" value={title} onChange={(e) => setTitle(e.target.value)} />
-              </div>
+          <FormSection title="Client" first>
+            <div className="space-y-2">
+              <Label>Client *</Label>
+              <Select value={clientId} onValueChange={setClientId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </FormSection>
 
