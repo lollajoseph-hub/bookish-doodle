@@ -65,6 +65,28 @@ function emptyForm(recruiterId: string | null): CandidateFormInput {
   };
 }
 
+function FormSection({
+  title,
+  description,
+  first = false,
+  children,
+}: {
+  title: string;
+  description?: string;
+  first?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={cn("space-y-4", !first && "mt-6 border-t border-primary/25 pt-5")}>
+      <div>
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">{title}</h3>
+        {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
 export function CandidateForm({
   candidateId,
   active = true,
@@ -195,149 +217,148 @@ export function CandidateForm({
 
   return (
     <div>
-      <FormSection title="Personal information" description="Basic contact details and assignment.">
+      <FormSection title="Personal information" description="Basic contact details and assignment." first>
         <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="full_name">Full name *</Label>
-          <Input
-            id="full_name"
-            value={form.full_name}
-            onChange={(e) => set("full_name", e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={form.email ?? ""}
-            onChange={(e) => set("email", e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" value={form.phone ?? ""} onChange={(e) => set("phone", e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="country">Country</Label>
-          <Input
-            id="country"
-            value={form.country ?? ""}
-            onChange={(e) => set("country", e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="years">Years of experience</Label>
-          <Input
-            id="years"
-            type="number"
-            min={0}
-            value={form.years_experience ?? ""}
-            onChange={(e) =>
-              set("years_experience", e.target.value === "" ? null : Number(e.target.value))
-            }
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Assigned recruiter</Label>
-          {isAdmin ? (
-            <Select
-              value={form.recruiter_id ?? "unassigned"}
-              onValueChange={(v: string) => set("recruiter_id", v === "unassigned" ? null : v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Unassigned" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="unassigned">Unassigned</SelectItem>
-                {staff.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.full_name || s.email}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <div className="flex h-9 items-center rounded-md border bg-muted px-3 text-sm text-muted-foreground">
-              {staff.find((s) => s.id === form.recruiter_id)?.full_name || profile?.full_name || "You"}
-              <span className="ml-2 text-xs">(admins can reassign)</span>
-            </div>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label>Roles</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                role="combobox"
-                className="h-9 w-full justify-between rounded-md border-input bg-transparent px-3 py-2 text-left font-normal text-foreground shadow-sm"
+          <div className="space-y-2">
+            <Label htmlFor="full_name">Full name *</Label>
+            <Input
+              id="full_name"
+              value={form.full_name}
+              onChange={(e) => set("full_name", e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={form.email ?? ""}
+              onChange={(e) => set("email", e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone</Label>
+            <Input
+              id="phone"
+              value={form.phone ?? ""}
+              onChange={(e) => set("phone", e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="country">Country</Label>
+            <Input
+              id="country"
+              value={form.country ?? ""}
+              onChange={(e) => set("country", e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="years">Years of experience</Label>
+            <Input
+              id="years"
+              type="number"
+              min={0}
+              value={form.years_experience ?? ""}
+              onChange={(e) =>
+                set("years_experience", e.target.value === "" ? null : Number(e.target.value))
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Assigned recruiter</Label>
+            {isAdmin ? (
+              <Select
+                value={form.recruiter_id ?? "unassigned"}
+                onValueChange={(v: string) => set("recruiter_id", v === "unassigned" ? null : v)}
               >
-                <span className="truncate">
-                  {form.roleIds.length
-                    ? form.roleIds
-                        .map((id) => roles.find((r) => r.id === id)?.name)
-                        .filter(Boolean)
-                        .join(", ")
-                    : "Select roles"}
-                </span>
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[280px] p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Search roles…" />
-                <CommandList>
-                  <CommandEmpty>No roles yet — add one on the Roles page.</CommandEmpty>
-                  <CommandGroup>
-                    {roles.map((r) => {
-                      const on = form.roleIds.includes(r.id);
-                      return (
-                        <CommandItem key={r.id} onSelect={() => toggleRole(r.id)}>
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              on ? "opacity-100 text-primary" : "opacity-0",
-                            )}
-                          />
-                          {r.name}
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-          {form.roleIds.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {form.roleIds.map((id) => {
-                const role = roles.find((r) => r.id === id);
-                if (!role) return null;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => toggleRole(id)}
-                    className="rounded-full border-amber bg-amber-soft px-3 py-0.5 text-xs font-medium text-amber-foreground transition-colors hover:bg-amber/80"
-                  >
-                    {role.name} ✕
-                  </button>
-                );
-              })}
-            </div>
-          )}
+                <SelectTrigger>
+                  <SelectValue placeholder="Unassigned" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {staff.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.full_name || s.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="flex h-9 items-center rounded-md border bg-muted px-3 text-sm text-muted-foreground">
+                {staff.find((s) => s.id === form.recruiter_id)?.full_name || profile?.full_name || "You"}
+                <span className="ml-2 text-xs">(admins can reassign)</span>
+              </div>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label>Roles</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  role="combobox"
+                  className="h-9 w-full justify-between rounded-md border-input bg-transparent px-3 py-2 text-left font-normal text-foreground shadow-sm"
+                >
+                  <span className="truncate">
+                    {form.roleIds.length
+                      ? form.roleIds
+                          .map((id) => roles.find((r) => r.id === id)?.name)
+                          .filter(Boolean)
+                          .join(", ")
+                      : "Select roles"}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[280px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search roles…" />
+                  <CommandList>
+                    <CommandEmpty>No roles yet — add one on the Roles page.</CommandEmpty>
+                    <CommandGroup>
+                      {roles.map((r) => {
+                        const on = form.roleIds.includes(r.id);
+                        return (
+                          <CommandItem key={r.id} onSelect={() => toggleRole(r.id)}>
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                on ? "opacity-100 text-primary" : "opacity-0",
+                              )}
+                            />
+                            {r.name}
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            {form.roleIds.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {form.roleIds.map((id) => {
+                  const role = roles.find((r) => r.id === id);
+                  if (!role) return null;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => toggleRole(id)}
+                      className="rounded-full border-amber bg-amber-soft px-3 py-0.5 text-xs font-medium text-amber-foreground transition-colors hover:bg-amber/80"
+                    >
+                      {role.name} ✕
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
-      </section>
+      </FormSection>
 
-      <section className="space-y-3">
-        <div>
-          <Label>Availability</Label>
-          <p className="text-xs text-muted-foreground">
-            When and how much this candidate can work.
-          </p>
-        </div>
+      <FormSection title="Availability" description="When and how much this candidate can work.">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="availability">Availability</Label>
@@ -401,62 +422,58 @@ export function CandidateForm({
             />
           </div>
         </div>
-      </section>
+      </FormSection>
 
-
-      <section className="space-y-3">
-        <div>
-          <Label>Introduction video</Label>
-          <p className="text-xs text-muted-foreground">
-            Upload a short intro clip, or paste a link to one (YouTube, Loom, Drive…).
-          </p>
-        </div>
-        <div className="inline-flex rounded-full border bg-card p-0.5 text-xs">
-          {(["link", "upload"] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => setVideoMode(mode)}
-              className={`rounded-full px-3 py-1 transition-all ${
-                videoMode === mode
-                  ? "bg-primary text-primary-foreground font-medium"
-                  : "text-muted-foreground hover:text-primary"
-              }`}
-            >
-              {mode === "link" ? "Paste a link" : "Upload a file"}
-            </button>
-          ))}
-        </div>
-        {videoMode === "link" ? (
-          <Input
-            type="url"
-            placeholder="https://…"
-            value={form.intro_video_url ?? ""}
-            onChange={(e) => set("intro_video_url", e.target.value || null)}
-          />
-        ) : (
-          <div className="space-y-1.5 rounded-xl border bg-primary-soft/40 p-3">
-            <Input
-              type="file"
-              accept="video/*"
-              className="h-9 text-xs"
-              onChange={(e) => pickFile("intro_video", e.target.files?.[0])}
-            />
-            {files.intro_video && (
-              <p className="truncate text-[11px] text-muted-foreground">{files.intro_video.name}</p>
-            )}
-          </div>
-        )}
-      </section>
-
-      {!candidateId && (
-        <section className="space-y-3">
+      <FormSection
+        title="Upload documents"
+        description={candidateId ? undefined : "Optional — attached right after the candidate is created."}
+      >
+        <div className="space-y-3">
           <div>
-            <Label>Documents</Label>
+            <Label>Introductory video</Label>
             <p className="text-xs text-muted-foreground">
-              Optional — attached right after the candidate is created.
+              Upload a short intro clip, or paste a link to one (YouTube, Loom, Drive…).
             </p>
           </div>
+          <div className="inline-flex rounded-full border bg-card p-0.5 text-xs">
+            {(["link", "upload"] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setVideoMode(mode)}
+                className={`rounded-full px-3 py-1 transition-all ${
+                  videoMode === mode
+                    ? "bg-primary text-primary-foreground font-medium"
+                    : "text-muted-foreground hover:text-primary"
+                }`}
+              >
+                {mode === "link" ? "Paste a link" : "Upload a file"}
+              </button>
+            ))}
+          </div>
+          {videoMode === "link" ? (
+            <Input
+              type="url"
+              placeholder="https://…"
+              value={form.intro_video_url ?? ""}
+              onChange={(e) => set("intro_video_url", e.target.value || null)}
+            />
+          ) : (
+            <div className="space-y-1.5 rounded-xl border bg-primary-soft/40 p-3">
+              <Input
+                type="file"
+                accept="video/*"
+                className="h-9 text-xs"
+                onChange={(e) => pickFile("intro_video", e.target.files?.[0])}
+              />
+              {files.intro_video && (
+                <p className="truncate text-[11px] text-muted-foreground">{files.intro_video.name}</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {!candidateId && (
           <div className="grid gap-3 sm:grid-cols-2">
             {UPLOAD_FIELDS.map((f) => (
               <div key={f.key} className="space-y-1.5 rounded-xl border p-3 bg-primary-soft/40">
@@ -476,10 +493,10 @@ export function CandidateForm({
               </div>
             ))}
           </div>
-        </section>
-      )}
+        )}
+      </FormSection>
 
-      <div className="flex justify-end gap-2 pt-2">
+      <div className="mt-6 flex justify-end gap-2 border-t border-primary/25 pt-4">
         {onCancel && (
           <Button variant="ghost" onClick={onCancel}>
             Cancel
