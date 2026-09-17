@@ -14,6 +14,14 @@ import {
   ScrollText,
   Check,
   ChevronDown,
+  CalendarCheck,
+  FileCheck,
+  LifeBuoy,
+  Wrench,
+  Activity,
+  BarChart3,
+  Bell,
+  History,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { useEffect, useState, type ReactNode } from "react";
@@ -145,7 +153,7 @@ function SidebarNav({ onNav, isAdmin }: { onNav?: () => void; isAdmin: boolean }
               {group.label}
             </div>
             <div className="space-y-1">
-              {group.items.map(renderItem)}
+              {group.items.filter((item) => !item.adminOnly || isAdmin).map(renderItem)}
               {group.label === "Candidate Pool" && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
