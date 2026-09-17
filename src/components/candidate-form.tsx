@@ -201,6 +201,23 @@ export function CandidateForm({
     );
   }
 
+  function addLanguage(raw: string) {
+    const name = raw.trim();
+    setLanguageDraft("");
+    if (!name) return;
+    if (form.languageNames.some((l) => l.toLowerCase() === name.toLowerCase())) return;
+    set("languageNames", [...form.languageNames, name]);
+  }
+
+  function removeLanguage(name: string) {
+    set(
+      "languageNames",
+      form.languageNames.filter((l) => l !== name),
+    );
+  }
+
+
+
   function pickFile(key: CandidateFileType, picked: File | undefined) {
     setFiles((prev) => {
       const next = { ...prev };
