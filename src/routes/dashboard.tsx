@@ -539,9 +539,9 @@ function DashboardPage() {
         </section>
 
         <section className="card-amber rounded-2xl border bg-card p-5">
-          <SectionTitle>Recently added</SectionTitle>
+          <SectionTitle>{isAdmin ? "Recently added" : "My recently added"}</SectionTitle>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {recent.map((c) => (
+            {(isAdmin ? recent : myRecent).map((c) => (
               <Link
                 key={c.id}
                 to="/candidates/$candidateId"
@@ -550,10 +550,14 @@ function DashboardPage() {
               >
                 <div className="truncate font-medium">{c.full_name}</div>
                 <div className="truncate text-xs text-muted-foreground">{c.headline || c.email || "—"}</div>
-                <div className="mt-1 text-[11px] text-primary">{c.recruiterName ?? "Unassigned"}</div>
+                {isAdmin && <div className="mt-1 text-[11px] text-primary">{c.recruiterName ?? "Unassigned"}</div>}
               </Link>
             ))}
-            {!recent.length && <p className="text-sm text-muted-foreground">No candidates added yet.</p>}
+            {!(isAdmin ? recent : myRecent).length && (
+              <p className="text-sm text-muted-foreground">
+                {isAdmin ? "No candidates added yet." : "No candidates assigned to you yet."}
+              </p>
+            )}
           </div>
         </section>
       </div>
