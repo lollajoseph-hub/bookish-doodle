@@ -381,31 +381,31 @@ function CandidateDetailPage() {
               <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 border-0 bg-transparent p-0">
                 <TabsTrigger
                   value="overview"
-                  className="rounded-xl px-3 py-2 text-sidebar-foreground/90 hover:bg-sidebar-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
+                  className="rounded-xl px-3 py-2 text-foreground/70 hover:bg-primary/10 hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
                 >
                   Overview
                 </TabsTrigger>
                 <TabsTrigger
                   value="documents"
-                  className="rounded-xl px-3 py-2 text-sidebar-foreground/90 hover:bg-sidebar-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
+                  className="rounded-xl px-3 py-2 text-foreground/70 hover:bg-primary/10 hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
                 >
                   Documents
                 </TabsTrigger>
                 <TabsTrigger
                   value="ai"
-                  className="rounded-xl px-3 py-2 text-sidebar-foreground/90 hover:bg-sidebar-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
+                  className="rounded-xl px-3 py-2 text-foreground/70 hover:bg-primary/10 hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
                 >
                   AI Profile
                 </TabsTrigger>
                 <TabsTrigger
                   value="pipeline"
-                  className="rounded-xl px-3 py-2 text-sidebar-foreground/90 hover:bg-sidebar-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
+                  className="rounded-xl px-3 py-2 text-foreground/70 hover:bg-primary/10 hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
                 >
                   Client Pipeline
                 </TabsTrigger>
                 <TabsTrigger
                   value="notes"
-                  className="rounded-xl px-3 py-2 text-sidebar-foreground/90 hover:bg-sidebar-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
+                  className="rounded-xl px-3 py-2 text-foreground/70 hover:bg-primary/10 hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
                 >
                   Notes
                 </TabsTrigger>
