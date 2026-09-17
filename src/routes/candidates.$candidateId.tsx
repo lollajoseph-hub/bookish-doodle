@@ -258,7 +258,51 @@ function CandidateDetailPage() {
                 )}
               </div>
             </section>
+
+            <CandidateFilesCard candidateId={candidateId} canEdit={canEdit} />
+
+            <section className="rounded-2xl border bg-card p-5">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+                Client pipeline
+              </h2>
+              <div className="mt-3 space-y-2">
+                {matches.length ? (
+                  matches.map((m) => (
+                    <Link
+                      key={m.id}
+                      to="/requests/$requestId"
+                      params={{ requestId: m.client_request_id }}
+                      className="block rounded-xl border p-3 transition-all hover:border-amber hover:bg-amber/5"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-medium">
+                          {m.requestTitle || m.roleName || "Request"}
+                        </span>
+                        <MatchStatusBadge status={m.status} />
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {m.clientName ?? "Client"}
+                        {m.status === "rejected" ? ` · ${labelize(m.rejection_reason)}` : ""}
+                      </p>
+                    </Link>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Not in any client review batch yet.
+                  </p>
+                )}
+              </div>
+            </section>
+
+            <AiSummaryCard
+              candidateId={candidateId}
+              canEdit={canEdit}
+              recruiterSummary={aiProfile?.recruiter_summary ?? null}
+              approvedSummary={aiProfile?.approved_summary ?? null}
+              rankScore={aiProfile?.rank_score ?? null}
+            />
           </div>
+
 
           <div className="space-y-6">
             <section className="rounded-2xl border bg-card p-5">
