@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
-import colorBrandLogo from "@/assets/scalesource-logo-color.png.asset.json";
 import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,11 +87,6 @@ function LoginPage() {
 
           <section className="flex items-center justify-center p-6 sm:p-10 lg:p-12">
             <div className="login-form-enter w-full max-w-sm rounded-2xl border border-primary-foreground/20 bg-primary-foreground/10 p-6 shadow-xl backdrop-blur-xl sm:p-8">
-            <img
-              src={colorBrandLogo.url}
-              alt="ScaleSource"
-              className="mb-8 h-12 w-auto max-w-full object-contain object-left drop-shadow-sm lg:hidden"
-            />
             <h2 className="text-lg font-semibold leading-tight text-primary-foreground">Sign in</h2>
             <form onSubmit={onSubmit} className="mt-5 space-y-4">
               <div className="space-y-2">
