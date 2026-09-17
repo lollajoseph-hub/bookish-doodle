@@ -14,6 +14,14 @@ import {
   ScrollText,
   Check,
   ChevronDown,
+  CalendarCheck,
+  FileCheck,
+  LifeBuoy,
+  Wrench,
+  Activity,
+  BarChart3,
+  Bell,
+  History,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { useEffect, useState, type ReactNode } from "react";
@@ -34,30 +42,66 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { fetchJobRoles } from "@/lib/queries";
 
 type NavItem = {
-  to: "/dashboard" | "/candidates" | "/clients" | "/requests" | "/placements" | "/roles" | "/recruiters" | "/audit-logs";
+  to:
+    | "/dashboard"
+    | "/candidates"
+    | "/clients"
+    | "/requests"
+    | "/placements"
+    | "/roles"
+    | "/recruiters"
+    | "/audit-logs"
+    | "/interview-review"
+    | "/offer-review"
+    | "/cs-queue"
+    | "/admin-tools"
+    | "/system-monitor"
+    | "/reports"
+    | "/notifications"
+    | "/recruiter-activity";
   label: string;
   icon: typeof LayoutDashboard;
+  adminOnly?: boolean;
 };
 
 const dashboardItem: NavItem = { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard };
 
 const navGroups: Array<{ label: string; items: NavItem[]; adminOnly?: boolean }> = [
-  { label: "Candidate Pool", items: [{ to: "/candidates", label: "Candidate Pool", icon: Users }] },
   {
-    label: "Clients",
+    label: "Pools",
     items: [
-      { to: "/clients", label: "Clients", icon: Building2 },
-      { to: "/requests", label: "Client Requests", icon: ClipboardList },
+      { to: "/candidates", label: "Candidate Pool", icon: Users },
+      { to: "/recruiters", label: "Recruiter Pool", icon: UserCog, adminOnly: true },
+      { to: "/clients", label: "Client Pool", icon: Building2 },
+      { to: "/roles", label: "Roles", icon: Briefcase, adminOnly: true },
     ],
   },
-  { label: "Placements", items: [{ to: "/placements", label: "Placements", icon: BriefcaseBusiness }] },
   {
-    label: "Admin Toolkit",
+    label: "Pipeline",
+    items: [
+      { to: "/requests", label: "Client Requests", icon: ClipboardList },
+      { to: "/interview-review", label: "Interview Review", icon: CalendarCheck },
+      { to: "/offer-review", label: "Offer Review", icon: FileCheck },
+      { to: "/placements", label: "Placements", icon: BriefcaseBusiness },
+      { to: "/cs-queue", label: "CS Queue", icon: LifeBuoy, adminOnly: true },
+    ],
+  },
+  {
+    label: "Operations",
     adminOnly: true,
     items: [
-      { to: "/roles", label: "Manage Roles", icon: Briefcase },
-      { to: "/recruiters", label: "Team", icon: UserCog },
-      { to: "/audit-logs", label: "Audit Logs", icon: ScrollText },
+      { to: "/admin-tools", label: "Admin Tools", icon: Wrench },
+      { to: "/system-monitor", label: "System Monitor", icon: Activity },
+      { to: "/reports", label: "Reports", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Activity",
+    adminOnly: true,
+    items: [
+      { to: "/notifications", label: "Notifications", icon: Bell },
+      { to: "/recruiter-activity", label: "Recruiter Activity", icon: History },
+      { to: "/audit-logs", label: "Activity Log", icon: ScrollText },
     ],
   },
 ];
@@ -77,26 +121,63 @@ function SidebarNav({ onNav, isAdmin }: { onNav?: () => void; isAdmin: boolean }
   const { data: roles = [] } = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
   const activeRoles = roles.filter((role) => role.is_active !== false);
 
+  const roleDropdown = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="h-8 w-full justify-between px-3 pl-9 text-xs font-normal text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+        >
+          <span className="truncate">
+            {activeRoles.find((role) => role.id === roleSearch)?.name ?? "All roles"}
+          </span>
+          <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="right" align="start" className="w-56">
+        <DropdownMenuLabel>Role categories</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/candidates" search={{}} onClick={onNav} className="flex justify-between">
+            All roles
+            {!roleSearch && <Check className="h-4 w-4" />}
+          </Link>
+        </DropdownMenuItem>
+        {activeRoles.map((role) => (
+          <DropdownMenuItem key={role.id} asChild>
+            <Link to="/candidates" search={{ role: role.id }} onClick={onNav} className="flex justify-between">
+              <span className="truncate">{role.name}</span>
+              {roleSearch === role.id && <Check className="h-4 w-4" />}
+            </Link>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   const renderItem = (item: NavItem) => {
     const active = path.startsWith(item.to);
     const Icon = item.icon;
     return (
-      <Link
-        key={item.to}
-        to={item.to}
-        search={item.to === "/candidates" ? {} : undefined}
-        onClick={onNav}
-        className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all ${
-          active
-            ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-amber/70"
-            : "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:translate-x-0.5"
-        }`}
-      >
-        <Icon className="h-4 w-4" />
-        {item.label}
-      </Link>
+      <div key={item.to} className="space-y-1">
+        <Link
+          to={item.to}
+          search={item.to === "/candidates" ? {} : undefined}
+          onClick={onNav}
+          className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all ${
+            active
+              ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-amber/70"
+              : "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:translate-x-0.5"
+          }`}
+        >
+          <Icon className="h-4 w-4" />
+          {item.label}
+        </Link>
+        {item.to === "/candidates" && roleDropdown}
+      </div>
     );
   };
+
 
   return (
     <nav className="flex-1 space-y-1 px-3 py-4">
@@ -109,45 +190,7 @@ function SidebarNav({ onNav, isAdmin }: { onNav?: () => void; isAdmin: boolean }
               {group.label}
             </div>
             <div className="space-y-1">
-              {group.items.map(renderItem)}
-              {group.label === "Candidate Pool" && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="h-8 w-full justify-between px-3 pl-9 text-xs font-normal text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                    >
-                      <span className="truncate">
-                        {activeRoles.find((role) => role.id === roleSearch)?.name ?? "All roles"}
-                      </span>
-                      <ChevronDown className="h-3.5 w-3.5 shrink-0" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent side="right" align="start" className="w-56">
-                    <DropdownMenuLabel>Role categories</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/candidates" search={{}} onClick={onNav} className="flex justify-between">
-                        All roles
-                        {!roleSearch && <Check className="h-4 w-4" />}
-                      </Link>
-                    </DropdownMenuItem>
-                    {activeRoles.map((role) => (
-                      <DropdownMenuItem key={role.id} asChild>
-                        <Link
-                          to="/candidates"
-                          search={{ role: role.id }}
-                          onClick={onNav}
-                          className="flex justify-between"
-                        >
-                          <span className="truncate">{role.name}</span>
-                          {roleSearch === role.id && <Check className="h-4 w-4" />}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+              {group.items.filter((item) => !item.adminOnly || isAdmin).map(renderItem)}
             </div>
           </div>
         ))}
