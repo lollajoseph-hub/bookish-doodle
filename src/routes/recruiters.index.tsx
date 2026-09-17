@@ -98,14 +98,15 @@ function TeamPage() {
     <AppShell
       title="Recruiter Pool"
       description="Recruiters and admins, and the candidates each one carries"
-      actions={
-        isAdmin ? (
+  >
+      {isAdmin && (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">Recruiters and the candidates each one carries</p>
           <Button onClick={() => setAddOpen(true)}>
             <Plus className="mr-1 h-4 w-4" /> Add recruiter
           </Button>
-        ) : undefined
-      }
-    >
+        </div>
+      )}
       {isLoading && <p className="text-sm text-muted-foreground">Loading team…</p>}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {staff
