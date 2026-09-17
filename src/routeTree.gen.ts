@@ -16,6 +16,7 @@ import { Route as RecruitersRouteImport } from './routes/recruiters'
 import { Route as PlacementsRouteImport } from './routes/placements'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as InterviewReviewRouteImport } from './routes/interview-review'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ClientsRouteImport } from './routes/clients'
@@ -63,6 +64,11 @@ const NotificationsRoute = NotificationsRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InterviewReviewRoute = InterviewReviewRouteImport.update({
+  id: '/interview-review',
+  path: '/interview-review',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/clients': typeof ClientsRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/interview-review': typeof InterviewReviewRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/placements': typeof PlacementsRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/audit-logs': typeof AuditLogsRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/interview-review': typeof InterviewReviewRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/placements': typeof PlacementsRoute
@@ -180,6 +188,7 @@ export interface FileRoutesById {
   '/clients': typeof ClientsRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/interview-review': typeof InterviewReviewRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/placements': typeof PlacementsRoute
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/dashboard'
     | '/forgot-password'
+    | '/interview-review'
     | '/login'
     | '/notifications'
     | '/placements'
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/audit-logs'
     | '/dashboard'
     | '/forgot-password'
+    | '/interview-review'
     | '/login'
     | '/notifications'
     | '/placements'
@@ -245,6 +256,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/dashboard'
     | '/forgot-password'
+    | '/interview-review'
     | '/login'
     | '/notifications'
     | '/placements'
@@ -268,6 +280,7 @@ export interface RootRouteChildren {
   ClientsRoute: typeof ClientsRouteWithChildren
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  InterviewReviewRoute: typeof InterviewReviewRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
   PlacementsRoute: typeof PlacementsRoute
@@ -326,6 +339,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/interview-review': {
+      id: '/interview-review'
+      path: '/interview-review'
+      fullPath: '/interview-review'
+      preLoaderRoute: typeof InterviewReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -472,6 +492,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClientsRoute: ClientsRouteWithChildren,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  InterviewReviewRoute: InterviewReviewRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
   PlacementsRoute: PlacementsRoute,
