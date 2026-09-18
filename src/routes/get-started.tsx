@@ -260,13 +260,13 @@ function GetStartedPage() {
                       <Input type="number" min="0" value={f.min_experience_years} onChange={(e) => set("min_experience_years")(e.target.value)} />
                     </Field>
                     <Field label="Software Experience">
-                      <Input placeholder="e.g. ezyVet, AVImark" value={f.software_experience} onChange={(e) => set("software_experience")(e.target.value)} />
+                      <Input placeholder="e.g. Salesforce, HubSpot" value={f.software_experience} onChange={(e) => set("software_experience")(e.target.value)} />
                     </Field>
                     <Field label="Required Skills">
                       <Input placeholder="Comma-separated" value={f.required_skills} onChange={(e) => set("required_skills")(e.target.value)} />
                     </Field>
-                    <Field label="Veterinary Specialty">
-                      <Input placeholder="e.g. Emergency, Dental" value={f.specialization} onChange={(e) => set("specialization")(e.target.value)} />
+                    <Field label="Specialization">
+                      <Input placeholder="e.g. Enterprise Sales, Payroll" value={f.specialization} onChange={(e) => set("specialization")(e.target.value)} />
                     </Field>
                     <Field label="Language">
                       <Input placeholder="e.g. English, Spanish" value={f.languages} onChange={(e) => set("languages")(e.target.value)} />
