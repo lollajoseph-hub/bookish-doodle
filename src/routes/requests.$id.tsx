@@ -351,6 +351,12 @@ function RequestDetail() {
         onClose={() => setScheduleFor(null)}
         onScheduled={() => { setScheduleFor(null); load(); }}
       />
+
+      <RejectDialog
+        candidate={rejectFor}
+        onClose={() => setRejectFor(null)}
+        onRejected={() => { setRejectFor(null); load(); }}
+      />
     </div>
   );
 }
