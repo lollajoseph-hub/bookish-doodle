@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarClock, Video, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/interviews")({
-  head: () => ({ meta: [{ title: "Interviews — VetPod" }] }),
+  head: () => ({ meta: [{ title: "Interviews — Candidate Pool" }] }),
   component: () => (
     <AppShell>
       <InterviewsPage />
@@ -19,10 +19,10 @@ export const Route = createFileRoute("/interviews")({
 interface InterviewRow {
   match_id: string;
   status: string | null;
-  clinic_status: string | null;
+  client_status: string | null;
   candidate_name: string | null;
   role_title: string | null;
-  clinic_name: string | null;
+  company_name: string | null;
   interview_scheduled_at: string | null;
   interview_timezone: string | null;
   interview_mode: string | null;
@@ -34,13 +34,13 @@ function statusMeta(cs: string | null | undefined): { label: string; tone: strin
   switch ((cs ?? "").toLowerCase()) {
     case "interview_confirmed":
       return { label: "Interview confirmed", tone: "bg-emerald-100 text-emerald-700" };
-    case "vetpod_reviewing":
-      return { label: "VetPod reviewing", tone: "bg-sky-100 text-sky-700" };
-    case "vetpod_reschedule_proposed":
+    case "scalesource_reviewing":
+      return { label: "ScaleSource reviewing", tone: "bg-sky-100 text-sky-700" };
+    case "scalesource_reschedule_proposed":
       return { label: "Reschedule proposed", tone: "bg-amber-100 text-amber-700" };
     case "interview_completed":
       return { label: "Completed", tone: "bg-slate-100 text-slate-700" };
-    case "vetpod_preparing_offer":
+    case "scalesource_preparing_offer":
       return { label: "Preparing offer", tone: "bg-emerald-100 text-emerald-700" };
     case "candidate_declined":
       return { label: "Candidate declined", tone: "bg-rose-100 text-rose-700" };
@@ -74,7 +74,7 @@ function InterviewsPage() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.rpc("get_clinic_interviews").then(({ data, error }) => {
+    supabase.rpc("get_client_interviews").then(({ data, error }) => {
       if (error) {
         setErr(error.message);
         setRows([]);
@@ -120,8 +120,8 @@ function InterviewsPage() {
       ) : (
         <div className="grid gap-3">
           {rows.map((r) => {
-            const meta = statusMeta(r.clinic_status);
-            const canJoin = ["interview_confirmed", "interview_completed"].includes((r.clinic_status ?? "").toLowerCase()) && !!r.meet_url;
+            const meta = statusMeta(r.client_status);
+            const canJoin = ["interview_confirmed", "interview_completed"].includes((r.client_status ?? "").toLowerCase()) && !!r.meet_url;
             return (
               <Card key={r.match_id} className="rounded-2xl">
                 <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">

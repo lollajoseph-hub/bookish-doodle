@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Stethoscope, Eye, EyeOff } from "lucide-react";
+import { Users, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Sign in — VetPod Clinic Workstation" }] }),
+  head: () => ({ meta: [{ title: "Sign in — Candidate Pool" }] }),
   component: AuthPage,
 });
 
@@ -31,13 +31,13 @@ function AuthPage() {
   }, [loading, user, navigate]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-teal-50 via-white to-emerald-50 px-4">
-      <Card className="w-full max-w-md rounded-2xl border-teal-100 shadow-lg">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-md rounded-2xl shadow-lg">
         <CardHeader className="text-center">
           <div className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-primary text-primary-foreground">
-            <Stethoscope className="h-6 w-6" />
+            <Users className="h-6 w-6" />
           </div>
-          <CardTitle>VetPod Clinic Workstation</CardTitle>
+          <CardTitle>Candidate Pool</CardTitle>
           <CardDescription>Sign in to manage your hiring requests</CardDescription>
         </CardHeader>
         <CardContent>
@@ -98,7 +98,7 @@ function AuthPage() {
               </button>
             ) : magicSent ? (
               <p className="text-center text-sm text-muted-foreground">
-                If your email is registered with a clinic, a secure login link has been sent.
+                If your email is registered with a client company, a secure login link has been sent.
               </p>
             ) : (
               <form
@@ -108,7 +108,7 @@ function AuthPage() {
                   setMagicBusy(true);
                   let sendFailed = false;
                   try {
-                    const { error } = await supabase.functions.invoke("clinic-magic-link", {
+                    const { error } = await supabase.functions.invoke("client-magic-link", {
                       body: { email: magicEmail.trim().toLowerCase() },
                     });
                     if (error) {
@@ -141,7 +141,7 @@ function AuthPage() {
           </div>
           <div className="mt-4 text-center text-sm">
             <Link to="/get-started" className="text-primary hover:underline">
-              New clinic? Submit a hiring request →
+              New here? Submit a hiring request →
             </Link>
           </div>
         </CardContent>

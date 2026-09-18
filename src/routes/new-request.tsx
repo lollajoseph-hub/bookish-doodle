@@ -24,7 +24,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/new-request")({
-  head: () => ({ meta: [{ title: "New Hiring Request — VetPod" }] }),
+  head: () => ({ meta: [{ title: "New Hiring Request — Candidate Pool" }] }),
   component: () => (
     <AppShell>
       <NewRequest />
@@ -36,7 +36,7 @@ const POSITIONS = [
   "Practice Owner",
   "Practice Manager",
   "Hospital Administrator",
-  "Head Veterinarian",
+  
   "Office Manager",
   "HR",
   "Other",
@@ -67,8 +67,8 @@ function NewRequest() {
     contact_email: "",
     contact_phone: "",
     position: "",
-    clinic_name: "",
-    clinic_address: "",
+    company_name: "",
+    company_address: "",
     title: "",
     role_needed: "",
     employment_type: "",
@@ -91,10 +91,10 @@ function NewRequest() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const { data, error } = await supabase.rpc("submit_clinic_request", {
-      p_clinic: {
-        name: f.clinic_name,
-        address: f.clinic_address,
+    const { data, error } = await supabase.rpc("submit_client_request", {
+      p_client: {
+        name: f.company_name,
+        address: f.company_address,
         contact_email: f.contact_email,
         contact_phone: f.contact_phone,
         position: f.position,
@@ -103,7 +103,7 @@ function NewRequest() {
         title: f.title || f.role_needed,
         role_needed: f.role_needed,
         specialization: f.specialization,
-        location: f.clinic_address,
+        location: f.company_address,
         employment_type: f.employment_type,
         weekly_hours: f.weekly_hours,
         shift: f.shift,
@@ -117,7 +117,7 @@ function NewRequest() {
         headcount: f.headcount,
         description: f.description,
       },
-      p_clinic_id: null,
+      p_client_id: null,
     });
     setBusy(false);
     if (error) {
@@ -134,13 +134,13 @@ function NewRequest() {
     <form onSubmit={submit} className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">New Hiring Request</h1>
-        <p className="text-sm text-muted-foreground">Tell us about your clinic and the role you need filled.</p>
+        <p className="text-sm text-muted-foreground">Tell us about your company and the role you need filled.</p>
       </div>
 
       <Card className="rounded-2xl">
         <CardHeader>
-          <CardTitle>Clinic Information</CardTitle>
-          <CardDescription>Your contact and clinic details</CardDescription>
+          <CardTitle>Company Information</CardTitle>
+          <CardDescription>Your contact and company details</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label="First Name" required>
@@ -163,12 +163,12 @@ function NewRequest() {
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Clinic Name" required>
-            <Input value={f.clinic_name} onChange={(e) => set("clinic_name")(e.target.value)} required />
+          <Field label="Company Name" required>
+            <Input value={f.company_name} onChange={(e) => set("company_name")(e.target.value)} required />
           </Field>
           <div className="md:col-span-2">
-            <Field label="Clinic Address" required>
-              <Input value={f.clinic_address} onChange={(e) => set("clinic_address")(e.target.value)} required />
+            <Field label="Company Address" required>
+              <Input value={f.company_address} onChange={(e) => set("company_address")(e.target.value)} required />
             </Field>
           </div>
         </CardContent>
@@ -231,13 +231,13 @@ function NewRequest() {
                 <Input type="number" min="0" value={f.min_experience_years} onChange={(e) => set("min_experience_years")(e.target.value)} />
               </Field>
               <Field label="Software Experience">
-                <Input placeholder="e.g. ezyVet, AVImark" value={f.software_experience} onChange={(e) => set("software_experience")(e.target.value)} />
+                <Input placeholder="e.g. Salesforce, HubSpot" value={f.software_experience} onChange={(e) => set("software_experience")(e.target.value)} />
               </Field>
               <Field label="Required Skills">
                 <Input placeholder="Comma-separated" value={f.required_skills} onChange={(e) => set("required_skills")(e.target.value)} />
               </Field>
-              <Field label="Veterinary Specialty">
-                <Input placeholder="e.g. Emergency, Dental" value={f.specialization} onChange={(e) => set("specialization")(e.target.value)} />
+              <Field label="Specialization">
+                <Input placeholder="e.g. Enterprise Sales, Payroll" value={f.specialization} onChange={(e) => set("specialization")(e.target.value)} />
               </Field>
               <Field label="Language">
                 <Input placeholder="e.g. English, Spanish" value={f.languages} onChange={(e) => set("languages")(e.target.value)} />

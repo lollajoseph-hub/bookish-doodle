@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Users, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/requests/")({
-  head: () => ({ meta: [{ title: "My Requests — VetPod" }] }),
+  head: () => ({ meta: [{ title: "My Requests — Candidate Pool" }] }),
   component: () => (
     <AppShell>
       <Requests />
@@ -61,7 +61,7 @@ function Requests() {
       <div className="flex items-end justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">My Requests</h1>
-          <p className="text-sm text-muted-foreground">All hiring requests for your clinic.</p>
+          <p className="text-sm text-muted-foreground">All hiring requests for your company.</p>
         </div>
         <Button asChild>
           <Link to="/new-request"><PlusCircle className="mr-1.5 h-4 w-4" />New Request</Link>

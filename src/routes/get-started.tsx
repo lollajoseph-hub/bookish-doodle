@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronDown, Stethoscope, CheckCircle2 } from "lucide-react";
+import { ChevronDown, Users, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/get-started")({
-  head: () => ({ meta: [{ title: "Get Started — VetPod" }] }),
+  head: () => ({ meta: [{ title: "Get Started — Candidate Pool" }] }),
   component: GetStartedPage,
 });
 
@@ -32,7 +32,7 @@ const POSITIONS = [
   "Practice Owner",
   "Practice Manager",
   "Hospital Administrator",
-  "Head Veterinarian",
+  
   "Office Manager",
   "HR",
   "Other",
@@ -62,8 +62,8 @@ function GetStartedPage() {
     contact_email: "",
     contact_phone: "",
     position: "",
-    clinic_name: "",
-    clinic_address: "",
+    company_name: "",
+    company_address: "",
     role_needed: "",
     employment_type: "",
     weekly_hours: "",
@@ -85,11 +85,11 @@ function GetStartedPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const { error } = await supabase.functions.invoke("public-clinic-request", {
+    const { error } = await supabase.functions.invoke("public-client-request", {
       body: {
-        clinic: {
-          name: f.clinic_name,
-          address: f.clinic_address,
+        client: {
+          name: f.company_name,
+          address: f.company_address,
           contact_email: f.contact_email,
           contact_phone: f.contact_phone,
           position: f.position,
@@ -104,7 +104,7 @@ function GetStartedPage() {
           title: f.role_needed,
           role_needed: f.role_needed,
           specialization: f.specialization,
-          location: f.clinic_address,
+          location: f.company_address,
           employment_type: f.employment_type,
           weekly_hours: f.weekly_hours,
           shift: f.shift,
@@ -134,9 +134,9 @@ function GetStartedPage() {
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-3">
           <Link to="/auth" className="flex items-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Stethoscope className="h-5 w-5" />
+              <Users className="h-5 w-5" />
             </span>
-            <span className="font-semibold tracking-tight text-foreground">VetPod Clinic Workstation</span>
+            <span className="font-semibold tracking-tight text-foreground">Candidate Pool</span>
           </Link>
           <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground">
             Already have an account? Sign in
@@ -162,14 +162,14 @@ function GetStartedPage() {
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">Submit a Hiring Request</h1>
               <p className="text-sm text-muted-foreground">
-                Tell us about your clinic and the role you need filled. We'll email you a secure login link to review matched candidates.
+                Tell us about your company and the role you need filled. We'll email you a secure login link to review matched candidates.
               </p>
             </div>
 
             <Card className="rounded-2xl">
               <CardHeader>
-                <CardTitle>Clinic Information</CardTitle>
-                <CardDescription>Your contact and clinic details</CardDescription>
+                <CardTitle>Company Information</CardTitle>
+                <CardDescription>Your contact and company details</CardDescription>
               </CardHeader>
               <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Field label="First Name" required>
@@ -192,12 +192,12 @@ function GetStartedPage() {
                     </SelectContent>
                   </Select>
                 </Field>
-                <Field label="Clinic Name" required>
-                  <Input value={f.clinic_name} onChange={(e) => set("clinic_name")(e.target.value)} required />
+                <Field label="Company Name" required>
+                  <Input value={f.company_name} onChange={(e) => set("company_name")(e.target.value)} required />
                 </Field>
                 <div className="md:col-span-2">
-                  <Field label="Clinic Address" required>
-                    <Input value={f.clinic_address} onChange={(e) => set("clinic_address")(e.target.value)} required />
+                  <Field label="Company Address" required>
+                    <Input value={f.company_address} onChange={(e) => set("company_address")(e.target.value)} required />
                   </Field>
                 </div>
               </CardContent>
@@ -260,13 +260,13 @@ function GetStartedPage() {
                       <Input type="number" min="0" value={f.min_experience_years} onChange={(e) => set("min_experience_years")(e.target.value)} />
                     </Field>
                     <Field label="Software Experience">
-                      <Input placeholder="e.g. ezyVet, AVImark" value={f.software_experience} onChange={(e) => set("software_experience")(e.target.value)} />
+                      <Input placeholder="e.g. Salesforce, HubSpot" value={f.software_experience} onChange={(e) => set("software_experience")(e.target.value)} />
                     </Field>
                     <Field label="Required Skills">
                       <Input placeholder="Comma-separated" value={f.required_skills} onChange={(e) => set("required_skills")(e.target.value)} />
                     </Field>
-                    <Field label="Veterinary Specialty">
-                      <Input placeholder="e.g. Emergency, Dental" value={f.specialization} onChange={(e) => set("specialization")(e.target.value)} />
+                    <Field label="Specialization">
+                      <Input placeholder="e.g. Enterprise Sales, Payroll" value={f.specialization} onChange={(e) => set("specialization")(e.target.value)} />
                     </Field>
                     <Field label="Language">
                       <Input placeholder="e.g. English, Spanish" value={f.languages} onChange={(e) => set("languages")(e.target.value)} />

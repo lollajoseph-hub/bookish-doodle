@@ -21,10 +21,8 @@ import { PdfPagePreview } from "@/components/PdfPagePreview";
 import { toast } from "sonner";
 import {
   ArrowLeft,
-  Award,
   CheckCircle2,
   Download,
-  FileBadge,
   Loader2,
   RotateCcw,
   Star,
@@ -49,7 +47,7 @@ async function signedUrl(bucket: string, path: string) {
 }
 
 export const Route = createFileRoute("/requests/$id")({
-  head: () => ({ meta: [{ title: "Request — VetPod" }] }),
+  head: () => ({ meta: [{ title: "Request — Candidate Pool" }] }),
   component: () => (
     <AppShell>
       <RequestDetail />
@@ -62,11 +60,9 @@ interface PresentedCandidate {
   candidate_name: string;
   headline?: string | null;
   availability?: string | null;
-  roleplay_score?: number | null;
-  course_score?: number | null;
   shortlisted_at?: string | null;
   status?: string | null;
-  clinic_status?: string | null;
+  client_status?: string | null;
   profile_photo_bucket?: string | null;
   profile_photo_path?: string | null;
   interview_scheduled_at?: string | null;
@@ -77,11 +73,6 @@ interface PresentedCandidate {
   name_revealed?: boolean | null;
 }
 
-
-function pct(n: number | null | undefined) {
-  if (n == null) return "—";
-  return `${Math.round(Number(n))}%`;
-}
 
 
 function InterviewStatusBlock({
@@ -96,18 +87,18 @@ function InterviewStatusBlock({
   const date = c.interview_scheduled_at
     ? `${new Date(c.interview_scheduled_at).toLocaleString()} (${c.interview_timezone ?? "—"})`
     : null;
-  if (c.clinic_status === "vetpod_reviewing") {
+  if (c.client_status === "scalesource_reviewing") {
     return (
       <div className="rounded-md border border-sky-200 bg-sky-50 px-2 py-1.5 text-xs text-sky-900">
-        <Badge className="bg-sky-100 text-sky-800" variant="secondary">VetPod reviewing interview</Badge>
+        <Badge className="bg-sky-100 text-sky-800" variant="secondary">ScaleSource reviewing interview</Badge>
         {date && <div className="mt-1">Proposed: {date}</div>}
       </div>
     );
   }
-  if (c.clinic_status === "vetpod_reschedule_proposed") {
+  if (c.client_status === "scalesource_reschedule_proposed") {
     return (
       <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-900">
-        <Badge className="bg-amber-100 text-amber-800" variant="secondary">VetPod proposed a new time</Badge>
+        <Badge className="bg-amber-100 text-amber-800" variant="secondary">ScaleSource proposed a new time</Badge>
         {date && <div className="mt-1">New time: {date}</div>}
         <Button size="sm" className="mt-1 h-7 text-xs" disabled={actingId === c.match_id} onClick={() => onAccept(c.match_id)}>
           Accept new time
@@ -115,25 +106,25 @@ function InterviewStatusBlock({
       </div>
     );
   }
-  if (c.clinic_status === "interview_confirmed") {
+  if (c.client_status === "interview_confirmed") {
     return null;
   }
-  if (c.clinic_status === "interview_completed") {
+  if (c.client_status === "interview_completed") {
     return null;
   }
-  if (c.clinic_status === "vetpod_preparing_offer") {
+  if (c.client_status === "scalesource_preparing_offer") {
     return (
       <div className="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1.5 text-xs text-indigo-900">
-        <Badge className="bg-indigo-100 text-indigo-800" variant="secondary">VetPod preparing offer</Badge>
-        <div className="mt-1">VetPod is preparing your employment offer.</div>
+        <Badge className="bg-indigo-100 text-indigo-800" variant="secondary">ScaleSource preparing offer</Badge>
+        <div className="mt-1">ScaleSource is preparing your employment offer.</div>
       </div>
     );
   }
-  if (c.clinic_status === "candidate_declined") {
+  if (c.client_status === "candidate_declined") {
     return (
       <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-900">
         <Badge className="bg-amber-100 text-amber-800" variant="secondary">Candidate declined</Badge>
-        <div className="mt-1">Candidate declined. VetPod will assist with next steps.</div>
+        <div className="mt-1">Candidate declined. ScaleSource will assist with next steps.</div>
       </div>
     );
   }
@@ -153,7 +144,7 @@ function RequestDetail() {
   const load = useCallback(() => {
     setRows(null);
     supabase
-      .rpc("get_clinic_presented_candidates", { p_request: id })
+      .rpc("get_client_presented_candidates", { p_request: id })
       .then(async ({ data, error }) => {
         if (error) { setErr(error.message); return; }
         const list = (data ?? []) as PresentedCandidate[];
@@ -231,11 +222,11 @@ function RequestDetail() {
             const isShortlisted = !!c.shortlisted_at;
             const isRejected = c.status === "rejected";
             const interviewLocked =
-              c.clinic_status === "vetpod_reviewing" ||
-              c.clinic_status === "vetpod_reschedule_proposed" ||
-              c.clinic_status === "interview_confirmed";
-            const canHire = c.clinic_status === "interview_completed";
-            const offerInProgress = c.clinic_status === "vetpod_preparing_offer" || c.clinic_status === "candidate_declined";
+              c.client_status === "scalesource_reviewing" ||
+              c.client_status === "scalesource_reschedule_proposed" ||
+              c.client_status === "interview_confirmed";
+            const canHire = c.client_status === "interview_completed";
+            const offerInProgress = c.client_status === "scalesource_preparing_offer" || c.client_status === "candidate_declined";
             const photo = photoUrls[c.match_id];
             const initial = (c.candidate_name ?? "?").slice(0, 1).toUpperCase();
             return (
@@ -277,28 +268,22 @@ function RequestDetail() {
 
                   </div>
 
-                  <div className="text-xs text-muted-foreground">
-                    <span className="font-semibold text-teal-700">Roleplay</span> {pct(c.roleplay_score)}
-                    <span className="mx-1.5">·</span>
-                    <span className="font-semibold text-emerald-700">Course</span> {pct(c.course_score)}
-                  </div>
-
                   <InterviewStatusBlock
                     c={c}
                     actingId={actingId}
-                    onAccept={(matchId) => act("clinic_accept_reschedule", matchId, "Interview confirmed")}
+                    onAccept={(matchId) => act("client_accept_reschedule", matchId, "Interview confirmed")}
                   />
 
                   <div className="flex items-center gap-1.5">
                     <Button size="sm" className="flex-1" onClick={() => setResumeFor(c)}>
-                      <UserCheck className="mr-1.5 h-4 w-4" />View VetPod Resume
+                      <UserCheck className="mr-1.5 h-4 w-4" />View Candidate Profile
                     </Button>
                     {isHired ? null : offerInProgress ? null : canHire ? (
                       <Button
                         size="sm"
                         className="flex-1"
                         disabled={actingId === c.match_id}
-                        onClick={() => act("clinic_request_hire", c.match_id, "Hire request sent to VetPod")}
+                        onClick={() => act("client_request_hire", c.match_id, "Hire request sent to ScaleSource")}
                       >
                         <UserCheck className="mr-1.5 h-4 w-4" />Hire Candidate
                       </Button>
@@ -408,7 +393,7 @@ function InterviewSchedulerDialog({
     }
     const iso = new Date(`${date}T${time}:00`).toISOString();
     setBusy(true);
-    const { error } = await supabase.rpc("clinic_schedule_interview", {
+    const { error } = await supabase.rpc("client_schedule_interview", {
       p_match: candidate.match_id,
       p_at: iso,
       p_timezone: tz,
@@ -458,10 +443,8 @@ function InterviewSchedulerDialog({
 
 // ---------------------------- Resume Dialog ----------------------------
 
-interface ResumeAudio { scenario: string; score: number | null; bucket: string; path: string }
 interface ResumePayload {
   resume: Record<string, any> | null;
-  roleplay_audios: ResumeAudio[] | null;
 }
 
 function asList(v: any): string[] {
@@ -506,22 +489,6 @@ function ChipGroup({ title, items }: { title: string; items: string[] }) {
       <Chips items={items} />
     </div>
   );
-}
-
-function recommendationFor(score: number | null | undefined) {
-  const n = Number(score ?? 0);
-  if (n >= 90) return { label: "Highly Recommended", cls: "bg-emerald-100 text-emerald-800" };
-  if (n >= 85) return { label: "Recommended", cls: "bg-teal-100 text-teal-800" };
-  if (n >= 80) return { label: "Strong Candidate", cls: "bg-sky-100 text-sky-800" };
-  return null;
-}
-
-function scoreWord(score: number | null | undefined) {
-  const n = Number(score ?? 0);
-  if (n >= 90) return "Excellent";
-  if (n >= 85) return "Strong";
-  if (n >= 80) return "Solid";
-  return "—";
 }
 
 function fmtDate(v: any): string {
@@ -633,52 +600,34 @@ function ResumeDialog({
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [introUrl, setIntroUrl] = useState<string | null>(null);
-  const [audioUrls, setAudioUrls] = useState<(string | null)[]>([]);
-  const [verifyOpen, setVerifyOpen] = useState(false);
-  const [verifyResult, setVerifyResult] = useState<any>(null);
-  const [verifyBusy, setVerifyBusy] = useState(false);
   const [workExpanded, setWorkExpanded] = useState(false);
 
   useEffect(() => {
     if (!candidate) {
       setPayload(null);
-      setResumeUrl(null); setPhotoUrl(null); setIntroUrl(null); setAudioUrls([]);
+      setResumeUrl(null); setPhotoUrl(null); setIntroUrl(null);
       setWorkExpanded(false);
       return;
     }
     setLoading(true);
     supabase
-      .rpc("get_clinic_candidate_resume", { p_match: candidate.match_id })
+      .rpc("get_client_candidate_resume", { p_match: candidate.match_id })
       .then(async ({ data, error }) => {
         if (error) { toast.error(error.message); setLoading(false); return; }
         const p = data as ResumePayload;
         setPayload(p);
         const r = p?.resume ?? {};
-        const [ru, ph, iv, auds] = await Promise.all([
-          r.vetpod_resume_path ? signedUrl("vetpod-resumes", r.vetpod_resume_path) : null,
+        const [ru, ph, iv] = await Promise.all([
+          r.resume_path ? signedUrl("candidate-resumes", r.resume_path) : null,
           r.profile_photo_path ? signedUrl("candidate-photos", r.profile_photo_path) : null,
           r.intro_video_path ? signedUrl("intro-videos", r.intro_video_path) : null,
-          Promise.all((p?.roleplay_audios ?? []).map((a) => signedUrl(a.bucket, a.path))),
         ]);
-        setResumeUrl(ru); setPhotoUrl(ph); setIntroUrl(iv); setAudioUrls(auds);
+        setResumeUrl(ru); setPhotoUrl(ph); setIntroUrl(iv);
         setLoading(false);
       });
   }, [candidate]);
 
   const r = payload?.resume ?? null;
-  const audios = payload?.roleplay_audios ?? [];
-
-  async function verifyCert() {
-    if (!r?.certificate_verification_id) return;
-    setVerifyBusy(true);
-    setVerifyOpen(true);
-    const { data, error } = await supabase.rpc("verify_certificate", { query: r.certificate_verification_id });
-    setVerifyBusy(false);
-    if (error) { setVerifyResult({ error: error.message }); return; }
-    setVerifyResult(data);
-  }
-
-  const rec = r ? recommendationFor(r.roleplay_score) : null;
   const introEmbed = useMemo(() => (r?.intro_video_url ? getVideoEmbed(r.intro_video_url) : null), [r?.intro_video_url]);
 
   return (
@@ -686,13 +635,13 @@ function ResumeDialog({
       <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
         {loading || !r ? (
           <div className="flex items-center justify-center py-16 text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />Loading VetPod Resume…
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />Loading candidate profile…
           </div>
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle className="sr-only">VetPod Resume — {r.full_name}</DialogTitle>
-              <DialogDescription className="sr-only">Candidate VetPod Resume</DialogDescription>
+              <DialogTitle className="sr-only">Candidate Profile — {r.full_name}</DialogTitle>
+              <DialogDescription className="sr-only">Full candidate profile</DialogDescription>
             </DialogHeader>
 
             {/* ───────── SECTION 1 — Professional Profile ───────── */}
@@ -779,58 +728,13 @@ function ResumeDialog({
                 <div className="rounded-xl border bg-muted/30 p-4">
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 text-sm font-semibold">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-500" /> VetPod AI Assessment
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-500" /> ScaleSource AI Assessment
                     </div>
-                    {rec && <Badge className={rec.cls} variant="secondary">{rec.label}</Badge>}
                   </div>
                   <p className="whitespace-pre-wrap text-sm text-foreground/90">{r.final_client_analysis}</p>
                 </div>
               )}
 
-              {r.certificate_status === "issued" && (
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    <span>
-                      <strong>VetPod Academy Certified</strong>
-                      {r.certificate_number ? ` · ${r.certificate_number}` : ""}
-                      {r.certificate_verification_id ? ` · Verify ID ${r.certificate_verification_id}` : ""}
-                    </span>
-                  </div>
-                  {r.certificate_verification_id && (
-                    <Button variant="outline" size="sm" onClick={verifyCert}>
-                      <FileBadge className="mr-1.5 h-4 w-4" />Verify Certificate
-                    </Button>
-                  )}
-                </div>
-              )}
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border bg-teal-50/40 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Roleplay Performance</div>
-                    <Badge className="bg-emerald-100 text-emerald-800" variant="secondary">Passed</Badge>
-                  </div>
-                  <div className="mt-1 text-3xl font-semibold text-teal-700">{pct(r.roleplay_score)}</div>
-                  <div className="text-xs text-muted-foreground">{scoreWord(r.roleplay_score)}</div>
-                </div>
-                <div className="rounded-xl border bg-emerald-50/40 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Final Exam Score</div>
-                    <Badge
-                      className={
-                        typeof r.course_score === "number" && r.course_score >= 80
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-amber-100 text-amber-800"
-                      }
-                      variant="secondary"
-                    >
-                      {typeof r.course_score === "number" && r.course_score >= 80 ? "Passed" : "Below Benchmark"}
-                    </Badge>
-                  </div>
-                  <div className="mt-1 text-3xl font-semibold text-emerald-700">{pct(r.course_score)}</div>
-                </div>
-              </div>
 
               <div className="rounded-xl border p-4">
                 <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Availability</div>
@@ -841,14 +745,13 @@ function ResumeDialog({
                   <div><span className="text-muted-foreground">Preferred shift:</span> <span className="font-medium">{r.preferred_shift ?? "—"}</span></div>
                   <div><span className="text-muted-foreground">Earliest start:</span> <span className="font-medium">{r.earliest_start_date ?? "—"}</span></div>
                   <div><span className="text-muted-foreground">CS experience:</span> <span className="font-medium">{r.years_customer_service_experience != null ? `${r.years_customer_service_experience}y` : "—"}</span></div>
-                  <div><span className="text-muted-foreground">Vet experience:</span> <span className="font-medium">{r.years_veterinary_experience != null ? `${r.years_veterinary_experience}y` : "—"}</span></div>
                 </div>
               </div>
 
               {resumeUrl && (
                 <div>
                   <Button asChild variant="default" size="sm">
-                    <a href={resumeUrl} target="_blank" rel="noreferrer"><Download className="mr-1.5 h-4 w-4" />Download VetPod Resume PDF</a>
+                    <a href={resumeUrl} target="_blank" rel="noreferrer"><Download className="mr-1.5 h-4 w-4" />Download Profile PDF</a>
                   </Button>
                 </div>
               )}
@@ -929,28 +832,6 @@ function ResumeDialog({
                 <ChipGroup title="Career Highlights" items={asList(r.career_highlights)} />
               </div>
 
-              {audios.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Roleplay Audio Submissions</div>
-                  <div className="space-y-2">
-                    {audios.map((a, i) => (
-                      <div key={i} className="rounded-lg border p-3">
-                        <div className="mb-1.5 flex items-center justify-between gap-2">
-                          <div className="text-sm font-medium">{a.scenario}</div>
-                          {a.score != null && (
-                            <Badge variant="secondary" className="bg-teal-50 text-teal-800">{Math.round(Number(a.score))}%</Badge>
-                          )}
-                        </div>
-                        {audioUrls[i] ? (
-                          <audio controls src={audioUrls[i] as string} className="w-full" />
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Audio unavailable</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               <ChipGroup title="Badges" items={asList(r.badges)} />
             </section>
@@ -958,32 +839,6 @@ function ResumeDialog({
           </>
         )}
 
-        <Dialog open={verifyOpen} onOpenChange={setVerifyOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-emerald-600" />Certificate Verification</DialogTitle>
-            </DialogHeader>
-            {verifyBusy ? (
-              <div className="py-6 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></div>
-            ) : verifyResult?.error ? (
-              <p className="text-sm text-destructive">{verifyResult.error}</p>
-            ) : (
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <span className="font-medium">Status:</span> {String(verifyResult?.status ?? verifyResult?.valid ?? "—")}
-                </div>
-                <div><span className="font-medium">Certificate #:</span> {String(verifyResult?.certificate_number ?? verifyResult?.number ?? "—")}</div>
-                <div><span className="font-medium">Verification ID:</span> {String(r?.certificate_verification_id ?? "—")}</div>
-                {verifyResult?.valid != null && (
-                  <Badge className={verifyResult.valid ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"} variant="secondary">
-                    {verifyResult.valid ? "Valid" : "Invalid"}
-                  </Badge>
-                )}
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
       </DialogContent>
     </Dialog>
   );

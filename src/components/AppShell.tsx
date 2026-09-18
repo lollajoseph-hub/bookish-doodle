@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Stethoscope, LogOut, PlusCircle, ListChecks, CalendarClock, Star } from "lucide-react";
+import { Users, LogOut, PlusCircle, ListChecks, CalendarClock, Star } from "lucide-react";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, loading, signOut } = useAuth();
@@ -26,10 +26,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
           <Link to="/requests" className="flex items-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Stethoscope className="h-5 w-5" />
+              <Users className="h-5 w-5" />
             </span>
             <span className="font-semibold tracking-tight text-foreground">
-              VetPod Clinic Workstation
+              Candidate Pool
             </span>
           </Link>
           <nav className="flex items-center gap-2">
