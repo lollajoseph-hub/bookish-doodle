@@ -1,11 +1,14 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
+import { useMembership } from "@/lib/membership";
 import { Button } from "@/components/ui/button";
-import { Users, LogOut, PlusCircle, ListChecks, CalendarClock, Star } from "lucide-react";
+import { NotificationsBell } from "@/components/notifications-bell";
+import { Users, LogOut, PlusCircle, ListChecks, CalendarClock, Star, UsersRound } from "lucide-react";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, loading, signOut } = useAuth();
+  const { membership } = useMembership();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,6 +60,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                 New Request
               </Link>
             </Button>
+            {membership?.is_primary && (
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/team">
+                  <UsersRound className="mr-1.5 h-4 w-4" />
+                  Team
+                </Link>
+              </Button>
+            )}
+            <NotificationsBell />
             <Button
               variant="outline"
               size="sm"

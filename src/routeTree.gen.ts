@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TeamRouteImport } from './routes/team'
 import { Route as ShortlistedRouteImport } from './routes/shortlisted'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as NewRequestRouteImport } from './routes/new-request'
@@ -19,6 +20,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as RequestsIndexRouteImport } from './routes/requests.index'
 import { Route as RequestsIdRouteImport } from './routes/requests.$id'
 
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShortlistedRoute = ShortlistedRouteImport.update({
   id: '/shortlisted',
   path: '/shortlisted',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/new-request': typeof NewRequestRoute
   '/reset-password': typeof ResetPasswordRoute
   '/shortlisted': typeof ShortlistedRoute
+  '/team': typeof TeamRoute
   '/requests/$id': typeof RequestsIdRoute
   '/requests/': typeof RequestsIndexRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/new-request': typeof NewRequestRoute
   '/reset-password': typeof ResetPasswordRoute
   '/shortlisted': typeof ShortlistedRoute
+  '/team': typeof TeamRoute
   '/requests/$id': typeof RequestsIdRoute
   '/requests': typeof RequestsIndexRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/new-request': typeof NewRequestRoute
   '/reset-password': typeof ResetPasswordRoute
   '/shortlisted': typeof ShortlistedRoute
+  '/team': typeof TeamRoute
   '/requests/$id': typeof RequestsIdRoute
   '/requests/': typeof RequestsIndexRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/new-request'
     | '/reset-password'
     | '/shortlisted'
+    | '/team'
     | '/requests/$id'
     | '/requests/'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/new-request'
     | '/reset-password'
     | '/shortlisted'
+    | '/team'
     | '/requests/$id'
     | '/requests'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/new-request'
     | '/reset-password'
     | '/shortlisted'
+    | '/team'
     | '/requests/$id'
     | '/requests/'
   fileRoutesById: FileRoutesById
@@ -143,12 +155,20 @@ export interface RootRouteChildren {
   NewRequestRoute: typeof NewRequestRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ShortlistedRoute: typeof ShortlistedRoute
+  TeamRoute: typeof TeamRoute
   RequestsIdRoute: typeof RequestsIdRoute
   RequestsIndexRoute: typeof RequestsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shortlisted': {
       id: '/shortlisted'
       path: '/shortlisted'
@@ -223,6 +243,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewRequestRoute: NewRequestRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ShortlistedRoute: ShortlistedRoute,
+  TeamRoute: TeamRoute,
   RequestsIdRoute: RequestsIdRoute,
   RequestsIndexRoute: RequestsIndexRoute,
 }

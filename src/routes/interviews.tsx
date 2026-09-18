@@ -1,14 +1,33 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarClock, Video, ExternalLink } from "lucide-react";
+import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
+import { statusTone, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
+import { toast } from "sonner";
+import { CalendarClock, Clock, ExternalLink, Loader2, UserSearch, Video } from "lucide-react";
+import {
+  MATCH_STATUS_LABELS,
+  displayName,
+  formatDateTime,
+  signedPhotoUrl,
+  type MatchStatus,
+} from "@/lib/matches";
 
 export const Route = createFileRoute("/interviews")({
-  head: () => ({ meta: [{ title: "Interviews — Candidate Pool" }] }),
+  head: () => ({
+    meta: [
+      { title: "Interviews — Candidate Pool" },
+      { name: "description", content: "Every interview requested, scheduled or completed across your hiring requests." },
+      { property: "og:title", content: "Interviews — Candidate Pool" },
+      { property: "og:description", content: "Every interview requested, scheduled or completed across your hiring requests." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: () => (
     <AppShell>
       <InterviewsPage />
@@ -16,86 +35,84 @@ export const Route = createFileRoute("/interviews")({
   ),
 });
 
-interface InterviewRow {
-  match_id: string;
-  status: string | null;
-  client_status: string | null;
-  candidate_name: string | null;
-  role_title: string | null;
-  company_name: string | null;
-  interview_scheduled_at: string | null;
-  interview_timezone: string | null;
-  interview_mode: string | null;
-  interview_confirmed_at: string | null;
-  meet_url: string | null;
-}
+const INTERVIEW_STATUSES: MatchStatus[] = [
+  "interview_requested",
+  "interview_confirmed",
+  "interview_completed",
+];
 
-function statusMeta(cs: string | null | undefined): { label: string; tone: string } {
-  switch ((cs ?? "").toLowerCase()) {
-    case "interview_confirmed":
-      return { label: "Interview confirmed", tone: "bg-emerald-100 text-emerald-700" };
-    case "scalesource_reviewing":
-      return { label: "ScaleSource reviewing", tone: "bg-sky-100 text-sky-700" };
-    case "scalesource_reschedule_proposed":
-      return { label: "Reschedule proposed", tone: "bg-amber-100 text-amber-700" };
-    case "interview_completed":
-      return { label: "Completed", tone: "bg-slate-100 text-slate-700" };
-    case "scalesource_preparing_offer":
-      return { label: "Preparing offer", tone: "bg-emerald-100 text-emerald-700" };
-    case "candidate_declined":
-      return { label: "Candidate declined", tone: "bg-rose-100 text-rose-700" };
-    default:
-      return { label: cs ?? "—", tone: "bg-slate-100 text-slate-700" };
-  }
-}
+const ORDER: MatchStatus[] = ["interview_confirmed", "interview_requested", "interview_completed"];
 
-function formatWhen(iso: string | null, tz: string | null) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  const timeZone = tz || undefined;
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      timeZone,
-      timeZoneName: "short",
-    }).format(d);
-  } catch {
-    return d.toLocaleString();
-  }
+interface RequestMeta {
+  id: string;
+  job_roles: { name: string | null } | null;
 }
 
 function InterviewsPage() {
-  const [rows, setRows] = useState<InterviewRow[] | null>(null);
+  const [rows, setRows] = useState<MatchRow[] | null>(null);
+  const [requests, setRequests] = useState<Record<string, string>>({});
+  const [photos, setPhotos] = useState<Record<string, string | null>>({});
   const [err, setErr] = useState<string | null>(null);
+  const [actingId, setActingId] = useState<string | null>(null);
+  const [profileFor, setProfileFor] = useState<MatchRow | null>(null);
+
+  const load = useCallback(async () => {
+    setErr(null);
+    const [matchRes, reqRes] = await Promise.all([
+      supabase.from("candidate_matches").select(MATCH_SELECT).in("status", INTERVIEW_STATUSES),
+      supabase.from("client_requests").select("id,job_roles(name)"),
+    ]);
+
+    if (reqRes.data) {
+      const map: Record<string, string> = {};
+      for (const r of reqRes.data as unknown as RequestMeta[]) {
+        map[r.id] = r.job_roles?.name ?? "Hiring request";
+      }
+      setRequests(map);
+    }
+
+    if (matchRes.error) {
+      setErr(matchRes.error.message);
+      setRows([]);
+      return;
+    }
+
+    const list = ((matchRes.data ?? []) as unknown as MatchRow[]).slice().sort((a, b) => {
+      const rank = ORDER.indexOf(a.status) - ORDER.indexOf(b.status);
+      if (rank !== 0) return rank;
+      const ta = a.interview_scheduled_at ? new Date(a.interview_scheduled_at).getTime() : Infinity;
+      const tb = b.interview_scheduled_at ? new Date(b.interview_scheduled_at).getTime() : Infinity;
+      return ta - tb;
+    });
+    setRows(list);
+
+    const entries = await Promise.all(
+      list.map(async (m) => [m.id, await signedPhotoUrl(m.candidate_pool_profile?.profile_photo_path)] as const)
+    );
+    setPhotos(Object.fromEntries(entries));
+  }, []);
 
   useEffect(() => {
-    supabase.rpc("get_client_interviews").then(({ data, error }) => {
-      if (error) {
-        setErr(error.message);
-        setRows([]);
-        return;
-      }
-      const list = (data ?? []) as InterviewRow[];
-      list.sort((a, b) => {
-        const ta = a.interview_scheduled_at ? new Date(a.interview_scheduled_at).getTime() : Infinity;
-        const tb = b.interview_scheduled_at ? new Date(b.interview_scheduled_at).getTime() : Infinity;
-        return ta - tb;
-      });
-      setRows(list);
-    });
-  }, []);
+    void load();
+  }, [load]);
+
+  async function requestHire(matchId: string) {
+    setActingId(matchId);
+    const { error } = await supabase.rpc("request_to_hire", { p_match_id: matchId });
+    setActingId(null);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Hire request sent to ScaleSource");
+      void load();
+    }
+  }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Interviews</h1>
         <p className="text-sm text-muted-foreground">
-          All scheduled and past interviews across your hiring requests.
+          Every interview requested, scheduled or already held across your hiring requests.
         </p>
       </div>
 
@@ -111,56 +128,98 @@ function InterviewsPage() {
         <Card className="rounded-2xl border-dashed">
           <CardContent className="flex flex-col items-center justify-center gap-2 py-12 text-center">
             <CalendarClock className="h-8 w-8 text-muted-foreground" />
-            <p className="font-medium">No interviews scheduled yet.</p>
+            <p className="font-medium">No interviews yet.</p>
             <p className="text-sm text-muted-foreground">
-              Interviews you schedule from a request will appear here.
+              Request an interview from a candidate&apos;s card and it will appear here.
             </p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-3">
-          {rows.map((r) => {
-            const meta = statusMeta(r.client_status);
-            const canJoin = ["interview_confirmed", "interview_completed"].includes((r.client_status ?? "").toLowerCase()) && !!r.meet_url;
+          {rows.map((m) => {
+            const p = m.candidate_pool_profile;
+            const name = displayName(p?.full_name, m.status);
+            const when = formatDateTime(m.interview_scheduled_at);
+            const photo = photos[m.id] ?? null;
             return (
-              <Card key={r.match_id} className="rounded-2xl">
-                <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="truncate font-medium">{r.candidate_name ?? "Candidate"}</h3>
-                      <Badge variant="secondary" className={meta.tone}>
-                        {meta.label}
-                      </Badge>
+              <Card key={m.id} className="rounded-2xl">
+                <CardContent className="space-y-3 p-5">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="flex min-w-0 items-start gap-3">
+                      {photo ? (
+                        <img src={photo} alt="" className="h-14 w-14 flex-none rounded-full object-cover ring-2 ring-primary/15" />
+                      ) : (
+                        <div className="grid h-14 w-14 flex-none place-items-center rounded-full bg-primary/10 text-xl font-semibold text-primary">
+                          {name.slice(0, 1).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="truncate font-semibold">{name}</h3>
+                          <Badge variant="secondary" className={statusTone(m.status)}>
+                            {MATCH_STATUS_LABELS[m.status] ?? m.status}
+                          </Badge>
+                        </div>
+                        {p?.headline && <p className="truncate text-xs text-muted-foreground">{p.headline}</p>}
+                        <Link
+                          to="/requests/$id"
+                          params={{ id: m.client_request_id }}
+                          className="block text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          For: {requests[m.client_request_id] ?? "Hiring request"}
+                        </Link>
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {r.role_title ?? "—"}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground/80">
-                      <span className="inline-flex items-center gap-1.5">
-                        <CalendarClock className="h-4 w-4 text-muted-foreground" />
-                        {formatWhen(r.interview_scheduled_at, r.interview_timezone)}
-                      </span>
-                      {r.interview_mode && (
-                        <span className="inline-flex items-center gap-1.5 capitalize">
-                          <Video className="h-4 w-4 text-muted-foreground" />
-                          {r.interview_mode}
-                        </span>
+
+                    <div className="flex flex-none flex-wrap items-center gap-2">
+                      <Button variant="secondary" size="sm" onClick={() => setProfileFor(m)}>
+                        <UserSearch className="mr-1.5 h-4 w-4" />
+                        View full profile
+                      </Button>
+                      {m.status === "interview_confirmed" && m.meet_url && (
+                        <Button asChild size="sm">
+                          <a href={m.meet_url} target="_blank" rel="noreferrer">
+                            <Video className="mr-1.5 h-4 w-4" />
+                            Join Google Meet
+                            <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                          </a>
+                        </Button>
                       )}
                     </div>
                   </div>
-                  {canJoin && (
-                    <a
-                      href={r.meet_url!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0"
+
+                  {m.status === "interview_requested" && (
+                    <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                      <Clock className="h-4 w-4 flex-none" />
+                      Requested — ScaleSource is arranging a time with the candidate.
+                    </div>
+                  )}
+
+                  {(m.status === "interview_confirmed" || m.status === "interview_completed") && (
+                    <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+                      <p className="flex items-center gap-2 text-sm font-medium text-primary">
+                        <CalendarClock className="h-4 w-4 flex-none" />
+                        {when
+                          ? m.status === "interview_completed"
+                            ? `Interview held on ${when}`
+                            : `Interview on ${when}`
+                          : MATCH_STATUS_LABELS[m.status]}
+                      </p>
+                      {m.status === "interview_completed" && m.interview_notes && (
+                        <p className="whitespace-pre-line text-sm text-muted-foreground">{m.interview_notes}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {m.status === "interview_completed" && (
+                    <Button
+                      className="w-full sm:w-auto"
+                      disabled={actingId === m.id}
+                      onClick={() => requestHire(m.id)}
                     >
-                      <Button className="gap-1.5">
-                        <Video className="h-4 w-4" />
-                        Join Google Meet
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </Button>
-                    </a>
+                      {actingId === m.id && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                      Request to hire
+                    </Button>
                   )}
                 </CardContent>
               </Card>
@@ -168,6 +227,12 @@ function InterviewsPage() {
           })}
         </div>
       )}
+
+      <CandidateProfileDialog
+        candidateId={profileFor?.candidate_id ?? null}
+        matchStatus={profileFor?.status ?? null}
+        onClose={() => setProfileFor(null)}
+      />
     </div>
   );
 }
