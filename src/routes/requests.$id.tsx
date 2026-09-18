@@ -763,7 +763,6 @@ function ResumeDialog({
                     <div className="flex items-center gap-1.5 text-sm font-semibold">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-500" /> ScaleSource AI Assessment
                     </div>
-                    {rec && <Badge className={rec.cls} variant="secondary">{rec.label}</Badge>}
                   </div>
                   <p className="whitespace-pre-wrap text-sm text-foreground/90">{r.final_client_analysis}</p>
                 </div>
