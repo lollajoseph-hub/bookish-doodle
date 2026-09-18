@@ -106,8 +106,20 @@ function NewRequest() {
     }
 
     const requestId = (inserted as { id: string }).id;
+
+    const { data: mustHaveIds, error: resolveError } = await supabase.rpc(
+      "resolve_or_create_skills",
+      { p_names: f.must_have_skill_names },
+    );
+    if (resolveError) {
+      setBusy(false);
+      toast.error(`Request saved, but the must-have skills didn't attach: ${resolveError.message}`);
+      navigate({ to: "/requests/$id", params: { id: requestId } });
+      return;
+    }
+
     const skillRows = [
-      ...f.language_skill_ids.map((skill_id) => ({
+      ...[...((mustHaveIds as string[] | null) ?? []), ...f.language_skill_ids].map((skill_id) => ({
         request_id: requestId,
         skill_id,
         is_required: true,

@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +19,7 @@ export interface RequestForm {
   engagement_type: string;
   hours_needed: string;
   days_of_week_needed: string[];
-  must_have_skills_text: string;
+  must_have_skill_names: string[];
   language_skill_ids: string[];
   nice_to_have_skill_ids: string[];
   hires_needed: string;
@@ -31,7 +33,7 @@ export const emptyRequestForm: RequestForm = {
   engagement_type: "",
   hours_needed: "",
   days_of_week_needed: [],
-  must_have_skills_text: "",
+  must_have_skill_names: [],
   language_skill_ids: [],
   nice_to_have_skill_ids: [],
   hires_needed: "1",
@@ -59,9 +61,80 @@ export function validateScheduleFields(f: RequestForm): string | null {
 }
 
 export function validateRequirementsFields(f: RequestForm): string | null {
-  if (!f.must_have_skills_text.trim()) return "List at least one must-have skill.";
+  if (f.must_have_skill_names.length === 0) return "Add at least one must-have skill.";
   if (f.language_skill_ids.length === 0) return "Pick at least one required language.";
   return null;
+}
+
+/** Creatable tag input: type a name, press Enter or comma to commit it as a removable pill. */
+export function TagInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string[];
+  onChange: (next: string[]) => void;
+  placeholder?: string;
+}) {
+  const [draft, setDraft] = useState("");
+
+  const commit = (raw: string) => {
+    const name = raw.trim();
+    if (!name) return;
+    if (value.some((v) => v.toLowerCase() === name.toLowerCase())) {
+      setDraft("");
+      return;
+    }
+    onChange([...value, name]);
+    setDraft("");
+  };
+
+  return (
+    <div className="rounded-md border border-input bg-background p-2">
+      {value.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {value.map((name) => (
+            <span
+              key={name}
+              className="inline-flex items-center gap-1 rounded-full bg-primary/10 py-1 pl-2.5 pr-1 text-xs font-medium text-primary"
+            >
+              {name}
+              <button
+                type="button"
+                aria-label={`Remove ${name}`}
+                onClick={() => onChange(value.filter((v) => v !== name))}
+                className="grid h-4 w-4 place-items-center rounded-full text-primary/70 hover:bg-primary/20 hover:text-primary"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <Input
+        value={draft}
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v.includes(",")) {
+            v.split(",").forEach(commit);
+          } else {
+            setDraft(v);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit(draft);
+          } else if (e.key === "Backspace" && !draft && value.length > 0) {
+            onChange(value.slice(0, -1));
+          }
+        }}
+        onBlur={() => commit(draft)}
+        placeholder={placeholder}
+        className="border-0 bg-transparent px-1 shadow-none focus-visible:ring-0"
+      />
+    </div>
+  );
 }
 
 export function Field({
@@ -153,8 +226,8 @@ export function RequestRequirementsFields(props: RequestFieldsProps) {
   const { f, set, skillOptions, languageOptions, catalog } = useRequestFieldProps(props);
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div className="md:col-span-2"><Field label="Must-have skills" required hint="Separate skills with commas — e.g. Excel, QuickBooks, cold calling.">
-        <Textarea rows={3} value={f.must_have_skills_text} onChange={(e) => set("must_have_skills_text", e.target.value)} placeholder="The skills a candidate absolutely must have" />
+      <div className="md:col-span-2"><Field label="Must-have skills" required hint="Type a skill and press Enter to add it — e.g. Excel, QuickBooks, cold calling.">
+        <TagInput value={f.must_have_skill_names} onChange={(v) => set("must_have_skill_names", v)} placeholder="The skills a candidate absolutely must have" />
       </Field></div>
       <div className="md:col-span-2"><Field label="Required languages" required>
         <MultiSelect options={languageOptions} value={f.language_skill_ids} onChange={(v) => set("language_skill_ids", v)} placeholder={catalog.loading ? "Loading languages…" : "Select required languages"} searchPlaceholder="Search languages…" />
@@ -200,7 +273,7 @@ export function requestPayload(f: RequestForm) {
     hires_needed: Number(f.hires_needed) || 1,
     years_experience_min: f.years_experience_min ? Number(f.years_experience_min) : null,
     desired_start_date: f.desired_start_date || null,
-    must_have_skills_text: f.must_have_skills_text.trim() || null,
+    must_have_skill_names: f.must_have_skill_names,
     notes: f.notes.trim() || null,
   };
 }
