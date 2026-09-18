@@ -8,6 +8,7 @@ import { Users, LogOut, PlusCircle, ListChecks, CalendarClock, Star, UsersRound 
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, loading, signOut } = useAuth();
+  const { membership } = useMembership();
   const navigate = useNavigate();
 
   useEffect(() => {
