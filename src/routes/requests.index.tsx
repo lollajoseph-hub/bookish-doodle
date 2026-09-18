@@ -128,6 +128,7 @@ function RequestsPage() {
   const [minYears, setMinYears] = useState("");
   const [startDate, setStartDate] = useState("");
   const [days, setDays] = useState<string[]>([]);
+  const [mustSkills, setMustSkills] = useState("");
   const [notes, setNotes] = useState("");
 
   const { data: requests = [], isLoading } = useQuery({
@@ -165,6 +166,7 @@ function RequestsPage() {
         desired_start_date: startDate,
         days_of_week_needed: days,
         notes,
+        must_have_skills_text: mustSkills,
         created_by: profile?.id ?? null,
       });
     },
@@ -172,6 +174,7 @@ function RequestsPage() {
       toast.success("Request created");
       setOpen(false);
       setNotes("");
+      setMustSkills("");
       setDays([]);
       queryClient.invalidateQueries({ queryKey: ["client-requests"] });
     },
@@ -355,6 +358,18 @@ function RequestsPage() {
                     );
                   })}
                 </div>
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="must-skills">Must-have skills</Label>
+                <Textarea
+                  id="must-skills"
+                  placeholder="Skills the client says are non-negotiable, e.g. Spanish, QuickBooks, Monday-Friday availability"
+                  value={mustSkills}
+                  onChange={(e) => setMustSkills(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Free text from the client — optional, stored exactly as they wrote it.
+                </p>
               </div>
             </div>
           </FormSection>
