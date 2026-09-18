@@ -62,7 +62,7 @@ function toEntries(v: unknown): Entry[] {
     const o = (item ?? {}) as Record<string, unknown>;
     const start = str(o, "start_date", "start", "from", "year_start");
     const end = str(o, "end_date", "end", "to", "year_end") ?? (o["current"] ? "Present" : null);
-    const period = str(o, "period", "dates") ?? [start, end].filter(Boolean).join(" – ") || null;
+    const period = str(o, "period", "dates") ?? ([start, end].filter(Boolean).join(" – ") || null);
     return {
       title: str(o, "title", "role", "position", "degree", "qualification", "name"),
       subtitle: str(o, "company", "employer", "organisation", "organization", "institution", "school", "field_of_study"),
