@@ -787,50 +787,6 @@ function ResumeDialog({
                 </div>
               )}
 
-              {r.certificate_status === "issued" && (
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    <span>
-                      <strong>VetPod Academy Certified</strong>
-                      {r.certificate_number ? ` · ${r.certificate_number}` : ""}
-                      {r.certificate_verification_id ? ` · Verify ID ${r.certificate_verification_id}` : ""}
-                    </span>
-                  </div>
-                  {r.certificate_verification_id && (
-                    <Button variant="outline" size="sm" onClick={verifyCert}>
-                      <FileBadge className="mr-1.5 h-4 w-4" />Verify Certificate
-                    </Button>
-                  )}
-                </div>
-              )}
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border bg-teal-50/40 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Roleplay Performance</div>
-                    <Badge className="bg-emerald-100 text-emerald-800" variant="secondary">Passed</Badge>
-                  </div>
-                  <div className="mt-1 text-3xl font-semibold text-teal-700">{pct(r.roleplay_score)}</div>
-                  <div className="text-xs text-muted-foreground">{scoreWord(r.roleplay_score)}</div>
-                </div>
-                <div className="rounded-xl border bg-emerald-50/40 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Final Exam Score</div>
-                    <Badge
-                      className={
-                        typeof r.course_score === "number" && r.course_score >= 80
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-amber-100 text-amber-800"
-                      }
-                      variant="secondary"
-                    >
-                      {typeof r.course_score === "number" && r.course_score >= 80 ? "Passed" : "Below Benchmark"}
-                    </Badge>
-                  </div>
-                  <div className="mt-1 text-3xl font-semibold text-emerald-700">{pct(r.course_score)}</div>
-                </div>
-              </div>
 
               <div className="rounded-xl border p-4">
                 <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Availability</div>
