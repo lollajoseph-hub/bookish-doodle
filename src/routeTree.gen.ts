@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShortlistedRouteImport } from './routes/shortlisted'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as NewRequestRouteImport } from './routes/new-request'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as InterviewsRouteImport } from './routes/interviews'
 import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -23,9 +25,19 @@ const ShortlistedRoute = ShortlistedRouteImport.update({
   path: '/shortlisted',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewRequestRoute = NewRequestRouteImport.update({
   id: '/new-request',
   path: '/new-request',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InterviewsRoute = InterviewsRouteImport.update({
@@ -64,7 +76,9 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/get-started': typeof GetStartedRoute
   '/interviews': typeof InterviewsRoute
+  '/login': typeof LoginRoute
   '/new-request': typeof NewRequestRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/shortlisted': typeof ShortlistedRoute
   '/requests/$id': typeof RequestsIdRoute
   '/requests/': typeof RequestsIndexRoute
@@ -74,7 +88,9 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/get-started': typeof GetStartedRoute
   '/interviews': typeof InterviewsRoute
+  '/login': typeof LoginRoute
   '/new-request': typeof NewRequestRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/shortlisted': typeof ShortlistedRoute
   '/requests/$id': typeof RequestsIdRoute
   '/requests': typeof RequestsIndexRoute
@@ -85,7 +101,9 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/get-started': typeof GetStartedRoute
   '/interviews': typeof InterviewsRoute
+  '/login': typeof LoginRoute
   '/new-request': typeof NewRequestRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/shortlisted': typeof ShortlistedRoute
   '/requests/$id': typeof RequestsIdRoute
   '/requests/': typeof RequestsIndexRoute
@@ -97,7 +115,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/get-started'
     | '/interviews'
+    | '/login'
     | '/new-request'
+    | '/reset-password'
     | '/shortlisted'
     | '/requests/$id'
     | '/requests/'
@@ -107,7 +127,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/get-started'
     | '/interviews'
+    | '/login'
     | '/new-request'
+    | '/reset-password'
     | '/shortlisted'
     | '/requests/$id'
     | '/requests'
@@ -117,7 +139,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/get-started'
     | '/interviews'
+    | '/login'
     | '/new-request'
+    | '/reset-password'
     | '/shortlisted'
     | '/requests/$id'
     | '/requests/'
@@ -128,7 +152,9 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   GetStartedRoute: typeof GetStartedRoute
   InterviewsRoute: typeof InterviewsRoute
+  LoginRoute: typeof LoginRoute
   NewRequestRoute: typeof NewRequestRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ShortlistedRoute: typeof ShortlistedRoute
   RequestsIdRoute: typeof RequestsIdRoute
   RequestsIndexRoute: typeof RequestsIndexRoute
@@ -143,11 +169,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShortlistedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/new-request': {
       id: '/new-request'
       path: '/new-request'
       fullPath: '/new-request'
       preLoaderRoute: typeof NewRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/interviews': {
@@ -200,7 +240,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   GetStartedRoute: GetStartedRoute,
   InterviewsRoute: InterviewsRoute,
+  LoginRoute: LoginRoute,
   NewRequestRoute: NewRequestRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ShortlistedRoute: ShortlistedRoute,
   RequestsIdRoute: RequestsIdRoute,
   RequestsIndexRoute: RequestsIndexRoute,
