@@ -89,12 +89,14 @@ function NewRequest() {
     }
     setBusy(true);
 
+    // must_have_skill_names is resolved to skill IDs separately — not a client_requests column.
+    const { must_have_skill_names: _names, ...requestColumns } = requestPayload(f);
     const { data: inserted, error } = await supabase
       .from("client_requests")
       .insert({
         client_id: membership.client_id,
         created_by: user.id,
-        ...requestPayload(f),
+        ...requestColumns,
       })
       .select("id")
       .single();
