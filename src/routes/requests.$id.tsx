@@ -633,16 +633,12 @@ function ResumeDialog({
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [introUrl, setIntroUrl] = useState<string | null>(null);
-  const [audioUrls, setAudioUrls] = useState<(string | null)[]>([]);
-  const [verifyOpen, setVerifyOpen] = useState(false);
-  const [verifyResult, setVerifyResult] = useState<any>(null);
-  const [verifyBusy, setVerifyBusy] = useState(false);
   const [workExpanded, setWorkExpanded] = useState(false);
 
   useEffect(() => {
     if (!candidate) {
       setPayload(null);
-      setResumeUrl(null); setPhotoUrl(null); setIntroUrl(null); setAudioUrls([]);
+      setResumeUrl(null); setPhotoUrl(null); setIntroUrl(null);
       setWorkExpanded(false);
       return;
     }
@@ -654,31 +650,17 @@ function ResumeDialog({
         const p = data as ResumePayload;
         setPayload(p);
         const r = p?.resume ?? {};
-        const [ru, ph, iv, auds] = await Promise.all([
+        const [ru, ph, iv] = await Promise.all([
           r.resume_path ? signedUrl("candidate-resumes", r.resume_path) : null,
           r.profile_photo_path ? signedUrl("candidate-photos", r.profile_photo_path) : null,
           r.intro_video_path ? signedUrl("intro-videos", r.intro_video_path) : null,
-          Promise.all((p?.roleplay_audios ?? []).map((a) => signedUrl(a.bucket, a.path))),
         ]);
-        setResumeUrl(ru); setPhotoUrl(ph); setIntroUrl(iv); setAudioUrls(auds);
+        setResumeUrl(ru); setPhotoUrl(ph); setIntroUrl(iv);
         setLoading(false);
       });
   }, [candidate]);
 
   const r = payload?.resume ?? null;
-  const audios = payload?.roleplay_audios ?? [];
-
-  async function verifyCert() {
-    if (!r?.certificate_verification_id) return;
-    setVerifyBusy(true);
-    setVerifyOpen(true);
-    const { data, error } = await supabase.rpc("verify_certificate", { query: r.certificate_verification_id });
-    setVerifyBusy(false);
-    if (error) { setVerifyResult({ error: error.message }); return; }
-    setVerifyResult(data);
-  }
-
-  const rec = r ? recommendationFor(r.roleplay_score) : null;
   const introEmbed = useMemo(() => (r?.intro_video_url ? getVideoEmbed(r.intro_video_url) : null), [r?.intro_video_url]);
 
   return (
