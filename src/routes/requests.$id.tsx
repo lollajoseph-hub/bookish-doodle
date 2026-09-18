@@ -929,28 +929,6 @@ function ResumeDialog({
                 <ChipGroup title="Career Highlights" items={asList(r.career_highlights)} />
               </div>
 
-              {audios.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Roleplay Audio Submissions</div>
-                  <div className="space-y-2">
-                    {audios.map((a, i) => (
-                      <div key={i} className="rounded-lg border p-3">
-                        <div className="mb-1.5 flex items-center justify-between gap-2">
-                          <div className="text-sm font-medium">{a.scenario}</div>
-                          {a.score != null && (
-                            <Badge variant="secondary" className="bg-teal-50 text-teal-800">{Math.round(Number(a.score))}%</Badge>
-                          )}
-                        </div>
-                        {audioUrls[i] ? (
-                          <audio controls src={audioUrls[i] as string} className="w-full" />
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Audio unavailable</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               <ChipGroup title="Badges" items={asList(r.badges)} />
             </section>
