@@ -166,7 +166,7 @@ function RequestDetail() {
 
   async function act(rpc: string, match_id: string, label: string) {
     setActingId(match_id);
-    const { error } = await supabase.rpc(rpc, { p_match: match_id });
+    const { error } = await supabase.rpc(rpc, { p_match_id: match_id });
     setActingId(null);
     if (error) toast.error(error.message);
     else {

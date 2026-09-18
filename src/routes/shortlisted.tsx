@@ -108,7 +108,7 @@ function ShortlistedPage() {
 
   async function unshortlist(matchId: string) {
     setActingId(matchId);
-    const { error } = await supabase.rpc("client_shortlist_candidate", { p_match: matchId });
+    const { error } = await supabase.rpc("client_shortlist_candidate", { p_match_id: matchId });
     setActingId(null);
     if (error) {
       toast.error(error.message);

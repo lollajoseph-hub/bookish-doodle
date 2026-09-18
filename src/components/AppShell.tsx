@@ -9,7 +9,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth" });
+    if (!loading && !user) navigate({ to: "/login" });
   }, [loading, user, navigate]);
 
   if (loading || !user) {
@@ -62,7 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               size="sm"
               onClick={async () => {
                 await signOut();
-                navigate({ to: "/auth" });
+                navigate({ to: "/login" });
               }}
             >
               <LogOut className="mr-1.5 h-4 w-4" />
