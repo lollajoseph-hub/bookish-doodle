@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronDown, Stethoscope, CheckCircle2 } from "lucide-react";
+import { ChevronDown, Users, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -134,7 +134,7 @@ function GetStartedPage() {
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-3">
           <Link to="/auth" className="flex items-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Stethoscope className="h-5 w-5" />
+              <Users className="h-5 w-5" />
             </span>
             <span className="font-semibold tracking-tight text-foreground">Candidate Pool</span>
           </Link>
