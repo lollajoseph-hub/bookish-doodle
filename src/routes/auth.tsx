@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Stethoscope, Eye, EyeOff } from "lucide-react";
+import { Users, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
@@ -31,11 +31,11 @@ function AuthPage() {
   }, [loading, user, navigate]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-teal-50 via-white to-emerald-50 px-4">
-      <Card className="w-full max-w-md rounded-2xl border-teal-100 shadow-lg">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-md rounded-2xl shadow-lg">
         <CardHeader className="text-center">
           <div className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-primary text-primary-foreground">
-            <Stethoscope className="h-6 w-6" />
+            <Users className="h-6 w-6" />
           </div>
           <CardTitle>Candidate Pool</CardTitle>
           <CardDescription>Sign in to manage your hiring requests</CardDescription>
