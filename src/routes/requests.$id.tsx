@@ -21,10 +21,8 @@ import { PdfPagePreview } from "@/components/PdfPagePreview";
 import { toast } from "sonner";
 import {
   ArrowLeft,
-  Award,
   CheckCircle2,
   Download,
-  FileBadge,
   Loader2,
   RotateCcw,
   Star,
@@ -62,8 +60,6 @@ interface PresentedCandidate {
   candidate_name: string;
   headline?: string | null;
   availability?: string | null;
-  roleplay_score?: number | null;
-  course_score?: number | null;
   shortlisted_at?: string | null;
   status?: string | null;
   client_status?: string | null;
@@ -77,11 +73,6 @@ interface PresentedCandidate {
   name_revealed?: boolean | null;
 }
 
-
-function pct(n: number | null | undefined) {
-  if (n == null) return "—";
-  return `${Math.round(Number(n))}%`;
-}
 
 
 function InterviewStatusBlock({
@@ -277,12 +268,6 @@ function RequestDetail() {
 
                   </div>
 
-                  <div className="text-xs text-muted-foreground">
-                    <span className="font-semibold text-teal-700">Roleplay</span> {pct(c.roleplay_score)}
-                    <span className="mx-1.5">·</span>
-                    <span className="font-semibold text-emerald-700">Course</span> {pct(c.course_score)}
-                  </div>
-
                   <InterviewStatusBlock
                     c={c}
                     actingId={actingId}
@@ -458,10 +443,8 @@ function InterviewSchedulerDialog({
 
 // ---------------------------- Resume Dialog ----------------------------
 
-interface ResumeAudio { scenario: string; score: number | null; bucket: string; path: string }
 interface ResumePayload {
   resume: Record<string, any> | null;
-  roleplay_audios: ResumeAudio[] | null;
 }
 
 function asList(v: any): string[] {
@@ -506,22 +489,6 @@ function ChipGroup({ title, items }: { title: string; items: string[] }) {
       <Chips items={items} />
     </div>
   );
-}
-
-function recommendationFor(score: number | null | undefined) {
-  const n = Number(score ?? 0);
-  if (n >= 90) return { label: "Highly Recommended", cls: "bg-emerald-100 text-emerald-800" };
-  if (n >= 85) return { label: "Recommended", cls: "bg-teal-100 text-teal-800" };
-  if (n >= 80) return { label: "Strong Candidate", cls: "bg-sky-100 text-sky-800" };
-  return null;
-}
-
-function scoreWord(score: number | null | undefined) {
-  const n = Number(score ?? 0);
-  if (n >= 90) return "Excellent";
-  if (n >= 85) return "Strong";
-  if (n >= 80) return "Solid";
-  return "—";
 }
 
 function fmtDate(v: any): string {

@@ -28,8 +28,6 @@ interface ShortlistedRow {
   company_name: string | null;
   client_request_id: string;
   shortlisted_at: string | null;
-  roleplay_score: number | null;
-  course_score: number | null;
   profile_photo_bucket: string | null;
   profile_photo_path: string | null;
   name_revealed: boolean | null;
@@ -52,11 +50,6 @@ function availabilityLabel(v: string | null | undefined) {
     default:
       return v ?? "—";
   }
-}
-
-function pct(n: number | null | undefined) {
-  if (n == null) return "—";
-  return `${Math.round(Number(n))}%`;
 }
 
 function relativeDate(iso: string | null | undefined) {
@@ -192,12 +185,6 @@ function ShortlistedPage() {
                       <span className="text-muted-foreground">Request:</span>
                       <span>
                         {r.role_title ?? "—"} · {r.company_name ?? "—"}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-foreground/80">
-                      <span className="text-muted-foreground">Scores:</span>
-                      <span>
-                        Roleplay {pct(r.roleplay_score)} · Course {pct(r.course_score)}
                       </span>
                     </div>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-foreground/80">
