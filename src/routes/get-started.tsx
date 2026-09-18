@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/get-started")({
-  head: () => ({ meta: [{ title: "Get Started — VetPod" }] }),
+  head: () => ({ meta: [{ title: "Get Started — Candidate Pool" }] }),
   component: GetStartedPage,
 });
 
@@ -62,7 +62,7 @@ function GetStartedPage() {
     contact_email: "",
     contact_phone: "",
     position: "",
-    clinic_name: "",
+    company_name: "",
     clinic_address: "",
     role_needed: "",
     employment_type: "",
@@ -85,10 +85,10 @@ function GetStartedPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const { error } = await supabase.functions.invoke("public-clinic-request", {
+    const { error } = await supabase.functions.invoke("public-client-request", {
       body: {
         clinic: {
-          name: f.clinic_name,
+          name: f.company_name,
           address: f.clinic_address,
           contact_email: f.contact_email,
           contact_phone: f.contact_phone,
@@ -136,7 +136,7 @@ function GetStartedPage() {
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
               <Stethoscope className="h-5 w-5" />
             </span>
-            <span className="font-semibold tracking-tight text-foreground">VetPod Clinic Workstation</span>
+            <span className="font-semibold tracking-tight text-foreground">Candidate Pool</span>
           </Link>
           <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground">
             Already have an account? Sign in
@@ -193,7 +193,7 @@ function GetStartedPage() {
                   </Select>
                 </Field>
                 <Field label="Clinic Name" required>
-                  <Input value={f.clinic_name} onChange={(e) => set("clinic_name")(e.target.value)} required />
+                  <Input value={f.company_name} onChange={(e) => set("company_name")(e.target.value)} required />
                 </Field>
                 <div className="md:col-span-2">
                   <Field label="Clinic Address" required>

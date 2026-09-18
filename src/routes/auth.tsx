@@ -10,7 +10,7 @@ import { Stethoscope, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Sign in — VetPod Clinic Workstation" }] }),
+  head: () => ({ meta: [{ title: "Sign in — Candidate Pool" }] }),
   component: AuthPage,
 });
 
@@ -37,7 +37,7 @@ function AuthPage() {
           <div className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-primary text-primary-foreground">
             <Stethoscope className="h-6 w-6" />
           </div>
-          <CardTitle>VetPod Clinic Workstation</CardTitle>
+          <CardTitle>Candidate Pool</CardTitle>
           <CardDescription>Sign in to manage your hiring requests</CardDescription>
         </CardHeader>
         <CardContent>
@@ -108,7 +108,7 @@ function AuthPage() {
                   setMagicBusy(true);
                   let sendFailed = false;
                   try {
-                    const { error } = await supabase.functions.invoke("clinic-magic-link", {
+                    const { error } = await supabase.functions.invoke("client-magic-link", {
                       body: { email: magicEmail.trim().toLowerCase() },
                     });
                     if (error) {

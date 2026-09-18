@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Users, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/requests/")({
-  head: () => ({ meta: [{ title: "My Requests — VetPod" }] }),
+  head: () => ({ meta: [{ title: "My Requests — Candidate Pool" }] }),
   component: () => (
     <AppShell>
       <Requests />

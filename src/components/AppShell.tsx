@@ -29,7 +29,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Stethoscope className="h-5 w-5" />
             </span>
             <span className="font-semibold tracking-tight text-foreground">
-              VetPod Clinic Workstation
+              Candidate Pool
             </span>
           </Link>
           <nav className="flex items-center gap-2">

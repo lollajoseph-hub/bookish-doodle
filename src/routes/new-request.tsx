@@ -24,7 +24,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/new-request")({
-  head: () => ({ meta: [{ title: "New Hiring Request — VetPod" }] }),
+  head: () => ({ meta: [{ title: "New Hiring Request — Candidate Pool" }] }),
   component: () => (
     <AppShell>
       <NewRequest />
@@ -67,7 +67,7 @@ function NewRequest() {
     contact_email: "",
     contact_phone: "",
     position: "",
-    clinic_name: "",
+    company_name: "",
     clinic_address: "",
     title: "",
     role_needed: "",
@@ -93,7 +93,7 @@ function NewRequest() {
     setBusy(true);
     const { data, error } = await supabase.rpc("submit_clinic_request", {
       p_clinic: {
-        name: f.clinic_name,
+        name: f.company_name,
         address: f.clinic_address,
         contact_email: f.contact_email,
         contact_phone: f.contact_phone,
@@ -164,7 +164,7 @@ function NewRequest() {
             </Select>
           </Field>
           <Field label="Clinic Name" required>
-            <Input value={f.clinic_name} onChange={(e) => set("clinic_name")(e.target.value)} required />
+            <Input value={f.company_name} onChange={(e) => set("company_name")(e.target.value)} required />
           </Field>
           <div className="md:col-span-2">
             <Field label="Clinic Address" required>

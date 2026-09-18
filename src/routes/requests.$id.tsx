@@ -49,7 +49,7 @@ async function signedUrl(bucket: string, path: string) {
 }
 
 export const Route = createFileRoute("/requests/$id")({
-  head: () => ({ meta: [{ title: "Request — VetPod" }] }),
+  head: () => ({ meta: [{ title: "Request — Candidate Pool" }] }),
   component: () => (
     <AppShell>
       <RequestDetail />
@@ -66,7 +66,7 @@ interface PresentedCandidate {
   course_score?: number | null;
   shortlisted_at?: string | null;
   status?: string | null;
-  clinic_status?: string | null;
+  client_status?: string | null;
   profile_photo_bucket?: string | null;
   profile_photo_path?: string | null;
   interview_scheduled_at?: string | null;
@@ -96,18 +96,18 @@ function InterviewStatusBlock({
   const date = c.interview_scheduled_at
     ? `${new Date(c.interview_scheduled_at).toLocaleString()} (${c.interview_timezone ?? "—"})`
     : null;
-  if (c.clinic_status === "vetpod_reviewing") {
+  if (c.client_status === "scalesource_reviewing") {
     return (
       <div className="rounded-md border border-sky-200 bg-sky-50 px-2 py-1.5 text-xs text-sky-900">
-        <Badge className="bg-sky-100 text-sky-800" variant="secondary">VetPod reviewing interview</Badge>
+        <Badge className="bg-sky-100 text-sky-800" variant="secondary">ScaleSource reviewing interview</Badge>
         {date && <div className="mt-1">Proposed: {date}</div>}
       </div>
     );
   }
-  if (c.clinic_status === "vetpod_reschedule_proposed") {
+  if (c.client_status === "scalesource_reschedule_proposed") {
     return (
       <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-900">
-        <Badge className="bg-amber-100 text-amber-800" variant="secondary">VetPod proposed a new time</Badge>
+        <Badge className="bg-amber-100 text-amber-800" variant="secondary">ScaleSource proposed a new time</Badge>
         {date && <div className="mt-1">New time: {date}</div>}
         <Button size="sm" className="mt-1 h-7 text-xs" disabled={actingId === c.match_id} onClick={() => onAccept(c.match_id)}>
           Accept new time
@@ -115,25 +115,25 @@ function InterviewStatusBlock({
       </div>
     );
   }
-  if (c.clinic_status === "interview_confirmed") {
+  if (c.client_status === "interview_confirmed") {
     return null;
   }
-  if (c.clinic_status === "interview_completed") {
+  if (c.client_status === "interview_completed") {
     return null;
   }
-  if (c.clinic_status === "vetpod_preparing_offer") {
+  if (c.client_status === "scalesource_preparing_offer") {
     return (
       <div className="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1.5 text-xs text-indigo-900">
-        <Badge className="bg-indigo-100 text-indigo-800" variant="secondary">VetPod preparing offer</Badge>
-        <div className="mt-1">VetPod is preparing your employment offer.</div>
+        <Badge className="bg-indigo-100 text-indigo-800" variant="secondary">ScaleSource preparing offer</Badge>
+        <div className="mt-1">ScaleSource is preparing your employment offer.</div>
       </div>
     );
   }
-  if (c.clinic_status === "candidate_declined") {
+  if (c.client_status === "candidate_declined") {
     return (
       <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-900">
         <Badge className="bg-amber-100 text-amber-800" variant="secondary">Candidate declined</Badge>
-        <div className="mt-1">Candidate declined. VetPod will assist with next steps.</div>
+        <div className="mt-1">Candidate declined. ScaleSource will assist with next steps.</div>
       </div>
     );
   }
@@ -153,7 +153,7 @@ function RequestDetail() {
   const load = useCallback(() => {
     setRows(null);
     supabase
-      .rpc("get_clinic_presented_candidates", { p_request: id })
+      .rpc("get_client_presented_candidates", { p_request: id })
       .then(async ({ data, error }) => {
         if (error) { setErr(error.message); return; }
         const list = (data ?? []) as PresentedCandidate[];
@@ -231,11 +231,11 @@ function RequestDetail() {
             const isShortlisted = !!c.shortlisted_at;
             const isRejected = c.status === "rejected";
             const interviewLocked =
-              c.clinic_status === "vetpod_reviewing" ||
-              c.clinic_status === "vetpod_reschedule_proposed" ||
-              c.clinic_status === "interview_confirmed";
-            const canHire = c.clinic_status === "interview_completed";
-            const offerInProgress = c.clinic_status === "vetpod_preparing_offer" || c.clinic_status === "candidate_declined";
+              c.client_status === "scalesource_reviewing" ||
+              c.client_status === "scalesource_reschedule_proposed" ||
+              c.client_status === "interview_confirmed";
+            const canHire = c.client_status === "interview_completed";
+            const offerInProgress = c.client_status === "scalesource_preparing_offer" || c.client_status === "candidate_declined";
             const photo = photoUrls[c.match_id];
             const initial = (c.candidate_name ?? "?").slice(0, 1).toUpperCase();
             return (
@@ -286,19 +286,19 @@ function RequestDetail() {
                   <InterviewStatusBlock
                     c={c}
                     actingId={actingId}
-                    onAccept={(matchId) => act("clinic_accept_reschedule", matchId, "Interview confirmed")}
+                    onAccept={(matchId) => act("client_accept_reschedule", matchId, "Interview confirmed")}
                   />
 
                   <div className="flex items-center gap-1.5">
                     <Button size="sm" className="flex-1" onClick={() => setResumeFor(c)}>
-                      <UserCheck className="mr-1.5 h-4 w-4" />View VetPod Resume
+                      <UserCheck className="mr-1.5 h-4 w-4" />View Candidate Profile
                     </Button>
                     {isHired ? null : offerInProgress ? null : canHire ? (
                       <Button
                         size="sm"
                         className="flex-1"
                         disabled={actingId === c.match_id}
-                        onClick={() => act("clinic_request_hire", c.match_id, "Hire request sent to VetPod")}
+                        onClick={() => act("client_request_hire", c.match_id, "Hire request sent to ScaleSource")}
                       >
                         <UserCheck className="mr-1.5 h-4 w-4" />Hire Candidate
                       </Button>
@@ -408,7 +408,7 @@ function InterviewSchedulerDialog({
     }
     const iso = new Date(`${date}T${time}:00`).toISOString();
     setBusy(true);
-    const { error } = await supabase.rpc("clinic_schedule_interview", {
+    const { error } = await supabase.rpc("client_schedule_interview", {
       p_match: candidate.match_id,
       p_at: iso,
       p_timezone: tz,
@@ -648,14 +648,14 @@ function ResumeDialog({
     }
     setLoading(true);
     supabase
-      .rpc("get_clinic_candidate_resume", { p_match: candidate.match_id })
+      .rpc("get_client_candidate_resume", { p_match: candidate.match_id })
       .then(async ({ data, error }) => {
         if (error) { toast.error(error.message); setLoading(false); return; }
         const p = data as ResumePayload;
         setPayload(p);
         const r = p?.resume ?? {};
         const [ru, ph, iv, auds] = await Promise.all([
-          r.vetpod_resume_path ? signedUrl("vetpod-resumes", r.vetpod_resume_path) : null,
+          r.resume_path ? signedUrl("candidate-resumes", r.resume_path) : null,
           r.profile_photo_path ? signedUrl("candidate-photos", r.profile_photo_path) : null,
           r.intro_video_path ? signedUrl("intro-videos", r.intro_video_path) : null,
           Promise.all((p?.roleplay_audios ?? []).map((a) => signedUrl(a.bucket, a.path))),
@@ -686,13 +686,13 @@ function ResumeDialog({
       <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
         {loading || !r ? (
           <div className="flex items-center justify-center py-16 text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />Loading VetPod Resume…
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />Loading candidate profile…
           </div>
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle className="sr-only">VetPod Resume — {r.full_name}</DialogTitle>
-              <DialogDescription className="sr-only">Candidate VetPod Resume</DialogDescription>
+              <DialogTitle className="sr-only">Candidate Profile — {r.full_name}</DialogTitle>
+              <DialogDescription className="sr-only">Full candidate profile</DialogDescription>
             </DialogHeader>
 
             {/* ───────── SECTION 1 — Professional Profile ───────── */}
@@ -779,7 +779,7 @@ function ResumeDialog({
                 <div className="rounded-xl border bg-muted/30 p-4">
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 text-sm font-semibold">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-500" /> VetPod AI Assessment
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-500" /> ScaleSource AI Assessment
                     </div>
                     {rec && <Badge className={rec.cls} variant="secondary">{rec.label}</Badge>}
                   </div>
@@ -848,7 +848,7 @@ function ResumeDialog({
               {resumeUrl && (
                 <div>
                   <Button asChild variant="default" size="sm">
-                    <a href={resumeUrl} target="_blank" rel="noreferrer"><Download className="mr-1.5 h-4 w-4" />Download VetPod Resume PDF</a>
+                    <a href={resumeUrl} target="_blank" rel="noreferrer"><Download className="mr-1.5 h-4 w-4" />Download Profile PDF</a>
                   </Button>
                 </div>
               )}
