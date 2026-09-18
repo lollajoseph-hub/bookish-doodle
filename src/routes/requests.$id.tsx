@@ -841,7 +841,6 @@ function ResumeDialog({
                   <div><span className="text-muted-foreground">Preferred shift:</span> <span className="font-medium">{r.preferred_shift ?? "—"}</span></div>
                   <div><span className="text-muted-foreground">Earliest start:</span> <span className="font-medium">{r.earliest_start_date ?? "—"}</span></div>
                   <div><span className="text-muted-foreground">CS experience:</span> <span className="font-medium">{r.years_customer_service_experience != null ? `${r.years_customer_service_experience}y` : "—"}</span></div>
-                  <div><span className="text-muted-foreground">Vet experience:</span> <span className="font-medium">{r.years_veterinary_experience != null ? `${r.years_veterinary_experience}y` : "—"}</span></div>
                 </div>
               </div>
 
