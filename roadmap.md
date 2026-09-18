@@ -1,4 +1,4 @@
 # Design/UX pass
-- [ ] Rebuild branded login and add official logo
-- [ ] Split onboarding into five animated steps
-- [ ] Verify desktop/mobile and capture screenshots
+- [x] Rebuild branded login and add official logo
+- [x] Split onboarding into five animated steps
+- [x] Verify desktop/mobile and capture screenshots
