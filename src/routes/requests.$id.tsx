@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { TimezoneSelect } from "@/components/timezone-select";
 import { PdfPagePreview } from "@/components/PdfPagePreview";
+import { RejectCandidateDialog } from "@/components/reject-dialog";
 
 import { toast } from "sonner";
 import {
@@ -352,8 +353,9 @@ function RequestDetail() {
         onScheduled={() => { setScheduleFor(null); load(); }}
       />
 
-      <RejectDialog
-        candidate={rejectFor}
+      <RejectCandidateDialog
+        matchId={rejectFor?.match_id ?? null}
+        candidateName={rejectFor?.candidate_name ?? null}
         onClose={() => setRejectFor(null)}
         onRejected={() => { setRejectFor(null); load(); }}
       />
