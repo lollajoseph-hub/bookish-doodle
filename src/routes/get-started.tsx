@@ -8,7 +8,6 @@ import { supabase } from "@/lib/supabase";
 import { useCatalog } from "@/lib/catalog";
 import {
   Field,
-  RequestFields,
   RequestRoleFields,
   RequestScheduleFields,
   RequestRequirementsFields,
