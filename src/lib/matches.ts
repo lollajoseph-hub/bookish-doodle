@@ -1,24 +1,27 @@
 import { supabase } from "./supabase";
 
-/**
- * Storage bucket holding candidate media (`profile_photo_path`, `intro_video_path`
- * on `candidate_pool_profile` are paths inside this bucket, not full URLs).
- *
- * NOTE: the bucket name could not be read from the backend with the client
- * (anon/authenticated) key — storage listing is staff-only. If photos do not
- * appear, change this one constant to the bucket the admin dashboard uses.
- */
-export const CANDIDATE_MEDIA_BUCKET = "candidate-media";
+/** Private Storage buckets holding candidate media. Paths come from `candidate_pool_profile`. */
+export const PHOTOS_BUCKET = "candidate-photos";
+export const VIDEOS_BUCKET = "intro-videos";
 
-/** Resolves a Storage path to a temporary signed URL. Returns null if unavailable. */
-export async function signedMediaUrl(path: string | null | undefined) {
-  if (!path) return null;
+/** Signed URLs expire — resolve per page load, never persist them. */
+const SIGNED_URL_TTL_SECONDS = 3600;
+
+/** Resolves a Storage path to a temporary signed URL. Returns null when absent/unavailable. */
+export async function resolveSignedUrl(bucket: string, path: string | null | undefined) {
+  if (!path || !path.trim()) return null;
   const { data, error } = await supabase.storage
-    .from(CANDIDATE_MEDIA_BUCKET)
-    .createSignedUrl(path, 3600);
+    .from(bucket)
+    .createSignedUrl(path, SIGNED_URL_TTL_SECONDS);
   if (error) return null;
   return data?.signedUrl ?? null;
 }
+
+export const signedPhotoUrl = (path: string | null | undefined) =>
+  resolveSignedUrl(PHOTOS_BUCKET, path);
+
+export const signedVideoUrl = (path: string | null | undefined) =>
+  resolveSignedUrl(VIDEOS_BUCKET, path);
 
 /** `candidate_matches.status` enum. */
 export type MatchStatus =
