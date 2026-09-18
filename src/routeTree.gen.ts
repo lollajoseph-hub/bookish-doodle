@@ -15,7 +15,6 @@ import { Route as NewRequestRouteImport } from './routes/new-request'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InterviewsRouteImport } from './routes/interviews'
 import { Route as GetStartedRouteImport } from './routes/get-started'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RequestsIndexRouteImport } from './routes/requests.index'
 import { Route as RequestsIdRouteImport } from './routes/requests.$id'
@@ -50,11 +49,6 @@ const GetStartedRoute = GetStartedRouteImport.update({
   path: '/get-started',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -73,7 +67,6 @@ const RequestsIdRoute = RequestsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/get-started': typeof GetStartedRoute
   '/interviews': typeof InterviewsRoute
   '/login': typeof LoginRoute
@@ -85,7 +78,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/get-started': typeof GetStartedRoute
   '/interviews': typeof InterviewsRoute
   '/login': typeof LoginRoute
@@ -98,7 +90,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/get-started': typeof GetStartedRoute
   '/interviews': typeof InterviewsRoute
   '/login': typeof LoginRoute
@@ -112,7 +103,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/auth'
     | '/get-started'
     | '/interviews'
     | '/login'
@@ -124,7 +114,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/auth'
     | '/get-started'
     | '/interviews'
     | '/login'
@@ -136,7 +125,6 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/auth'
     | '/get-started'
     | '/interviews'
     | '/login'
@@ -149,7 +137,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthRoute: typeof AuthRoute
   GetStartedRoute: typeof GetStartedRoute
   InterviewsRoute: typeof InterviewsRoute
   LoginRoute: typeof LoginRoute
@@ -204,13 +191,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GetStartedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -237,7 +217,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthRoute: AuthRoute,
   GetStartedRoute: GetStartedRoute,
   InterviewsRoute: InterviewsRoute,
   LoginRoute: LoginRoute,
