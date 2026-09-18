@@ -283,9 +283,9 @@ function RequestDetail() {
                         size="sm"
                         className="flex-1"
                         disabled={actingId === c.match_id}
-                        onClick={() => act("client_request_hire", c.match_id, "Hire request sent to ScaleSource")}
+                        onClick={() => act("request_to_hire", c.match_id, "Hire request sent to ScaleSource")}
                       >
-                        <UserCheck className="mr-1.5 h-4 w-4" />Hire Candidate
+                        <UserCheck className="mr-1.5 h-4 w-4" />Request to Hire
                       </Button>
                     ) : isRejected ? (
                       <Button
@@ -314,7 +314,7 @@ function RequestDetail() {
                             <Video className="h-4 w-4" />
                           </Button>
                         )}
-                        <Button variant="outline" size="icon" title="Reject" className="text-destructive hover:bg-destructive/10" disabled={actingId === c.match_id} onClick={() => act("client_reject_candidate", c.match_id, "Candidate rejected")}>
+                        <Button variant="outline" size="icon" title="Reject" className="text-destructive hover:bg-destructive/10" disabled={actingId === c.match_id} onClick={() => setRejectFor(c)}>
                           <ThumbsDown className="h-4 w-4" />
                         </Button>
                       </>
