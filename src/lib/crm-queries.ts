@@ -304,6 +304,7 @@ export async function createClientRequest(input: {
   desired_start_date: string | null;
   days_of_week_needed: string[];
   notes: string | null;
+  must_have_skills_text?: string | null;
   created_by: string | null;
 }): Promise<string> {
   const { data, error } = await supabase
@@ -321,6 +322,7 @@ export async function createClientRequest(input: {
       desired_start_date: input.desired_start_date || null,
       days_of_week_needed: input.days_of_week_needed.length ? input.days_of_week_needed : null,
       notes: input.notes || null,
+      must_have_skills_text: input.must_have_skills_text?.trim() || null,
       status: "open",
       created_by: input.created_by,
     })

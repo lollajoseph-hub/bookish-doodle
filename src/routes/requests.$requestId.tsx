@@ -272,6 +272,14 @@ function RequestDetailPage() {
                 </p>
                 <p className="text-muted-foreground">Start: {r.desired_start_date || "—"}</p>
                 {r.notes && <p className="rounded-xl bg-primary-soft/60 p-3 text-foreground">{r.notes}</p>}
+                <div className="rounded-xl bg-primary-soft/60 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-primary-dark">
+                    Must-have skills (from client)
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-foreground">
+                    {r.must_have_skills_text?.trim() || "—"}
+                  </p>
+                </div>
               </div>
               <Link
                 to="/clients/$clientId"
