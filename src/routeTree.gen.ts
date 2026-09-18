@@ -10,10 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShortlistedRouteImport } from './routes/shortlisted'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as NewRequestRouteImport } from './routes/new-request'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as InterviewsRouteImport } from './routes/interviews'
 import { Route as GetStartedRouteImport } from './routes/get-started'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RequestsIndexRouteImport } from './routes/requests.index'
 import { Route as RequestsIdRouteImport } from './routes/requests.$id'
@@ -23,9 +24,19 @@ const ShortlistedRoute = ShortlistedRouteImport.update({
   path: '/shortlisted',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewRequestRoute = NewRequestRouteImport.update({
   id: '/new-request',
   path: '/new-request',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InterviewsRoute = InterviewsRouteImport.update({
@@ -36,11 +47,6 @@ const InterviewsRoute = InterviewsRouteImport.update({
 const GetStartedRoute = GetStartedRouteImport.update({
   id: '/get-started',
   path: '/get-started',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -61,20 +67,22 @@ const RequestsIdRoute = RequestsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/get-started': typeof GetStartedRoute
   '/interviews': typeof InterviewsRoute
+  '/login': typeof LoginRoute
   '/new-request': typeof NewRequestRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/shortlisted': typeof ShortlistedRoute
   '/requests/$id': typeof RequestsIdRoute
   '/requests/': typeof RequestsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/get-started': typeof GetStartedRoute
   '/interviews': typeof InterviewsRoute
+  '/login': typeof LoginRoute
   '/new-request': typeof NewRequestRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/shortlisted': typeof ShortlistedRoute
   '/requests/$id': typeof RequestsIdRoute
   '/requests': typeof RequestsIndexRoute
@@ -82,10 +90,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/get-started': typeof GetStartedRoute
   '/interviews': typeof InterviewsRoute
+  '/login': typeof LoginRoute
   '/new-request': typeof NewRequestRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/shortlisted': typeof ShortlistedRoute
   '/requests/$id': typeof RequestsIdRoute
   '/requests/': typeof RequestsIndexRoute
@@ -94,30 +103,33 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/auth'
     | '/get-started'
     | '/interviews'
+    | '/login'
     | '/new-request'
+    | '/reset-password'
     | '/shortlisted'
     | '/requests/$id'
     | '/requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/auth'
     | '/get-started'
     | '/interviews'
+    | '/login'
     | '/new-request'
+    | '/reset-password'
     | '/shortlisted'
     | '/requests/$id'
     | '/requests'
   id:
     | '__root__'
     | '/'
-    | '/auth'
     | '/get-started'
     | '/interviews'
+    | '/login'
     | '/new-request'
+    | '/reset-password'
     | '/shortlisted'
     | '/requests/$id'
     | '/requests/'
@@ -125,10 +137,11 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthRoute: typeof AuthRoute
   GetStartedRoute: typeof GetStartedRoute
   InterviewsRoute: typeof InterviewsRoute
+  LoginRoute: typeof LoginRoute
   NewRequestRoute: typeof NewRequestRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ShortlistedRoute: typeof ShortlistedRoute
   RequestsIdRoute: typeof RequestsIdRoute
   RequestsIndexRoute: typeof RequestsIndexRoute
@@ -143,11 +156,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShortlistedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/new-request': {
       id: '/new-request'
       path: '/new-request'
       fullPath: '/new-request'
       preLoaderRoute: typeof NewRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/interviews': {
@@ -162,13 +189,6 @@ declare module '@tanstack/react-router' {
       path: '/get-started'
       fullPath: '/get-started'
       preLoaderRoute: typeof GetStartedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -197,10 +217,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthRoute: AuthRoute,
   GetStartedRoute: GetStartedRoute,
   InterviewsRoute: InterviewsRoute,
+  LoginRoute: LoginRoute,
   NewRequestRoute: NewRequestRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ShortlistedRoute: ShortlistedRoute,
   RequestsIdRoute: RequestsIdRoute,
   RequestsIndexRoute: RequestsIndexRoute,

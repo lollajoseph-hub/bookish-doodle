@@ -1,286 +1,306 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronDown, Users, CheckCircle2 } from "lucide-react";
+import { Users, CheckCircle2, ArrowLeft, ArrowRight, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { TimezoneSelect } from "@/components/timezone-select";
 import { supabase } from "@/lib/supabase";
+import { useCatalog } from "@/lib/catalog";
+import {
+  Field,
+  RequestFields,
+  emptyRequestForm,
+  requestPayload,
+  validateRequestForm,
+  type RequestForm,
+} from "@/components/request-fields";
 import { toast } from "sonner";
-import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/get-started")({
-  head: () => ({ meta: [{ title: "Get Started — Candidate Pool" }] }),
+  head: () => ({
+    meta: [
+      { title: "Get started — Candidate Pool" },
+      {
+        name: "description",
+        content: "Tell us about your company and the role you need filled, and we'll match candidates for you.",
+      },
+      { property: "og:title", content: "Get started — Candidate Pool" },
+      {
+        property: "og:description",
+        content: "Tell us about your company and the role you need filled, and we'll match candidates for you.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: GetStartedPage,
 });
 
-const POSITIONS = [
-  "Practice Owner",
-  "Practice Manager",
-  "Hospital Administrator",
-  
-  "Office Manager",
-  "HR",
-  "Other",
-];
-const EMPLOYMENT_TYPES = ["Full-time", "Part-time", "Contract", "Temporary"];
-const SHIFTS = ["day", "evening", "overnight", "flexible"];
+const STAGES = ["Company", "Your info", "Hiring request"];
 
-function Field({ label, children, required }: { label: string; children: React.ReactNode; required?: boolean }) {
+interface CompanyForm {
+  name: string;
+  industry: string;
+}
+interface ContactForm {
+  first_name: string;
+  last_name: string;
+  email: string;
+  position: string;
+}
+
+function Stepper({ stage }: { stage: number }) {
   return (
-    <div className="space-y-1.5">
-      <Label className="text-sm">
-        {label}
-        {required && <span className="ml-0.5 text-destructive">*</span>}
-      </Label>
-      {children}
-    </div>
+    <ol className="flex items-center gap-2">
+      {STAGES.map((label, i) => {
+        const state = i < stage ? "done" : i === stage ? "current" : "todo";
+        return (
+          <li key={label} className="flex flex-1 items-center gap-2">
+            <span
+              className={
+                "grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-semibold " +
+                (state === "done"
+                  ? "bg-primary text-primary-foreground"
+                  : state === "current"
+                    ? "bg-primary/15 text-primary ring-2 ring-primary"
+                    : "bg-muted text-muted-foreground")
+              }
+            >
+              {state === "done" ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+            </span>
+            <span
+              className={
+                "hidden text-sm sm:inline " +
+                (state === "todo" ? "text-muted-foreground" : "font-medium text-foreground")
+              }
+            >
+              {label}
+            </span>
+            {i < STAGES.length - 1 && <span className="h-px flex-1 bg-border" />}
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
 function GetStartedPage() {
+  const catalog = useCatalog();
+  const [stage, setStage] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
-  const [f, setF] = useState({
+  const [result, setResult] = useState<{ invited: boolean } | null>(null);
+
+  const [company, setCompany] = useState<CompanyForm>({ name: "", industry: "" });
+  const [contact, setContact] = useState<ContactForm>({
     first_name: "",
     last_name: "",
-    contact_email: "",
-    contact_phone: "",
+    email: "",
     position: "",
-    company_name: "",
-    company_address: "",
-    role_needed: "",
-    employment_type: "",
-    weekly_hours: "",
-    shift: "",
-    timezone: "",
-    country: "",
-    min_experience_years: "",
-    software_experience: "",
-    required_skills: "",
-    specialization: "",
-    languages: "",
-    start_date: "",
-    description: "",
-    headcount: "1",
   });
+  const [request, setRequest] = useState<RequestForm>(emptyRequestForm);
 
-  const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }));
+  function next() {
+    if (stage === 0 && !company.name.trim()) {
+      toast.error("Enter your company name.");
+      return;
+    }
+    if (stage === 1) {
+      if (!contact.first_name.trim() || !contact.last_name.trim()) {
+        toast.error("Enter your first and last name.");
+        return;
+      }
+      if (!contact.email.trim()) {
+        toast.error("Enter your email address.");
+        return;
+      }
+    }
+    setStage((s) => Math.min(s + 1, STAGES.length - 1));
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    const invalid = validateRequestForm(request);
+    if (invalid) {
+      toast.error(invalid);
+      return;
+    }
     setBusy(true);
-    const { error } = await supabase.functions.invoke("public-client-request", {
+    const { data, error } = await supabase.functions.invoke("public-client-request", {
       body: {
-        client: {
-          name: f.company_name,
-          address: f.company_address,
-          contact_email: f.contact_email,
-          contact_phone: f.contact_phone,
-          position: f.position,
+        company: {
+          name: company.name.trim(),
+          industry: company.industry.trim() || null,
         },
         contact: {
-          first_name: f.first_name,
-          last_name: f.last_name,
-          email: f.contact_email,
-          phone: f.contact_phone,
+          first_name: contact.first_name.trim(),
+          last_name: contact.last_name.trim(),
+          email: contact.email.trim().toLowerCase(),
+          position: contact.position.trim() || null,
         },
         request: {
-          title: f.role_needed,
-          role_needed: f.role_needed,
-          specialization: f.specialization,
-          location: f.company_address,
-          employment_type: f.employment_type,
-          weekly_hours: f.weekly_hours,
-          shift: f.shift,
-          timezone: f.timezone,
-          country: f.country,
-          min_experience_years: f.min_experience_years,
-          software_experience: f.software_experience,
-          required_skills: f.required_skills,
-          languages: f.languages,
-          start_date: f.start_date,
-          headcount: f.headcount,
-          description: f.description,
+          ...requestPayload(request),
+          required_skill_ids: [...request.must_have_skill_ids, ...request.language_skill_ids],
+          nice_to_have_skill_ids: request.nice_to_have_skill_ids,
         },
       },
     });
     setBusy(false);
-    if (error) {
-      toast.error(error.message || "Submission failed");
+
+    const payloadError = (data as { error?: string } | null)?.error;
+    if (error || payloadError) {
+      toast.error(payloadError || error?.message || "We couldn't submit your request. Please try again.");
       return;
     }
-    setSubmittedEmail(f.contact_email);
+    setResult({ invited: Boolean((data as { invited?: boolean } | null)?.invited) });
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50">
-      <header className="border-b bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-3">
-          <Link to="/auth" className="flex items-center gap-2">
+    <div className="min-h-screen bg-background">
+      <header className="border-b bg-card/80 backdrop-blur">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-3">
+          <Link to="/login" className="flex items-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
               <Users className="h-5 w-5" />
             </span>
             <span className="font-semibold tracking-tight text-foreground">Candidate Pool</span>
           </Link>
-          <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground">
+          <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">
             Already have an account? Sign in
           </Link>
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-6 py-10">
-        {submittedEmail ? (
-          <Card className="rounded-2xl border-teal-100 shadow-sm">
+      <main className="mx-auto max-w-3xl px-6 py-10">
+        {result ? (
+          <Card className="rounded-2xl">
             <CardContent className="flex flex-col items-center gap-4 py-16 text-center">
-              <div className="grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-emerald-700">
+              <div className="grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-primary">
                 <CheckCircle2 className="h-8 w-8" />
               </div>
-              <h1 className="text-2xl font-semibold tracking-tight">Thanks!</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">Request received</h1>
               <p className="max-w-md text-muted-foreground">
-                We've emailed a secure login link to <span className="font-medium text-foreground">{submittedEmail}</span>. Open it to review your matched candidates.
+                {result.invited
+                  ? "Check your email to set your password and get started."
+                  : "Your request has been added — log in to view it."}
               </p>
+              <Button asChild>
+                <Link to="/login">Go to sign in</Link>
+              </Button>
             </CardContent>
           </Card>
         ) : (
           <form onSubmit={submit} className="space-y-6">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Submit a Hiring Request</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">Get started</h1>
               <p className="text-sm text-muted-foreground">
-                Tell us about your company and the role you need filled. We'll email you a secure login link to review matched candidates.
+                Three quick steps and we'll start matching candidates for you.
               </p>
             </div>
 
-            <Card className="rounded-2xl">
-              <CardHeader>
-                <CardTitle>Company Information</CardTitle>
-                <CardDescription>Your contact and company details</CardDescription>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Field label="First Name" required>
-                  <Input value={f.first_name} onChange={(e) => set("first_name")(e.target.value)} required />
-                </Field>
-                <Field label="Last Name" required>
-                  <Input value={f.last_name} onChange={(e) => set("last_name")(e.target.value)} required />
-                </Field>
-                <Field label="Email" required>
-                  <Input type="email" value={f.contact_email} onChange={(e) => set("contact_email")(e.target.value)} required />
-                </Field>
-                <Field label="Phone" required>
-                  <Input value={f.contact_phone} onChange={(e) => set("contact_phone")(e.target.value)} required />
-                </Field>
-                <Field label="Position">
-                  <Select value={f.position} onValueChange={set("position")}>
-                    <SelectTrigger><SelectValue placeholder="Select position" /></SelectTrigger>
-                    <SelectContent>
-                      {POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field label="Company Name" required>
-                  <Input value={f.company_name} onChange={(e) => set("company_name")(e.target.value)} required />
-                </Field>
-                <div className="md:col-span-2">
-                  <Field label="Company Address" required>
-                    <Input value={f.company_address} onChange={(e) => set("company_address")(e.target.value)} required />
-                  </Field>
-                </div>
-              </CardContent>
-            </Card>
+            <Stepper stage={stage} />
 
-            <Card className="rounded-2xl">
-              <CardHeader>
-                <CardTitle>Hiring Requirements</CardTitle>
-                <CardDescription>The essentials — you can submit with just these</CardDescription>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Field label="Role" required>
-                  <Input placeholder="e.g. Front Desk Operator, Receptionist, Client Care Coordinator" value={f.role_needed} onChange={(e) => set("role_needed")(e.target.value)} required />
-                </Field>
-                <Field label="Employment Type" required>
-                  <Select value={f.employment_type} onValueChange={set("employment_type")}>
-                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                    <SelectContent>
-                      {EMPLOYMENT_TYPES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <div className="md:col-span-2">
-                  <Field label="Additional Notes">
-                    <Textarea rows={4} value={f.description} onChange={(e) => set("description")(e.target.value)} />
-                  </Field>
-                </div>
-              </CardContent>
-            </Card>
+            {catalog.error && stage === 2 && (
+              <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  We couldn't load the role and skill options. Please refresh, or contact us if this keeps happening.
+                </span>
+              </div>
+            )}
 
-            <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
-              <CollapsibleTrigger asChild>
-                <Button type="button" variant="ghost" className="w-full justify-between px-2 font-normal text-muted-foreground hover:text-foreground">
-                  <span>{detailsOpen ? "− Hide additional details" : "+ Add more details to improve your matches"}</span>
-                  <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${detailsOpen ? "rotate-180" : ""}`} />
+            {stage === 0 && (
+              <Card className="rounded-2xl">
+                <CardHeader>
+                  <CardTitle>Your company</CardTitle>
+                  <CardDescription>Who are we hiring for?</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <Field label="Company name" required>
+                    <Input
+                      value={company.name}
+                      onChange={(e) => setCompany({ ...company, name: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Industry">
+                    <Input
+                      value={company.industry}
+                      onChange={(e) => setCompany({ ...company, industry: e.target.value })}
+                      placeholder="Optional"
+                    />
+                  </Field>
+                </CardContent>
+              </Card>
+            )}
+
+            {stage === 1 && (
+              <Card className="rounded-2xl">
+                <CardHeader>
+                  <CardTitle>Your info</CardTitle>
+                  <CardDescription>So we know who to send candidates to</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <Field label="First name" required>
+                    <Input
+                      value={contact.first_name}
+                      onChange={(e) => setContact({ ...contact, first_name: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Last name" required>
+                    <Input
+                      value={contact.last_name}
+                      onChange={(e) => setContact({ ...contact, last_name: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Email" required>
+                    <Input
+                      type="email"
+                      value={contact.email}
+                      onChange={(e) => setContact({ ...contact, email: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Position" hint="Your role at the company">
+                    <Input
+                      value={contact.position}
+                      onChange={(e) => setContact({ ...contact, position: e.target.value })}
+                      placeholder="Optional"
+                    />
+                  </Field>
+                </CardContent>
+              </Card>
+            )}
+
+            {stage === 2 && (
+              <Card className="rounded-2xl">
+                <CardHeader>
+                  <CardTitle>Your hiring request</CardTitle>
+                  <CardDescription>What does the role look like?</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <RequestFields value={request} onChange={setRequest} catalog={catalog} />
+                </CardContent>
+              </Card>
+            )}
+
+            <div className="flex items-center justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStage((s) => Math.max(s - 1, 0))}
+                disabled={stage === 0}
+              >
+                <ArrowLeft className="mr-1.5 h-4 w-4" />
+                Back
+              </Button>
+              {stage < STAGES.length - 1 ? (
+                <Button type="button" onClick={next}>
+                  Continue
+                  <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <Card className="rounded-2xl mt-2">
-                  <CardHeader>
-                    <CardTitle>Additional Details</CardTitle>
-                    <CardDescription>Optional — helps us find better matches, but you can submit without these</CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <Field label="Weekly Hours">
-                      <Input type="number" min="0" value={f.weekly_hours} onChange={(e) => set("weekly_hours")(e.target.value)} />
-                    </Field>
-                    <Field label="Shift">
-                      <Select value={f.shift} onValueChange={set("shift")}>
-                        <SelectTrigger><SelectValue placeholder="Select shift" /></SelectTrigger>
-                        <SelectContent>
-                          {SHIFTS.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field label="Timezone">
-                      <TimezoneSelect value={f.timezone} onChange={set("timezone")} />
-                    </Field>
-                    <Field label="Experience (min years)">
-                      <Input type="number" min="0" value={f.min_experience_years} onChange={(e) => set("min_experience_years")(e.target.value)} />
-                    </Field>
-                    <Field label="Software Experience">
-                      <Input placeholder="e.g. Salesforce, HubSpot" value={f.software_experience} onChange={(e) => set("software_experience")(e.target.value)} />
-                    </Field>
-                    <Field label="Required Skills">
-                      <Input placeholder="Comma-separated" value={f.required_skills} onChange={(e) => set("required_skills")(e.target.value)} />
-                    </Field>
-                    <Field label="Specialization">
-                      <Input placeholder="e.g. Enterprise Sales, Payroll" value={f.specialization} onChange={(e) => set("specialization")(e.target.value)} />
-                    </Field>
-                    <Field label="Language">
-                      <Input placeholder="e.g. English, Spanish" value={f.languages} onChange={(e) => set("languages")(e.target.value)} />
-                    </Field>
-                    <Field label="Start Date">
-                      <Input type="date" value={f.start_date} onChange={(e) => set("start_date")(e.target.value)} />
-                    </Field>
-                  </CardContent>
-                </Card>
-              </CollapsibleContent>
-            </Collapsible>
-
-            <div className="flex justify-end">
-              <Button type="submit" disabled={busy}>{busy ? "Submitting…" : "Submit Request"}</Button>
+              ) : (
+                <Button type="submit" disabled={busy}>
+                  {busy ? "Submitting…" : "Submit request"}
+                </Button>
+              )}
             </div>
           </form>
         )}

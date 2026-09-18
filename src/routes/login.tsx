@@ -9,12 +9,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Users, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Sign in — Candidate Pool" }] }),
-  component: AuthPage,
+export const Route = createFileRoute("/login")({
+  head: () => ({
+    meta: [
+      { title: "Sign in — Candidate Pool" },
+      { name: "description", content: "Sign in to review your matched candidates and hiring requests." },
+      { property: "og:title", content: "Sign in — Candidate Pool" },
+      { property: "og:description", content: "Sign in to review your matched candidates and hiring requests." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: LoginPage,
 });
 
-function AuthPage() {
+function LoginPage() {
   const { signIn, user, loading } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -46,7 +55,7 @@ function AuthPage() {
             onSubmit={async (e) => {
               e.preventDefault();
               setBusy(true);
-              const { error } = await signIn(email, password);
+              const { error } = await signIn(email.trim(), password);
               setBusy(false);
               if (error) toast.error(error);
               else navigate({ to: "/requests" });
@@ -73,7 +82,7 @@ function AuthPage() {
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   aria-pressed={showPassword}
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
@@ -83,6 +92,7 @@ function AuthPage() {
               {busy ? "Signing in…" : "Sign in"}
             </Button>
           </form>
+
           <div className="mt-6 border-t pt-4">
             {!magicOpen ? (
               <button
@@ -94,7 +104,7 @@ function AuthPage() {
                 }}
                 className="w-full text-center text-sm text-primary hover:underline"
               >
-                Already requested staff? Email me a secure login link
+                Already submitted a request? Email me a secure login link
               </button>
             ) : magicSent ? (
               <p className="text-center text-sm text-muted-foreground">
@@ -113,7 +123,9 @@ function AuthPage() {
                     });
                     if (error) {
                       sendFailed = true;
-                      toast.error("We couldn't send the login link right now. Please try again shortly, or contact support if this keeps happening.");
+                      toast.error(
+                        "We couldn't send the login link right now. Please try again shortly, or contact support if this keeps happening.",
+                      );
                     }
                   } catch {
                     sendFailed = true;
@@ -139,9 +151,10 @@ function AuthPage() {
               </form>
             )}
           </div>
+
           <div className="mt-4 text-center text-sm">
             <Link to="/get-started" className="text-primary hover:underline">
-              New here? Submit a hiring request →
+              New company? Submit a hiring request →
             </Link>
           </div>
         </CardContent>

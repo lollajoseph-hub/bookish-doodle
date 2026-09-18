@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { TimezoneSelect } from "@/components/timezone-select";
 import { PdfPagePreview } from "@/components/PdfPagePreview";
+import { RejectCandidateDialog } from "@/components/reject-dialog";
 
 import { toast } from "sonner";
 import {
@@ -139,6 +140,7 @@ function RequestDetail() {
   const [actingId, setActingId] = useState<string | null>(null);
   const [resumeFor, setResumeFor] = useState<PresentedCandidate | null>(null);
   const [scheduleFor, setScheduleFor] = useState<PresentedCandidate | null>(null);
+  const [rejectFor, setRejectFor] = useState<PresentedCandidate | null>(null);
   const [requestingMore, setRequestingMore] = useState(false);
 
   const load = useCallback(() => {
@@ -166,7 +168,7 @@ function RequestDetail() {
 
   async function act(rpc: string, match_id: string, label: string) {
     setActingId(match_id);
-    const { error } = await supabase.rpc(rpc, { p_match: match_id });
+    const { error } = await supabase.rpc(rpc, { p_match_id: match_id });
     setActingId(null);
     if (error) toast.error(error.message);
     else {
@@ -225,7 +227,8 @@ function RequestDetail() {
               c.client_status === "scalesource_reviewing" ||
               c.client_status === "scalesource_reschedule_proposed" ||
               c.client_status === "interview_confirmed";
-            const canHire = c.client_status === "interview_completed";
+            // request_to_hire() throws unless the match is exactly interview_completed.
+            const canHire = c.status === "interview_completed";
             const offerInProgress = c.client_status === "scalesource_preparing_offer" || c.client_status === "candidate_declined";
             const photo = photoUrls[c.match_id];
             const initial = (c.candidate_name ?? "?").slice(0, 1).toUpperCase();
@@ -283,9 +286,9 @@ function RequestDetail() {
                         size="sm"
                         className="flex-1"
                         disabled={actingId === c.match_id}
-                        onClick={() => act("client_request_hire", c.match_id, "Hire request sent to ScaleSource")}
+                        onClick={() => act("request_to_hire", c.match_id, "Hire request sent to ScaleSource")}
                       >
-                        <UserCheck className="mr-1.5 h-4 w-4" />Hire Candidate
+                        <UserCheck className="mr-1.5 h-4 w-4" />Request to Hire
                       </Button>
                     ) : isRejected ? (
                       <Button
@@ -314,7 +317,7 @@ function RequestDetail() {
                             <Video className="h-4 w-4" />
                           </Button>
                         )}
-                        <Button variant="outline" size="icon" title="Reject" className="text-destructive hover:bg-destructive/10" disabled={actingId === c.match_id} onClick={() => act("client_reject_candidate", c.match_id, "Candidate rejected")}>
+                        <Button variant="outline" size="icon" title="Reject" className="text-destructive hover:bg-destructive/10" disabled={actingId === c.match_id} onClick={() => setRejectFor(c)}>
                           <ThumbsDown className="h-4 w-4" />
                         </Button>
                       </>
@@ -348,6 +351,13 @@ function RequestDetail() {
         candidate={scheduleFor}
         onClose={() => setScheduleFor(null)}
         onScheduled={() => { setScheduleFor(null); load(); }}
+      />
+
+      <RejectCandidateDialog
+        matchId={rejectFor?.match_id ?? null}
+        candidateName={rejectFor?.candidate_name ?? null}
+        onClose={() => setRejectFor(null)}
+        onRejected={() => { setRejectFor(null); load(); }}
       />
     </div>
   );

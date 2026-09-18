@@ -11,7 +11,7 @@ function Home() {
   const navigate = useNavigate();
   useEffect(() => {
     if (loading) return;
-    navigate({ to: user ? "/requests" : "/auth", replace: true });
+    navigate({ to: user ? "/requests" : "/login", replace: true });
   }, [user, loading, navigate]);
   return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading…</div>;
 }
