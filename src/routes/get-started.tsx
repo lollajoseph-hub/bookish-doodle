@@ -60,7 +60,7 @@ function Stepper({ stage }: { stage: number }) {
       <div className="mb-3 flex items-center justify-between text-xs font-medium text-muted-foreground">
         <span>Step {stage + 1} of {STAGES.length}</span><span>{Math.round(((stage + 1) / STAGES.length) * 100)}%</span>
       </div>
-      <div className="mb-5 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out" style={{ width: `${((stage + 1) / STAGES.length) * 100}%` }} /></div>
+      <div className="mb-5 h-1.5 overflow-hidden rounded-full bg-muted"><div className="wizard-progress-fill h-full rounded-full transition-[width] duration-500 ease-out" style={{ width: `${((stage + 1) / STAGES.length) * 100}%` }} /></div>
       <ol className="flex items-start">
       {STAGES.map((label, i) => {
         const state = i < stage ? "done" : i === stage ? "current" : "todo";
@@ -73,7 +73,7 @@ function Stepper({ stage }: { stage: number }) {
                 (state === "done"
                   ? "bg-primary text-primary-foreground"
                   : state === "current"
-                    ? "bg-primary/15 text-primary ring-2 ring-primary"
+                    ? "bg-amber/15 text-primary ring-2 ring-amber"
                     : "bg-muted text-muted-foreground")
               }
             >
@@ -318,12 +318,12 @@ function GetStartedPage() {
                 Back
               </Button>
               {stage < STAGES.length - 1 ? (
-                <Button type="button" onClick={next}>
+                <Button type="button" className="login-submit-button" onClick={next}>
                   Continue
                   <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Button>
               ) : (
-                <Button type="submit" disabled={busy}>
+                <Button type="submit" className="login-submit-button" disabled={busy}>
                   {busy ? "Submitting…" : "Submit request"}
                 </Button>
               )}
