@@ -60,6 +60,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                 New Request
               </Link>
             </Button>
+            {membership?.is_primary && (
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/team">
+                  <UsersRound className="mr-1.5 h-4 w-4" />
+                  Team
+                </Link>
+              </Button>
+            )}
+            <NotificationsBell />
             <Button
               variant="outline"
               size="sm"
