@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Users, CheckCircle2, ArrowLeft, ArrowRight, AlertTriangle } from "lucide-react";
+import { Check, CheckCircle2, ArrowLeft, ArrowRight, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,13 +8,18 @@ import { supabase } from "@/lib/supabase";
 import { useCatalog } from "@/lib/catalog";
 import {
   Field,
-  RequestFields,
+  RequestRoleFields,
+  RequestScheduleFields,
+  RequestRequirementsFields,
   emptyRequestForm,
   requestPayload,
   validateRequestForm,
+  validateRoleFields,
+  validateScheduleFields,
   type RequestForm,
 } from "@/components/request-fields";
 import { toast } from "sonner";
+import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
 
 export const Route = createFileRoute("/get-started")({
   head: () => ({
@@ -36,7 +41,7 @@ export const Route = createFileRoute("/get-started")({
   component: GetStartedPage,
 });
 
-const STAGES = ["Company", "Your info", "Hiring request"];
+const STAGES = ["Company", "Your info", "Role", "Schedule", "Requirements"];
 
 interface CompanyForm {
   name: string;
@@ -51,14 +56,20 @@ interface ContactForm {
 
 function Stepper({ stage }: { stage: number }) {
   return (
-    <ol className="flex items-center gap-2">
+    <div>
+      <div className="mb-3 flex items-center justify-between text-xs font-medium text-muted-foreground">
+        <span>Step {stage + 1} of {STAGES.length}</span><span>{Math.round(((stage + 1) / STAGES.length) * 100)}%</span>
+      </div>
+      <div className="mb-5 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out" style={{ width: `${((stage + 1) / STAGES.length) * 100}%` }} /></div>
+      <ol className="flex items-start">
       {STAGES.map((label, i) => {
         const state = i < stage ? "done" : i === stage ? "current" : "todo";
         return (
-          <li key={label} className="flex flex-1 items-center gap-2">
+          <li key={label} className="relative flex flex-1 flex-col items-center gap-2 text-center">
+            {i < STAGES.length - 1 && <span className={`absolute left-1/2 top-3.5 h-0.5 w-full transition-colors duration-500 ${i < stage ? "bg-primary" : "bg-border"}`} />}
             <span
               className={
-                "grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-semibold " +
+                "relative z-10 grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-semibold transition-all duration-300 " +
                 (state === "done"
                   ? "bg-primary text-primary-foreground"
                   : state === "current"
@@ -66,27 +77,28 @@ function Stepper({ stage }: { stage: number }) {
                     : "bg-muted text-muted-foreground")
               }
             >
-              {state === "done" ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+              {state === "done" ? <Check className="wizard-check-enter h-4 w-4" /> : i + 1}
             </span>
             <span
               className={
-                "hidden text-sm sm:inline " +
+                "hidden text-xs sm:inline " +
                 (state === "todo" ? "text-muted-foreground" : "font-medium text-foreground")
               }
             >
               {label}
             </span>
-            {i < STAGES.length - 1 && <span className="h-px flex-1 bg-border" />}
           </li>
         );
       })}
-    </ol>
+      </ol>
+    </div>
   );
 }
 
 function GetStartedPage() {
   const catalog = useCatalog();
   const [stage, setStage] = useState(0);
+  const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ invited: boolean } | null>(null);
 
@@ -114,6 +126,12 @@ function GetStartedPage() {
         return;
       }
     }
+    const requestError = stage === 2 ? validateRoleFields(request) : stage === 3 ? validateScheduleFields(request) : null;
+    if (requestError) {
+      toast.error(requestError);
+      return;
+    }
+    setDirection("forward");
     setStage((s) => Math.min(s + 1, STAGES.length - 1));
   }
 
@@ -159,8 +177,8 @@ function GetStartedPage() {
       <header className="border-b bg-card/80 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-3">
           <Link to="/login" className="flex items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Users className="h-5 w-5" />
+             <span className="flex h-9 w-32 items-center rounded-md bg-primary px-3">
+               <img src={whiteBrandLogo.url} alt="ScaleSource" className="h-4 w-full object-contain object-left" />
             </span>
             <span className="font-semibold tracking-tight text-foreground">Candidate Pool</span>
           </Link>
@@ -193,13 +211,13 @@ function GetStartedPage() {
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">Get started</h1>
               <p className="text-sm text-muted-foreground">
-                Three quick steps and we'll start matching candidates for you.
+                 Five focused steps and we'll start matching candidates for you.
               </p>
             </div>
 
             <Stepper stage={stage} />
 
-            {catalog.error && stage === 2 && (
+            {catalog.error && stage >= 2 && (
               <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>
@@ -208,6 +226,7 @@ function GetStartedPage() {
               </div>
             )}
 
+            <div key={stage} className={direction === "forward" ? "wizard-forward-enter" : "wizard-back-enter"}>
             {stage === 0 && (
               <Card className="rounded-2xl">
                 <CardHeader>
@@ -272,20 +291,27 @@ function GetStartedPage() {
             {stage === 2 && (
               <Card className="rounded-2xl">
                 <CardHeader>
-                  <CardTitle>Your hiring request</CardTitle>
-                  <CardDescription>What does the role look like?</CardDescription>
+                  <CardTitle>The role</CardTitle>
+                  <CardDescription>What kind of person are you looking to hire?</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RequestFields value={request} onChange={setRequest} catalog={catalog} />
+                  <RequestRoleFields value={request} onChange={setRequest} catalog={catalog} />
                 </CardContent>
               </Card>
             )}
+            {stage === 3 && (
+              <Card className="rounded-2xl"><CardHeader><CardTitle>Schedule</CardTitle><CardDescription>When and how much support do you need?</CardDescription></CardHeader><CardContent><RequestScheduleFields value={request} onChange={setRequest} catalog={catalog} /></CardContent></Card>
+            )}
+            {stage === 4 && (
+              <Card className="rounded-2xl"><CardHeader><CardTitle>Requirements</CardTitle><CardDescription>Tell us what matters most in your ideal candidate.</CardDescription></CardHeader><CardContent><RequestRequirementsFields value={request} onChange={setRequest} catalog={catalog} /></CardContent></Card>
+            )}
+            </div>
 
             <div className="flex items-center justify-between">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setStage((s) => Math.max(s - 1, 0))}
+                onClick={() => { setDirection("back"); setStage((s) => Math.max(s - 1, 0)); }}
                 disabled={stage === 0}
               >
                 <ArrowLeft className="mr-1.5 h-4 w-4" />

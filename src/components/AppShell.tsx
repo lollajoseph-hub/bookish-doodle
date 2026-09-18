@@ -4,7 +4,8 @@ import { useAuth } from "@/lib/auth";
 import { useMembership } from "@/lib/membership";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { Users, LogOut, PlusCircle, ListChecks, CalendarClock, Star, UsersRound } from "lucide-react";
+import { LogOut, PlusCircle, ListChecks, CalendarClock, Star, UsersRound } from "lucide-react";
+import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, loading, signOut } = useAuth();
@@ -28,8 +29,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-20 border-b bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
           <Link to="/requests" className="flex items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Users className="h-5 w-5" />
+            <span className="flex h-9 w-32 items-center rounded-md bg-primary px-3">
+              <img src={whiteBrandLogo.url} alt="ScaleSource" className="h-4 w-full object-contain object-left" />
             </span>
             <span className="font-semibold tracking-tight text-foreground">
               Candidate Pool
