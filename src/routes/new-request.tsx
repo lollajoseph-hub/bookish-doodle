@@ -107,7 +107,7 @@ function NewRequest() {
 
     const requestId = (inserted as { id: string }).id;
     const skillRows = [
-      ...[...f.must_have_skill_ids, ...f.language_skill_ids].map((skill_id) => ({
+      ...f.language_skill_ids.map((skill_id) => ({
         request_id: requestId,
         skill_id,
         is_required: true,

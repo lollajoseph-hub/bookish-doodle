@@ -17,7 +17,7 @@ export interface RequestForm {
   engagement_type: string;
   hours_needed: string;
   days_of_week_needed: string[];
-  must_have_skill_ids: string[];
+  must_have_skills_text: string;
   language_skill_ids: string[];
   nice_to_have_skill_ids: string[];
   hires_needed: string;
@@ -31,7 +31,7 @@ export const emptyRequestForm: RequestForm = {
   engagement_type: "",
   hours_needed: "",
   days_of_week_needed: [],
-  must_have_skill_ids: [],
+  must_have_skills_text: "",
   language_skill_ids: [],
   nice_to_have_skill_ids: [],
   hires_needed: "1",
@@ -59,7 +59,7 @@ export function validateScheduleFields(f: RequestForm): string | null {
 }
 
 export function validateRequirementsFields(f: RequestForm): string | null {
-  if (f.must_have_skill_ids.length === 0) return "Pick at least one must-have skill.";
+  if (!f.must_have_skills_text.trim()) return "List at least one must-have skill.";
   if (f.language_skill_ids.length === 0) return "Pick at least one required language.";
   return null;
 }
@@ -153,8 +153,8 @@ export function RequestRequirementsFields(props: RequestFieldsProps) {
   const { f, set, skillOptions, languageOptions, catalog } = useRequestFieldProps(props);
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div className="md:col-span-2"><Field label="Must-have skills" required>
-        <MultiSelect options={skillOptions} value={f.must_have_skill_ids} onChange={(v) => set("must_have_skill_ids", v)} placeholder={catalog.loading ? "Loading skills…" : "Select must-have skills"} searchPlaceholder="Search skills…" />
+      <div className="md:col-span-2"><Field label="Must-have skills" required hint="Separate skills with commas — e.g. Excel, QuickBooks, cold calling.">
+        <Textarea rows={3} value={f.must_have_skills_text} onChange={(e) => set("must_have_skills_text", e.target.value)} placeholder="The skills a candidate absolutely must have" />
       </Field></div>
       <div className="md:col-span-2"><Field label="Required languages" required>
         <MultiSelect options={languageOptions} value={f.language_skill_ids} onChange={(v) => set("language_skill_ids", v)} placeholder={catalog.loading ? "Loading languages…" : "Select required languages"} searchPlaceholder="Search languages…" />
@@ -200,6 +200,7 @@ export function requestPayload(f: RequestForm) {
     hires_needed: Number(f.hires_needed) || 1,
     years_experience_min: f.years_experience_min ? Number(f.years_experience_min) : null,
     desired_start_date: f.desired_start_date || null,
+    must_have_skills_text: f.must_have_skills_text.trim() || null,
     notes: f.notes.trim() || null,
   };
 }
