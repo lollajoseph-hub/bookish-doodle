@@ -144,7 +144,13 @@ export function CandidateCard({
             </div>
             {p?.headline && <p className="truncate text-xs text-muted-foreground">{p.headline}</p>}
             <p className="mt-0.5 text-xs text-muted-foreground">
-              {[primaryRole, p?.years_experience ? `${p.years_experience} yrs experience` : null, p?.country]
+              {[
+                primaryRole,
+                p?.years_experience
+                  ? `${p.years_experience} ${p.years_experience === 1 ? "yr" : "yrs"} experience`
+                  : null,
+                p?.country,
+              ]
                 .filter(Boolean)
                 .join(" · ")}
             </p>
