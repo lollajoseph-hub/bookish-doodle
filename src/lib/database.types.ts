@@ -245,6 +245,7 @@ export interface ClientRequestRow {
   years_experience_min: number | null;
   desired_start_date: string | null;
   notes: string | null;
+  must_have_skills_text: string | null;
   status: RequestStatus;
   rejection_count: number | null;
   created_by: string | null;
