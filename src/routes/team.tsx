@@ -146,7 +146,9 @@ function TeamPage() {
 function InviteDialog({ onInvited }: { onInvited: () => void }) {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [position, setPosition] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function submit(e: React.FormEvent) {
@@ -157,7 +159,12 @@ function InviteDialog({ onInvited }: { onInvited: () => void }) {
     }
     setBusy(true);
     const { data, error } = await supabase.functions.invoke("client-invite-colleague", {
-      body: { email: email.trim(), full_name: fullName.trim() || null },
+      body: {
+        email: email.trim(),
+        first_name: firstName.trim() || null,
+        last_name: lastName.trim() || null,
+        position: position.trim() || null,
+      },
     });
     setBusy(false);
     const failure = error?.message ?? (data as { error?: string } | null)?.error;
@@ -167,7 +174,9 @@ function InviteDialog({ onInvited }: { onInvited: () => void }) {
     }
     toast.success(`Invitation sent to ${email.trim()}`);
     setEmail("");
-    setFullName("");
+    setFirstName("");
+    setLastName("");
+    setPosition("");
     setOpen(false);
     onInvited();
   }
@@ -200,13 +209,33 @@ function InviteDialog({ onInvited }: { onInvited: () => void }) {
                 required
               />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="invite-first-name">First name</Label>
+                <Input
+                  id="invite-first-name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Alex"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="invite-last-name">Last name</Label>
+                <Input
+                  id="invite-last-name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Morgan"
+                />
+              </div>
+            </div>
             <div className="space-y-1.5">
-              <Label htmlFor="invite-name">Full name (optional)</Label>
+              <Label htmlFor="invite-position">Position (optional)</Label>
               <Input
-                id="invite-name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Alex Morgan"
+                id="invite-position"
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                placeholder="e.g. Office manager"
               />
             </div>
           </div>
