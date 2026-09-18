@@ -74,7 +74,7 @@ function InterviewsPage() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.rpc("get_clinic_interviews").then(({ data, error }) => {
+    supabase.rpc("get_client_interviews").then(({ data, error }) => {
       if (error) {
         setErr(error.message);
         setRows([]);

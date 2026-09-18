@@ -32,7 +32,7 @@ const POSITIONS = [
   "Practice Owner",
   "Practice Manager",
   "Hospital Administrator",
-  "Head Veterinarian",
+  
   "Office Manager",
   "HR",
   "Other",
@@ -63,7 +63,7 @@ function GetStartedPage() {
     contact_phone: "",
     position: "",
     company_name: "",
-    clinic_address: "",
+    company_address: "",
     role_needed: "",
     employment_type: "",
     weekly_hours: "",
@@ -87,9 +87,9 @@ function GetStartedPage() {
     setBusy(true);
     const { error } = await supabase.functions.invoke("public-client-request", {
       body: {
-        clinic: {
+        client: {
           name: f.company_name,
-          address: f.clinic_address,
+          address: f.company_address,
           contact_email: f.contact_email,
           contact_phone: f.contact_phone,
           position: f.position,
@@ -104,7 +104,7 @@ function GetStartedPage() {
           title: f.role_needed,
           role_needed: f.role_needed,
           specialization: f.specialization,
-          location: f.clinic_address,
+          location: f.company_address,
           employment_type: f.employment_type,
           weekly_hours: f.weekly_hours,
           shift: f.shift,
@@ -162,14 +162,14 @@ function GetStartedPage() {
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">Submit a Hiring Request</h1>
               <p className="text-sm text-muted-foreground">
-                Tell us about your clinic and the role you need filled. We'll email you a secure login link to review matched candidates.
+                Tell us about your company and the role you need filled. We'll email you a secure login link to review matched candidates.
               </p>
             </div>
 
             <Card className="rounded-2xl">
               <CardHeader>
-                <CardTitle>Clinic Information</CardTitle>
-                <CardDescription>Your contact and clinic details</CardDescription>
+                <CardTitle>Company Information</CardTitle>
+                <CardDescription>Your contact and company details</CardDescription>
               </CardHeader>
               <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Field label="First Name" required>
@@ -192,12 +192,12 @@ function GetStartedPage() {
                     </SelectContent>
                   </Select>
                 </Field>
-                <Field label="Clinic Name" required>
+                <Field label="Company Name" required>
                   <Input value={f.company_name} onChange={(e) => set("company_name")(e.target.value)} required />
                 </Field>
                 <div className="md:col-span-2">
-                  <Field label="Clinic Address" required>
-                    <Input value={f.clinic_address} onChange={(e) => set("clinic_address")(e.target.value)} required />
+                  <Field label="Company Address" required>
+                    <Input value={f.company_address} onChange={(e) => set("company_address")(e.target.value)} required />
                   </Field>
                 </div>
               </CardContent>

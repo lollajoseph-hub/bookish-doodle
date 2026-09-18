@@ -98,7 +98,7 @@ function AuthPage() {
               </button>
             ) : magicSent ? (
               <p className="text-center text-sm text-muted-foreground">
-                If your email is registered with a clinic, a secure login link has been sent.
+                If your email is registered with a client company, a secure login link has been sent.
               </p>
             ) : (
               <form
@@ -141,7 +141,7 @@ function AuthPage() {
           </div>
           <div className="mt-4 text-center text-sm">
             <Link to="/get-started" className="text-primary hover:underline">
-              New clinic? Submit a hiring request →
+              New here? Submit a hiring request →
             </Link>
           </div>
         </CardContent>

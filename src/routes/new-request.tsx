@@ -36,7 +36,7 @@ const POSITIONS = [
   "Practice Owner",
   "Practice Manager",
   "Hospital Administrator",
-  "Head Veterinarian",
+  
   "Office Manager",
   "HR",
   "Other",
@@ -68,7 +68,7 @@ function NewRequest() {
     contact_phone: "",
     position: "",
     company_name: "",
-    clinic_address: "",
+    company_address: "",
     title: "",
     role_needed: "",
     employment_type: "",
@@ -91,10 +91,10 @@ function NewRequest() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const { data, error } = await supabase.rpc("submit_clinic_request", {
-      p_clinic: {
+    const { data, error } = await supabase.rpc("submit_client_request", {
+      p_client: {
         name: f.company_name,
-        address: f.clinic_address,
+        address: f.company_address,
         contact_email: f.contact_email,
         contact_phone: f.contact_phone,
         position: f.position,
@@ -103,7 +103,7 @@ function NewRequest() {
         title: f.title || f.role_needed,
         role_needed: f.role_needed,
         specialization: f.specialization,
-        location: f.clinic_address,
+        location: f.company_address,
         employment_type: f.employment_type,
         weekly_hours: f.weekly_hours,
         shift: f.shift,
@@ -117,7 +117,7 @@ function NewRequest() {
         headcount: f.headcount,
         description: f.description,
       },
-      p_clinic_id: null,
+      p_client_id: null,
     });
     setBusy(false);
     if (error) {
@@ -134,13 +134,13 @@ function NewRequest() {
     <form onSubmit={submit} className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">New Hiring Request</h1>
-        <p className="text-sm text-muted-foreground">Tell us about your clinic and the role you need filled.</p>
+        <p className="text-sm text-muted-foreground">Tell us about your company and the role you need filled.</p>
       </div>
 
       <Card className="rounded-2xl">
         <CardHeader>
-          <CardTitle>Clinic Information</CardTitle>
-          <CardDescription>Your contact and clinic details</CardDescription>
+          <CardTitle>Company Information</CardTitle>
+          <CardDescription>Your contact and company details</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label="First Name" required>
@@ -163,12 +163,12 @@ function NewRequest() {
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Clinic Name" required>
+          <Field label="Company Name" required>
             <Input value={f.company_name} onChange={(e) => set("company_name")(e.target.value)} required />
           </Field>
           <div className="md:col-span-2">
-            <Field label="Clinic Address" required>
-              <Input value={f.clinic_address} onChange={(e) => set("clinic_address")(e.target.value)} required />
+            <Field label="Company Address" required>
+              <Input value={f.company_address} onChange={(e) => set("company_address")(e.target.value)} required />
             </Field>
           </div>
         </CardContent>
