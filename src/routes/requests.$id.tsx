@@ -958,32 +958,6 @@ function ResumeDialog({
           </>
         )}
 
-        <Dialog open={verifyOpen} onOpenChange={setVerifyOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-emerald-600" />Certificate Verification</DialogTitle>
-            </DialogHeader>
-            {verifyBusy ? (
-              <div className="py-6 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></div>
-            ) : verifyResult?.error ? (
-              <p className="text-sm text-destructive">{verifyResult.error}</p>
-            ) : (
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <span className="font-medium">Status:</span> {String(verifyResult?.status ?? verifyResult?.valid ?? "—")}
-                </div>
-                <div><span className="font-medium">Certificate #:</span> {String(verifyResult?.certificate_number ?? verifyResult?.number ?? "—")}</div>
-                <div><span className="font-medium">Verification ID:</span> {String(r?.certificate_verification_id ?? "—")}</div>
-                {verifyResult?.valid != null && (
-                  <Badge className={verifyResult.valid ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"} variant="secondary">
-                    {verifyResult.valid ? "Valid" : "Invalid"}
-                  </Badge>
-                )}
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
       </DialogContent>
     </Dialog>
   );
