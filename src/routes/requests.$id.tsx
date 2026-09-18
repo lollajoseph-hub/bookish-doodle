@@ -139,6 +139,7 @@ function RequestDetail() {
   const [actingId, setActingId] = useState<string | null>(null);
   const [resumeFor, setResumeFor] = useState<PresentedCandidate | null>(null);
   const [scheduleFor, setScheduleFor] = useState<PresentedCandidate | null>(null);
+  const [rejectFor, setRejectFor] = useState<PresentedCandidate | null>(null);
   const [requestingMore, setRequestingMore] = useState(false);
 
   const load = useCallback(() => {
@@ -225,7 +226,8 @@ function RequestDetail() {
               c.client_status === "scalesource_reviewing" ||
               c.client_status === "scalesource_reschedule_proposed" ||
               c.client_status === "interview_confirmed";
-            const canHire = c.client_status === "interview_completed";
+            // request_to_hire() throws unless the match is exactly interview_completed.
+            const canHire = c.status === "interview_completed";
             const offerInProgress = c.client_status === "scalesource_preparing_offer" || c.client_status === "candidate_declined";
             const photo = photoUrls[c.match_id];
             const initial = (c.candidate_name ?? "?").slice(0, 1).toUpperCase();
