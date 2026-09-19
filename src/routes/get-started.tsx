@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   AlertTriangle,
@@ -7,12 +7,15 @@ import {
   Briefcase,
   Building2,
   CalendarClock,
+  Eye,
+  EyeOff,
   ListChecks,
   User,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
 import { useCatalog } from "@/lib/catalog";
@@ -119,6 +122,78 @@ function Stepper({ stage }: { stage: number }) {
   );
 }
 
+function SetPasswordForm() {
+  const navigate = useNavigate();
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [show, setShow] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (password.length < 8) {
+      toast.error("Use at least 8 characters.");
+      return;
+    }
+    if (password !== confirm) {
+      toast.error("Those passwords don't match.");
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      setBusy(false);
+      toast.error(error.message);
+      return;
+    }
+    navigate({ to: "/requests" });
+  }
+
+  return (
+    <form onSubmit={submit} className="w-full space-y-4 text-left">
+      <div className="space-y-1.5">
+        <Label htmlFor="wizard-new-password">New password</Label>
+        <div className="relative">
+          <Input
+            id="wizard-new-password"
+            type={show ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={8}
+            required
+            className="pr-10"
+          />
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label={show ? "Hide password" : "Show password"}
+            aria-pressed={show}
+            onClick={() => setShow((v) => !v)}
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground">At least 8 characters.</p>
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="wizard-confirm-password">Confirm password</Label>
+        <Input
+          id="wizard-confirm-password"
+          type={show ? "text" : "password"}
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          minLength={8}
+          required
+        />
+      </div>
+      <Button type="submit" disabled={busy} className="login-submit-button w-full">
+        {busy ? "Saving…" : "Set password and continue"}
+      </Button>
+    </form>
+  );
+}
+
 function GetStartedPage() {
   const catalog = useCatalog();
   const [stage, setStage] = useState(0);
@@ -208,7 +283,19 @@ function GetStartedPage() {
       toast.error(payloadError || "We couldn't submit your request. Please try again.");
       return;
     }
-    setResult({ invited: Boolean((data as { invited?: boolean } | null)?.invited) });
+    const invited = Boolean((data as { invited?: boolean } | null)?.invited);
+    const inviteToken = (data as { invite_token?: string } | null)?.invite_token ?? null;
+    if (invited && inviteToken) {
+      const { error: otpError } = await supabase.auth.verifyOtp({ token_hash: inviteToken, type: "invite" });
+      if (otpError) {
+        // The account exists but we couldn't open a session here; fall back to the emailed link.
+        setResult({ invited: false });
+        return;
+      }
+      setResult({ invited: true });
+      return;
+    }
+    setResult({ invited: false });
   }
 
   return (
@@ -236,16 +323,20 @@ function GetStartedPage() {
                 <h1 className="text-2xl font-semibold tracking-tight">Your request is submitted!</h1>
               <p className="max-w-md text-muted-foreground">
                 {result.invited
-                  ? "Check your email to set your password and get started."
+                  ? "One last step — set a password for your new account."
                   : "Your request has been added — log in to view it."}
               </p>
               </div>
               <div className="w-full rounded-lg bg-primary-soft/60 p-5">
                 <RequestRecap items={allItems} expanded />
               </div>
-              <Button asChild className="login-submit-button">
-                <Link to="/login">Go to sign in</Link>
-              </Button>
+              {result.invited ? (
+                <SetPasswordForm />
+              ) : (
+                <Button asChild className="login-submit-button">
+                  <Link to="/login">Go to sign in</Link>
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (

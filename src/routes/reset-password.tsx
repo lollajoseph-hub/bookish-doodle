@@ -88,11 +88,10 @@ function ResetPasswordPage() {
       toast.error(error.message);
       return;
     }
-    // The invite link signed them in; sign back out so they log in with the new password.
-    await supabase.auth.signOut();
+    // The invite/recovery link already established a session — go straight into the app.
     setBusy(false);
     setPhase("done");
-    setTimeout(() => navigate({ to: "/login", replace: true }), 1800);
+    setTimeout(() => navigate({ to: "/requests", replace: true }), 1800);
   }
 
   return (
@@ -110,7 +109,7 @@ function ResetPasswordPage() {
             {phase === "ready" && "Choose a password to finish setting up your account."}
             {phase === "invalid" &&
               "This link is no longer valid. Request a new one from the sign-in page."}
-            {phase === "done" && "Taking you to sign in…"}
+            {phase === "done" && "Taking you to your requests…"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -160,8 +159,8 @@ function ResetPasswordPage() {
 
           {(phase === "invalid" || phase === "done") && (
             <div className="text-center text-sm">
-              <Link to="/login" className="text-primary hover:underline">
-                Go to sign in →
+              <Link to={phase === "done" ? "/requests" : "/login"} className="text-primary hover:underline">
+                {phase === "done" ? "Go to your requests →" : "Go to sign in →"}
               </Link>
             </div>
           )}
