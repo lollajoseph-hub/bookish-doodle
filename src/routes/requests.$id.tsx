@@ -4,13 +4,14 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { RejectCandidateDialog } from "@/components/reject-dialog";
 import { CandidateCard, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { InterviewRequestDialog } from "@/components/interview-request-dialog";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2, UsersRound } from "lucide-react";
 import { ENGAGEMENT_TYPES, DAYS_OF_WEEK } from "@/lib/catalog";
 import {
   REQUEST_STATUS_LABELS,
@@ -79,6 +80,8 @@ function RequestDetail() {
   const [rejectFor, setRejectFor] = useState<MatchRow | null>(null);
   const [profileFor, setProfileFor] = useState<MatchRow | null>(null);
   const [interviewFor, setInterviewFor] = useState<MatchRow | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [noMoreCandidates, setNoMoreCandidates] = useState(false);
 
   const load = useCallback(async () => {
     const [reqRes, matchRes] = await Promise.all([
@@ -92,7 +95,7 @@ function RequestDetail() {
     if (matchRes.error) {
       setErr(matchRes.error.message);
       setMatches([]);
-      return;
+      return null;
     }
 
     const list = ((matchRes.data ?? []) as unknown as MatchRow[]).slice().sort((a, b) => {
@@ -106,6 +109,7 @@ function RequestDetail() {
       list.map(async (m) => [m.id, await signedPhotoUrl(m.candidate_pool_profile?.profile_photo_path)] as const)
     );
     setPhotos(Object.fromEntries(entries));
+    return list;
   }, [id]);
 
   useEffect(() => {
@@ -124,6 +128,29 @@ function RequestDetail() {
     else {
       toast.success(success);
       void load();
+    }
+  }
+
+  async function showMoreCandidates() {
+    const existingIds = new Set((matches ?? []).map((match) => match.id));
+    setLoadingMore(true);
+
+    const { error } = await supabase.rpc("rank_and_match", {
+      p_request_id: id,
+      p_limit: 6,
+    });
+
+    if (error) {
+      setLoadingMore(false);
+      toast.error(error.message);
+      return;
+    }
+
+    const refreshedMatches = await load();
+    setLoadingMore(false);
+
+    if (refreshedMatches && !refreshedMatches.some((match) => !existingIds.has(match.id))) {
+      setNoMoreCandidates(true);
     }
   }
 
@@ -200,27 +227,44 @@ function RequestDetail() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {matches.map((m) => (
-                <CandidateCard
-                  key={m.id}
-                  match={m}
-                  photoUrl={photos[m.id] ?? null}
-                  busy={actingId === m.id}
-                  onViewProfile={() => setProfileFor(m)}
-                  onShortlist={() =>
-                    callRpc(
-                      "client_shortlist_candidate",
-                      m.id,
-                      m.status === "shortlisted" ? "Removed from shortlist" : "Added to shortlist"
-                    )
-                  }
-                  onRequestInterview={() => setInterviewFor(m)}
-                  onRequestHire={() => callRpc("request_to_hire", m.id, "Hire request sent to ScaleSource")}
-                  onReject={() => setRejectFor(m)}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid gap-4 md:grid-cols-2">
+                {matches.map((m) => (
+                  <CandidateCard
+                    key={m.id}
+                    match={m}
+                    photoUrl={photos[m.id] ?? null}
+                    busy={actingId === m.id}
+                    onViewProfile={() => setProfileFor(m)}
+                    onShortlist={() =>
+                      callRpc(
+                        "client_shortlist_candidate",
+                        m.id,
+                        m.status === "shortlisted" ? "Removed from shortlist" : "Added to shortlist"
+                      )
+                    }
+                    onRequestInterview={() => setInterviewFor(m)}
+                    onRequestHire={() => callRpc("request_to_hire", m.id, "Hire request sent to ScaleSource")}
+                    onReject={() => setRejectFor(m)}
+                  />
+                ))}
+              </div>
+
+              <div className="flex flex-col items-center gap-2 pt-2">
+                {noMoreCandidates ? (
+                  <p className="text-sm text-muted-foreground">No more candidates available right now.</p>
+                ) : (
+                  <Button variant="outline" disabled={loadingMore} onClick={showMoreCandidates}>
+                    {loadingMore ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <UsersRound className="mr-2 h-4 w-4" />
+                    )}
+                    {loadingMore ? "Finding candidates…" : "Show more candidates"}
+                  </Button>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>
