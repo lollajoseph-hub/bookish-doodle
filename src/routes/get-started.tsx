@@ -134,13 +134,6 @@ function GetStartedPage() {
     position: "",
   });
   const [request, setRequest] = useState<RequestForm>(emptyRequestForm);
-  const completedItems = buildRequestRecap({
-    company,
-    contact,
-    request,
-    catalog,
-    completedThrough: stage - 1,
-  });
   const allItems = buildRequestRecap({ company, contact, request, catalog });
 
   function next(event?: React.MouseEvent<HTMLButtonElement>) {

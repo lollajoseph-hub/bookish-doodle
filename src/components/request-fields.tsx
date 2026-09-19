@@ -208,44 +208,44 @@ function ChoiceCards({
   return (
     <div className="space-y-2.5">
       <div className={cn("grid gap-2", columns)} role="radiogroup">
-      {displayedOptions.map((option) => {
-        const selected = value === option.value;
-        const Icon = option.icon ?? BriefcaseBusiness;
-        return (
-          <Button
-            key={option.value}
-            type="button"
-            variant="outline"
-            role="radio"
-            aria-checked={selected}
-            onClick={() => onChange(option.value)}
-            className={cn(
-              "group relative h-auto min-h-20 whitespace-normal px-3 py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5",
-              selected
-                ? "scale-[1.02] border-primary bg-primary text-primary-foreground shadow-md hover:bg-primary hover:text-primary-foreground"
-                : "bg-card text-foreground hover:border-primary/40 hover:bg-primary-soft",
-            )}
-          >
-            <span className="flex min-w-0 flex-1 items-center gap-2.5">
-              <span
-                className={cn(
-                  "grid h-9 w-9 shrink-0 place-items-center rounded-md transition-colors duration-300",
-                  selected ? "bg-primary-foreground/15 text-primary-foreground" : "bg-primary/10 text-primary",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-              </span>
-              <span className="min-w-0 text-sm font-medium leading-tight">{option.label}</span>
-            </span>
-            <Check
+        {displayedOptions.map((option) => {
+          const selected = value === option.value;
+          const Icon = option.icon ?? BriefcaseBusiness;
+          return (
+            <Button
+              key={option.value}
+              type="button"
+              variant="outline"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => onChange(option.value)}
               className={cn(
-                "absolute right-2 top-2 h-3.5 w-3.5 transition-all duration-300",
-                selected ? "scale-100 opacity-100" : "scale-50 opacity-0",
+                "group relative h-auto min-h-20 whitespace-normal px-3 py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5",
+                selected
+                  ? "scale-[1.02] border-primary bg-primary text-primary-foreground shadow-md hover:bg-primary hover:text-primary-foreground"
+                  : "bg-card text-foreground hover:border-primary/40 hover:bg-primary-soft",
               )}
-            />
-          </Button>
-        );
-      })}
+            >
+              <span className="flex min-w-0 flex-1 items-center gap-2.5">
+                <span
+                  className={cn(
+                    "grid h-9 w-9 shrink-0 place-items-center rounded-md transition-colors duration-300",
+                    selected ? "bg-primary-foreground/15 text-primary-foreground" : "bg-primary/10 text-primary",
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 text-sm font-medium leading-tight">{option.label}</span>
+              </span>
+              <Check
+                className={cn(
+                  "absolute right-2 top-2 h-3.5 w-3.5 transition-all duration-300",
+                  selected ? "scale-100 opacity-100" : "scale-50 opacity-0",
+                )}
+              />
+            </Button>
+          );
+        })}
       </div>
       {canShowMore && (
         <Button
@@ -277,34 +277,15 @@ function useRequestFieldProps({ value: f, onChange, catalog }: RequestFieldsProp
 
 export function RequestRoleFields(props: RequestFieldsProps) {
   const { f, set, catalog } = useRequestFieldProps(props);
-  const [visibleCount, setVisibleCount] = useState(3);
-  
-  const allRoles = catalog.roles.map((role) => ({ value: role.id, label: role.name }));
-  const visibleRoles = f.role_id ? allRoles : allRoles.slice(0, visibleCount);
-  const hasMore = !f.role_id && visibleCount < allRoles.length;
-
   return (
     <div className="grid grid-cols-1 gap-5">
       <Field label={catalog.loading ? "Role — loading…" : "Role"} required>
-        <div className="space-y-3">
-          <ChoiceCards
-            value={f.role_id}
-            onChange={(v) => set("role_id", v)}
-            options={visibleRoles}
+        <ChoiceCards
+          value={f.role_id}
+          onChange={(v) => set("role_id", v)}
+          options={catalog.roles.map((role) => ({ value: role.id, label: role.name }))}
           pageSize={3}
-          />
-          {hasMore && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full border-dashed border-primary/20 bg-primary/5 text-xs font-medium text-primary hover:bg-primary/10"
-              onClick={() => setVisibleCount((prev) => prev + 3)}
-            >
-              Show more roles...
-            </Button>
-          )}
-        </div>
+        />
       </Field>
       <Field label="Engagement type" required>
         <ChoiceCards
