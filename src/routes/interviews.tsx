@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { statusTone, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { toast } from "sonner";
-import { CalendarClock, Clock, ExternalLink, Loader2, UserSearch, Video } from "lucide-react";
+import { CalendarClock, CheckCircle2, Clock, ExternalLink, Loader2, Star, UserSearch, Video } from "lucide-react";
 import {
   MATCH_STATUS_LABELS,
   displayName,
@@ -164,9 +164,13 @@ function InterviewsPage() {
                             )}
                             <h3 className="truncate font-semibold leading-tight">{name}</h3>
                           </div>
-                          <Badge variant="secondary" className={statusTone(m.status)}>
+                          <span
+                            className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusTone(m.status)}`}
+                          >
+                            {m.status === "shortlisted" && <Star className="h-3 w-3 fill-current" />}
+                            {m.status === "hired" && <CheckCircle2 className="h-3 w-3" />}
                             {MATCH_STATUS_LABELS[m.status] ?? m.status}
-                          </Badge>
+                          </span>
                         </div>
                         {p?.headline && <p className="truncate text-xs text-muted-foreground">{p.headline}</p>}
                         <Link
