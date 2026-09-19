@@ -161,7 +161,7 @@ export function CandidateProfileDialog({
 
   return (
     <Dialog open={!!candidateId} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="card-amber max-h-[90vh] max-w-2xl overflow-hidden p-0">
+      <DialogContent className="card-amber max-h-[90vh] max-w-2xl overflow-hidden bg-card p-0">
         <div ref={scrollRef} className="candidate-profile-scroll max-h-[90vh] overflow-y-auto scroll-smooth" tabIndex={0}>
         {err && (
           <div className="space-y-4 p-6">
@@ -202,11 +202,11 @@ export function CandidateProfileDialog({
                 )}
                 <div className="min-w-0">
                   {!isHired && (
-                    <p className="text-sm italic text-muted-foreground">Meet</p>
+                    <p className="text-sm italic text-foreground/70">Meet</p>
                   )}
                   <DialogHeader className="mt-0.5 items-start text-left">
                     <DialogTitle className="text-2xl leading-tight">{name}</DialogTitle>
-                    <DialogDescription className="text-sm">
+                    <DialogDescription className="text-sm text-foreground/80">
                       {profile.headline ?? "Full candidate profile"}
                     </DialogDescription>
                   </DialogHeader>
