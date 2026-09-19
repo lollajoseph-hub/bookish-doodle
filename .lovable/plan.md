@@ -1,19 +1,27 @@
-# Hybrid request wizard design
+# Interview and candidate-profile improvements
 
-## Build
-- Restore the calm five-step field layout in `/get-started`: Company, Your info, Role, Schedule, and Requirements retain their existing headings, spacing, validation, and slide/fade transitions.
-- Remove only the accumulating recap strip above each active step. Keep the recap component for both submitted-success screens.
-- Keep the bottom icon tracker, dotted connectors, amber active/completed states, and animated bottom-edge progress line.
-- Keep the animated calendar and selected-date fill.
-- Keep both confetti success screens and their answer recaps, with no automatic redirect.
+## Interview scheduling
+- Add a focused interview-request dialog shared by request detail and shortlisted views.
+- Require both a calendar date and a time before submission; keep the dialog initially blank and convert the local selection to an ISO timestamp.
+- Update `MatchRow` and its shared query to include `interview_proposed_at`, then call `client_request_interview` with both `p_match_id` and `p_proposed_at`.
+- Show the client’s proposed date/time while a request awaits ScaleSource confirmation in candidate cards and the Interviews page. Confirmed/completed interviews continue using the scheduled date and meeting details.
 
-## Shared role controls
-- Keep Role and Engagement type as animated icon cards in the shared request fields, so `/get-started` and `/new-request` stay consistent.
-- Show Role options three at a time. A `See more` control reveals the next three; continue until all roles are visible. Hide the control once all roles are shown or immediately after a role is selected.
-- Always show all three Engagement type cards with no pagination.
-- Preserve selected-card scale/color animation, keyboard semantics, form values, validation, and submission behavior.
+## Candidate naming and profile
+- Introduce one shared candidate-name heading treatment: pre-hire views render italic “Meet” plus the first name; hired views retain the plain full name.
+- Apply it to candidate cards, interview cards, and the full-profile title.
+- Reorder the profile to: large centered photo, name, headline, divider, availability, optional intro video, roles and skills, work history, education, then a combined final “AI Analysis” section containing summary and highlights.
+- Inspect the authenticated live dialog before finalizing the navigation change. Based on the current source, the only slider-like treatment is the work-history vertical rail with circular markers; replace it with simple arrow-led movement and use the same arrow language for pagination.
+
+## History pagination
+- Show the first five work-history entries initially, with “See more” revealing up to five more at a time.
+- Keep education unpaginated unless live data demonstrates it routinely exceeds five entries.
+- Reset pagination whenever a different candidate profile opens.
+
+## Branded surfaces
+- Add the existing `card-amber` treatment selectively to primary content cards: candidate cards, request summary/list cards, interview cards, team-member cards, main request forms, success/account cards, and the profile dialog.
+- Preserve dashed empty states, lightweight inset panels, popovers, and minor nested surfaces without the heavier branded border.
 
 ## Validation
-- Check the five-step public flow on desktop and mobile, confirming no recap strip appears during entry.
-- Verify Role pagination in both shared-form contexts, all Engagement cards, calendar selection, Back/Continue behavior, and success recap/confetti.
-- Confirm type checks and browser console remain clean. The authenticated submit itself remains limited by the disabled QA sign-in helper.
+- Run type checks and exercise the authenticated request-detail/shortlist interview dialog with a selected date and time.
+- Verify the proposed time appears in request and Interviews views, profile order and pagination work, hired/pre-hire names differ correctly, and no browser errors occur.
+- Check desktop and mobile layouts, especially the calendar dialog, large profile photo, long headings, and branded borders.
