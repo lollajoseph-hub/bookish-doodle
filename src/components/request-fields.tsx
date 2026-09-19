@@ -1,17 +1,23 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { format } from "date-fns";
+import {
+  BriefcaseBusiness,
+  CalendarIcon,
+  Check,
+  Clock3,
+  FolderKanban,
+  X,
+  type LucideIcon,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { MultiSelect } from "@/components/multi-select";
 import { DAYS_OF_WEEK, ENGAGEMENT_TYPES, type Catalog } from "@/lib/catalog";
+import { cn } from "@/lib/utils";
 
 /** Hiring-request fields shared by the public wizard and authenticated request form. */
 export interface RequestForm {
@@ -90,7 +96,16 @@ export function TagInput({
   };
 
   return (
-    <div className="rounded-md border border-input bg-background p-2">
+    <div
+      className="rounded-md border border-input bg-background p-2"
+      onKeyDownCapture={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          event.stopPropagation();
+          commit(draft);
+        }
+      }}
+    >
       {value.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1.5">
           {value.map((name) => (
@@ -122,10 +137,7 @@ export function TagInput({
           }
         }}
         onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            commit(draft);
-          } else if (e.key === "Backspace" && !draft && value.length > 0) {
+          if (e.key === "Backspace" && !draft && value.length > 0) {
             onChange(value.slice(0, -1));
           }
         }}
@@ -166,6 +178,67 @@ type RequestFieldsProps = {
   catalog: Catalog;
 };
 
+type ChoiceOption = {
+  value: string;
+  label: string;
+  icon?: LucideIcon;
+};
+
+function ChoiceCards({
+  value,
+  onChange,
+  options,
+  columns = "grid-cols-2 sm:grid-cols-3",
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: ChoiceOption[];
+  columns?: string;
+}) {
+  return (
+    <div className={cn("grid gap-2", columns)} role="radiogroup">
+      {options.map((option) => {
+        const selected = value === option.value;
+        const Icon = option.icon ?? BriefcaseBusiness;
+        return (
+          <Button
+            key={option.value}
+            type="button"
+            variant="outline"
+            role="radio"
+            aria-checked={selected}
+            onClick={() => onChange(option.value)}
+            className={cn(
+              "group relative h-auto min-h-20 whitespace-normal px-3 py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5",
+              selected
+                ? "scale-[1.02] border-primary bg-primary text-primary-foreground shadow-md hover:bg-primary hover:text-primary-foreground"
+                : "bg-card text-foreground hover:border-primary/40 hover:bg-primary-soft",
+            )}
+          >
+            <span className="flex min-w-0 flex-1 items-center gap-2.5">
+              <span
+                className={cn(
+                  "grid h-9 w-9 shrink-0 place-items-center rounded-md transition-colors duration-300",
+                  selected ? "bg-primary-foreground/15 text-primary-foreground" : "bg-primary/10 text-primary",
+                )}
+              >
+                <Icon className="h-4 w-4" />
+              </span>
+              <span className="min-w-0 text-sm font-medium leading-tight">{option.label}</span>
+            </span>
+            <Check
+              className={cn(
+                "absolute right-2 top-2 h-3.5 w-3.5 transition-all duration-300",
+                selected ? "scale-100 opacity-100" : "scale-50 opacity-0",
+              )}
+            />
+          </Button>
+        );
+      })}
+    </div>
+  );
+}
+
 function useRequestFieldProps({ value: f, onChange, catalog }: RequestFieldsProps) {
   const set = <K extends keyof RequestForm>(k: K, v: RequestForm[K]) =>
     onChange({ ...f, [k]: v });
@@ -181,22 +254,25 @@ function useRequestFieldProps({ value: f, onChange, catalog }: RequestFieldsProp
 export function RequestRoleFields(props: RequestFieldsProps) {
   const { f, set, catalog } = useRequestFieldProps(props);
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <Field label="Role" required>
-        <Select value={f.role_id} onValueChange={(v) => set("role_id", v)}>
-          <SelectTrigger><SelectValue placeholder={catalog.loading ? "Loading roles…" : "Select a role"} /></SelectTrigger>
-          <SelectContent>
-            {catalog.roles.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
+    <div className="grid grid-cols-1 gap-5">
+      <Field label={catalog.loading ? "Role — loading…" : "Role"} required>
+        <ChoiceCards
+          value={f.role_id}
+          onChange={(v) => set("role_id", v)}
+          options={catalog.roles.map((role) => ({ value: role.id, label: role.name }))}
+        />
       </Field>
       <Field label="Engagement type" required>
-        <Select value={f.engagement_type} onValueChange={(v) => set("engagement_type", v)}>
-          <SelectTrigger><SelectValue placeholder="Select engagement type" /></SelectTrigger>
-          <SelectContent>
-            {ENGAGEMENT_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <ChoiceCards
+          value={f.engagement_type}
+          onChange={(v) => set("engagement_type", v)}
+          options={ENGAGEMENT_TYPES.map((type, index) => ({
+            value: type.value,
+            label: type.label,
+            icon: [BriefcaseBusiness, Clock3, FolderKanban][index],
+          }))}
+          columns="grid-cols-1 sm:grid-cols-3"
+        />
       </Field>
       <Field label="How many hires" required>
         <Input type="number" min="1" step="1" value={f.hires_needed} onChange={(e) => set("hires_needed", e.target.value)} />
@@ -207,6 +283,7 @@ export function RequestRoleFields(props: RequestFieldsProps) {
 
 export function RequestScheduleFields(props: RequestFieldsProps) {
   const { f, set } = useRequestFieldProps(props);
+  const selectedDate = parseFormDate(f.desired_start_date);
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <Field label="Hours needed" required hint="e.g. 40 hours/week, or 20–25 hours across mornings">
@@ -216,10 +293,44 @@ export function RequestScheduleFields(props: RequestFieldsProps) {
         <MultiSelect options={DAYS_OF_WEEK.map((d) => ({ value: d.value, label: d.label }))} value={f.days_of_week_needed} onChange={(v) => set("days_of_week_needed", v)} placeholder="Select days" searchPlaceholder="Search days…" />
       </Field>
       <Field label="Desired start date">
-        <Input type="date" value={f.desired_start_date} onChange={(e) => set("desired_start_date", e.target.value)} />
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !selectedDate && "text-muted-foreground",
+              )}
+            >
+              <CalendarIcon className="h-4 w-4" />
+              {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => set("desired_start_date", date ? format(date, "yyyy-MM-dd") : "")}
+              defaultMonth={selectedDate}
+              className="pointer-events-auto p-3"
+              classNames={{
+                day_button:
+                  "transition-[background-color,color,transform,box-shadow] duration-300 data-[selected-single=true]:scale-105 data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground data-[selected-single=true]:shadow-md",
+              }}
+            />
+          </PopoverContent>
+        </Popover>
       </Field>
     </div>
   );
+}
+
+function parseFormDate(value: string) {
+  if (!value) return undefined;
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return undefined;
+  return new Date(year, month - 1, day);
 }
 
 export function RequestRequirementsFields(props: RequestFieldsProps) {

@@ -177,6 +177,29 @@
   to { opacity: 1; transform: scale(1) rotate(0); }
 }
 
+@keyframes wizard-recap-enter {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes wizard-success-icon {
+  0% { opacity: 0; transform: scale(0.65) rotate(-8deg); }
+  70% { transform: scale(1.08) rotate(2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes wizard-success-glow {
+  0% { opacity: 0; transform: scale(0.5); }
+  60% { opacity: 1; }
+  100% { opacity: 0.35; transform: scale(1.35); }
+}
+
+@keyframes wizard-confetti {
+  0% { opacity: 0; transform: translate(0, 12px) rotate(0deg) scale(0.5); }
+  24% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--confetti-x), var(--confetti-y)) rotate(210deg) scale(1); }
+}
+
 @utility login-panel-enter {
   animation: login-panel-enter 500ms ease-out both;
 }
@@ -195,6 +218,10 @@
 
 @utility wizard-check-enter {
   animation: wizard-check-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility wizard-recap-enter {
+  animation: wizard-recap-enter 320ms ease-out both;
 }
 
 @utility wizard-progress-fill {
@@ -295,6 +322,37 @@
   background-image: linear-gradient(110deg, var(--primary) 0%, color-mix(in oklab, var(--brand-accent) 92%, var(--amber)) 48%, var(--amber) 115%);
   box-shadow: 0 14px 32px -10px color-mix(in oklab, var(--amber) 55%, transparent);
 }
+
+.wizard-success-icon { animation: wizard-success-icon 560ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.wizard-success-glow { animation: wizard-success-glow 900ms ease-out both; }
+.wizard-confetti {
+  --confetti-x: 0px;
+  --confetti-y: -48px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.38rem;
+  height: 0.75rem;
+  border-radius: 2px;
+  background: var(--amber);
+  animation: wizard-confetti 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.wizard-confetti-2, .wizard-confetti-5, .wizard-confetti-8, .wizard-confetti-11, .wizard-confetti-14 { background: var(--brand-accent); }
+.wizard-confetti-3, .wizard-confetti-6, .wizard-confetti-9, .wizard-confetti-12 { background: var(--primary); }
+.wizard-confetti-1 { --confetti-x: -58px; --confetti-y: -34px; }
+.wizard-confetti-2 { --confetti-x: -43px; --confetti-y: -58px; animation-delay: 40ms; }
+.wizard-confetti-3 { --confetti-x: -20px; --confetti-y: -70px; animation-delay: 80ms; }
+.wizard-confetti-4 { --confetti-x: 8px; --confetti-y: -76px; animation-delay: 20ms; }
+.wizard-confetti-5 { --confetti-x: 35px; --confetti-y: -64px; animation-delay: 90ms; }
+.wizard-confetti-6 { --confetti-x: 60px; --confetti-y: -38px; animation-delay: 45ms; }
+.wizard-confetti-7 { --confetti-x: 68px; --confetti-y: -4px; animation-delay: 100ms; }
+.wizard-confetti-8 { --confetti-x: 48px; --confetti-y: 26px; animation-delay: 65ms; }
+.wizard-confetti-9 { --confetti-x: 20px; --confetti-y: 38px; animation-delay: 110ms; }
+.wizard-confetti-10 { --confetti-x: -12px; --confetti-y: 42px; animation-delay: 30ms; }
+.wizard-confetti-11 { --confetti-x: -42px; --confetti-y: 28px; animation-delay: 75ms; }
+.wizard-confetti-12 { --confetti-x: -66px; --confetti-y: 4px; animation-delay: 120ms; }
+.wizard-confetti-13 { --confetti-x: -72px; --confetti-y: -18px; animation-delay: 55ms; }
+.wizard-confetti-14 { --confetti-x: 72px; --confetti-y: -20px; animation-delay: 95ms; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

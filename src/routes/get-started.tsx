@@ -1,6 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Check, CheckCircle2, ArrowLeft, ArrowRight, AlertTriangle } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  Briefcase,
+  Building2,
+  CalendarClock,
+  ListChecks,
+  User,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -20,6 +30,8 @@ import {
 } from "@/components/request-fields";
 import { toast } from "sonner";
 import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
+import { buildRequestRecap, RequestRecap } from "@/components/request-recap";
+import { SuccessFlourish } from "@/components/success-flourish";
 
 export const Route = createFileRoute("/get-started")({
   head: () => ({
@@ -41,7 +53,13 @@ export const Route = createFileRoute("/get-started")({
   component: GetStartedPage,
 });
 
-const STAGES = ["Company", "Your info", "Role", "Schedule", "Requirements"];
+const STAGES: Array<{ label: string; icon: LucideIcon }> = [
+  { label: "Company", icon: Building2 },
+  { label: "Your info", icon: User },
+  { label: "Role", icon: Briefcase },
+  { label: "Schedule", icon: CalendarClock },
+  { label: "Requirements", icon: ListChecks },
+];
 
 interface CompanyForm {
   name: string;
@@ -55,33 +73,33 @@ interface ContactForm {
 }
 
 function Stepper({ stage }: { stage: number }) {
+  const progress = ((stage + 1) / STAGES.length) * 100;
   return (
-    <div>
-      <div className="mb-3 flex items-center justify-between text-xs font-medium text-muted-foreground">
-        <span>Step {stage + 1} of {STAGES.length}</span><span>{Math.round(((stage + 1) / STAGES.length) * 100)}%</span>
-      </div>
-      <div className="mb-5 h-1.5 overflow-hidden rounded-full bg-muted"><div className="wizard-progress-fill h-full rounded-full transition-[width] duration-500 ease-out" style={{ width: `${((stage + 1) / STAGES.length) * 100}%` }} /></div>
-      <ol className="flex items-start">
-      {STAGES.map((label, i) => {
+    <div className="relative border-t bg-primary-soft/55 px-4 pb-3 pt-5 sm:px-8">
+      <ol className="relative flex items-start">
+      {STAGES.map(({ label, icon: Icon }, i) => {
         const state = i < stage ? "done" : i === stage ? "current" : "todo";
         return (
           <li key={label} className="relative flex flex-1 flex-col items-center gap-2 text-center">
-            {i < STAGES.length - 1 && <span className={`absolute left-1/2 top-3.5 h-0.5 w-full transition-colors duration-500 ${i < stage ? "bg-primary" : "bg-border"}`} />}
+            {i < STAGES.length - 1 && (
+              <span className="absolute left-1/2 top-5 h-px w-full border-t border-dashed border-primary/30" />
+            )}
             <span
               className={
-                "relative z-10 grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-semibold transition-all duration-300 " +
-                (state === "done"
-                  ? "bg-primary text-primary-foreground"
+                "relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-lg border transition-all duration-300 " +
+                (state === "todo"
+                  ? "border-primary/25 bg-card text-muted-foreground"
                   : state === "current"
-                    ? "bg-amber/15 text-primary ring-2 ring-amber"
-                    : "bg-muted text-muted-foreground")
+                    ? "scale-110 border-amber bg-amber text-primary-foreground shadow-md ring-4 ring-amber/20"
+                    : "border-brand-accent bg-brand-accent text-primary-foreground")
               }
             >
-              {state === "done" ? <Check className="wizard-check-enter h-4 w-4" /> : i + 1}
+              <Icon className="h-4 w-4" />
             </span>
+            {state === "current" && <span className="h-1.5 w-1.5 rounded-full bg-amber" />}
             <span
               className={
-                "hidden text-xs sm:inline " +
+                "hidden text-[11px] sm:inline " +
                 (state === "todo" ? "text-muted-foreground" : "font-medium text-foreground")
               }
             >
@@ -91,6 +109,12 @@ function Stepper({ stage }: { stage: number }) {
         );
       })}
       </ol>
+      <div className="absolute inset-x-0 bottom-0 h-1 bg-border/70">
+        <div
+          className="wizard-progress-fill h-full transition-[width] duration-500 ease-out"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
     </div>
   );
 }
@@ -110,8 +134,17 @@ function GetStartedPage() {
     position: "",
   });
   const [request, setRequest] = useState<RequestForm>(emptyRequestForm);
+  const completedItems = buildRequestRecap({
+    company,
+    contact,
+    request,
+    catalog,
+    completedThrough: stage - 1,
+  });
+  const allItems = buildRequestRecap({ company, contact, request, catalog });
 
-  function next() {
+  function next(event?: React.MouseEvent<HTMLButtonElement>) {
+    event?.preventDefault();
     if (stage === 0 && !company.name.trim()) {
       toast.error("Enter your company name.");
       return;
@@ -191,18 +224,21 @@ function GetStartedPage() {
 
       <main className="mx-auto max-w-3xl px-6 py-10">
         {result ? (
-          <Card className="rounded-2xl">
-            <CardContent className="flex flex-col items-center gap-4 py-16 text-center">
-              <div className="grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-primary">
-                <CheckCircle2 className="h-8 w-8" />
-              </div>
-              <h1 className="text-2xl font-semibold tracking-tight">Request received</h1>
+          <Card className="overflow-hidden rounded-2xl">
+            <CardContent className="flex flex-col items-center gap-5 px-6 py-10 text-center sm:px-10">
+              <SuccessFlourish />
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight">Your request is submitted!</h1>
               <p className="max-w-md text-muted-foreground">
                 {result.invited
                   ? "Check your email to set your password and get started."
                   : "Your request has been added — log in to view it."}
               </p>
-              <Button asChild>
+              </div>
+              <div className="w-full rounded-lg bg-primary-soft/60 p-5">
+                <RequestRecap items={allItems} expanded />
+              </div>
+              <Button asChild className="login-submit-button">
                 <Link to="/login">Go to sign in</Link>
               </Button>
             </CardContent>
@@ -216,8 +252,6 @@ function GetStartedPage() {
               </p>
             </div>
 
-            <Stepper stage={stage} />
-
             {catalog.error && stage >= 2 && (
               <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -227,9 +261,15 @@ function GetStartedPage() {
               </div>
             )}
 
+            <Card className="overflow-hidden rounded-2xl">
+              {completedItems.length > 0 && (
+                <div className="overflow-x-auto border-b bg-primary-soft/35 px-6 py-4">
+                  <RequestRecap items={completedItems} />
+                </div>
+              )}
             <div key={stage} className={direction === "forward" ? "wizard-forward-enter" : "wizard-back-enter"}>
             {stage === 0 && (
-              <Card className="rounded-2xl">
+              <>
                 <CardHeader>
                   <CardTitle>Your company</CardTitle>
                   <CardDescription>Who are we hiring for?</CardDescription>
@@ -249,11 +289,11 @@ function GetStartedPage() {
                     />
                   </Field>
                 </CardContent>
-              </Card>
+              </>
             )}
 
             {stage === 1 && (
-              <Card className="rounded-2xl">
+              <>
                 <CardHeader>
                   <CardTitle>Your info</CardTitle>
                   <CardDescription>So we know who to send candidates to</CardDescription>
@@ -286,11 +326,11 @@ function GetStartedPage() {
                     />
                   </Field>
                 </CardContent>
-              </Card>
+              </>
             )}
 
             {stage === 2 && (
-              <Card className="rounded-2xl">
+              <>
                 <CardHeader>
                   <CardTitle>The role</CardTitle>
                   <CardDescription>What kind of person are you looking to hire?</CardDescription>
@@ -298,15 +338,18 @@ function GetStartedPage() {
                 <CardContent>
                   <RequestRoleFields value={request} onChange={setRequest} catalog={catalog} />
                 </CardContent>
-              </Card>
+              </>
             )}
             {stage === 3 && (
-              <Card className="rounded-2xl"><CardHeader><CardTitle>Schedule</CardTitle><CardDescription>When and how much support do you need?</CardDescription></CardHeader><CardContent><RequestScheduleFields value={request} onChange={setRequest} catalog={catalog} /></CardContent></Card>
+              <><CardHeader><CardTitle>Schedule</CardTitle><CardDescription>When and how much support do you need?</CardDescription></CardHeader><CardContent><RequestScheduleFields value={request} onChange={setRequest} catalog={catalog} /></CardContent></>
             )}
             {stage === 4 && (
-              <Card className="rounded-2xl"><CardHeader><CardTitle>Requirements</CardTitle><CardDescription>Tell us what matters most in your ideal candidate.</CardDescription></CardHeader><CardContent><RequestRequirementsFields value={request} onChange={setRequest} catalog={catalog} /></CardContent></Card>
+              <><CardHeader><CardTitle>Requirements</CardTitle><CardDescription>Tell us what matters most in your ideal candidate.</CardDescription></CardHeader><CardContent><RequestRequirementsFields value={request} onChange={setRequest} catalog={catalog} /></CardContent></>
             )}
             </div>
+
+              <Stepper stage={stage} />
+            </Card>
 
             <div className="flex items-center justify-between">
               <Button

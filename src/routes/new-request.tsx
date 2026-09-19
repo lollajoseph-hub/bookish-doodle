@@ -16,6 +16,8 @@ import {
   type RequestForm,
 } from "@/components/request-fields";
 import { toast } from "sonner";
+import { buildRequestRecap, RequestRecap } from "@/components/request-recap";
+import { SuccessFlourish } from "@/components/success-flourish";
 
 export const Route = createFileRoute("/new-request")({
   head: () => ({
@@ -49,6 +51,7 @@ function NewRequest() {
   const [membershipError, setMembershipError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [f, setF] = useState<RequestForm>(emptyRequestForm);
+  const [submittedRequestId, setSubmittedRequestId] = useState<string | null>(null);
 
   // Resolve the signed-in user's company from their own client_members row.
   useEffect(() => {
@@ -144,8 +147,36 @@ function NewRequest() {
     }
 
     setBusy(false);
-    toast.success("Request submitted — we're matching candidates now");
-    navigate({ to: "/requests/$id", params: { id: requestId } });
+    setSubmittedRequestId(requestId);
+  }
+
+  if (submittedRequestId) {
+    const recap = buildRequestRecap({
+      request: f,
+      catalog,
+      company: { name: membership?.client_name ?? "", industry: "" },
+    });
+    return (
+      <Card className="overflow-hidden rounded-2xl">
+        <CardContent className="flex flex-col items-center gap-5 px-6 py-10 text-center sm:px-10">
+          <SuccessFlourish />
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Your request is submitted!</h1>
+            <p className="mt-1 text-muted-foreground">We're matching candidates now.</p>
+          </div>
+          <div className="w-full rounded-lg bg-primary-soft/60 p-5">
+            <RequestRecap items={recap} expanded />
+          </div>
+          <Button
+            type="button"
+            className="login-submit-button"
+            onClick={() => navigate({ to: "/requests/$id", params: { id: submittedRequestId } })}
+          >
+            View request
+          </Button>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
