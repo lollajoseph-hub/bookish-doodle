@@ -145,77 +145,85 @@ function RequestDetail() {
         </div>
       )}
 
-      <Card className="card-amber rounded-2xl">
-        <CardContent className="p-5">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-semibold tracking-tight">{request?.job_roles?.name ?? "Hiring request"}</h1>
-            {request && (
-              <Badge className={requestStatusTone(request.status)} variant="secondary">
-                {REQUEST_STATUS_LABELS[request.status ?? ""] ?? request.status ?? "—"}
-              </Badge>
-            )}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,2.4fr)] lg:gap-6 lg:space-y-0 space-y-6">
+        <div className="min-w-0 lg:self-start">
+          <Card className="card-amber rounded-2xl">
+            <CardContent className="p-5">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl font-semibold tracking-tight">{request?.job_roles?.name ?? "Hiring request"}</h1>
+                {request && (
+                  <Badge className={requestStatusTone(request.status)} variant="secondary">
+                    {REQUEST_STATUS_LABELS[request.status ?? ""] ?? request.status ?? "—"}
+                  </Badge>
+                )}
+              </div>
+
+              {request && (
+                <dl className="mt-4 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-1">
+                  <Detail label="Engagement" value={engagement} />
+                  <Detail label="Hours needed" value={request.hours_needed} />
+                  <Detail label="Days needed" value={days || null} />
+                  <Detail label="Hires needed" value={String(request.hires_needed ?? 1)} />
+                  <Detail label="Minimum experience" value={request.years_experience_min ? `${request.years_experience_min} years` : null} />
+                  <Detail label="Desired start" value={formatDate(request.desired_start_date)} />
+                  <Detail label="Timezone" value={request.timezone_requirement} />
+                  <Detail label="Submitted" value={formatDate(request.created_at)} />
+                </dl>
+              )}
+
+              {request?.notes && (
+                <>
+                  <Separator className="my-4" />
+                  <p className="whitespace-pre-line text-sm text-muted-foreground">{request.notes}</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div aria-hidden className="hidden lg:block lg:w-px lg:bg-border" />
+
+        <div className="min-w-0 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight">Presented candidates</h2>
+            <p className="text-sm text-muted-foreground">
+              Shortlist the people you like, request an interview, or tell us why someone isn&apos;t a fit.
+            </p>
           </div>
 
-          {request && (
-            <dl className="mt-4 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-              <Detail label="Engagement" value={engagement} />
-              <Detail label="Hours needed" value={request.hours_needed} />
-              <Detail label="Days needed" value={days || null} />
-              <Detail label="Hires needed" value={String(request.hires_needed ?? 1)} />
-              <Detail label="Minimum experience" value={request.years_experience_min ? `${request.years_experience_min} years` : null} />
-              <Detail label="Desired start" value={formatDate(request.desired_start_date)} />
-              <Detail label="Timezone" value={request.timezone_requirement} />
-              <Detail label="Submitted" value={formatDate(request.created_at)} />
-            </dl>
+          {matches === null ? (
+            <p className="text-sm text-muted-foreground">Loading candidates…</p>
+          ) : matches.length === 0 ? (
+            <Card className="rounded-2xl border-dashed">
+              <CardContent className="py-12 text-center text-sm text-muted-foreground">
+                No candidates presented yet — matching is still in progress. We&apos;ll email you when profiles are ready.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {matches.map((m) => (
+                <CandidateCard
+                  key={m.id}
+                  match={m}
+                  photoUrl={photos[m.id] ?? null}
+                  busy={actingId === m.id}
+                  onViewProfile={() => setProfileFor(m)}
+                  onShortlist={() =>
+                    callRpc(
+                      "client_shortlist_candidate",
+                      m.id,
+                      m.status === "shortlisted" ? "Removed from shortlist" : "Added to shortlist"
+                    )
+                  }
+                  onRequestInterview={() => setInterviewFor(m)}
+                  onRequestHire={() => callRpc("request_to_hire", m.id, "Hire request sent to ScaleSource")}
+                  onReject={() => setRejectFor(m)}
+                />
+              ))}
+            </div>
           )}
-
-          {request?.notes && (
-            <>
-              <Separator className="my-4" />
-              <p className="whitespace-pre-line text-sm text-muted-foreground">{request.notes}</p>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight">Presented candidates</h2>
-        <p className="text-sm text-muted-foreground">
-          Shortlist the people you like, request an interview, or tell us why someone isn&apos;t a fit.
-        </p>
-      </div>
-
-      {matches === null ? (
-        <p className="text-sm text-muted-foreground">Loading candidates…</p>
-      ) : matches.length === 0 ? (
-        <Card className="rounded-2xl border-dashed">
-          <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            No candidates presented yet — matching is still in progress. We&apos;ll email you when profiles are ready.
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {matches.map((m) => (
-            <CandidateCard
-              key={m.id}
-              match={m}
-              photoUrl={photos[m.id] ?? null}
-              busy={actingId === m.id}
-              onViewProfile={() => setProfileFor(m)}
-              onShortlist={() =>
-                callRpc(
-                  "client_shortlist_candidate",
-                  m.id,
-                  m.status === "shortlisted" ? "Removed from shortlist" : "Added to shortlist"
-                )
-              }
-              onRequestInterview={() => setInterviewFor(m)}
-              onRequestHire={() => callRpc("request_to_hire", m.id, "Hire request sent to ScaleSource")}
-              onReject={() => setRejectFor(m)}
-            />
-          ))}
         </div>
-      )}
+      </div>
 
       <RejectCandidateDialog
         matchId={rejectFor?.id ?? null}
