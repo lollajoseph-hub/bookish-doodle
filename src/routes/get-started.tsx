@@ -109,7 +109,7 @@ function Stepper({ stage }: { stage: number }) {
         );
       })}
       </ol>
-      <div className="absolute inset-x-0 bottom-0 h-1 bg-border/70">
+      <div className="absolute inset-x-0 bottom-0 h-1 overflow-hidden rounded-b-xl bg-border/70">
         <div
           className="wizard-progress-fill h-full transition-[width] duration-500 ease-out"
           style={{ width: `${progress}%` }}
