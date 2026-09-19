@@ -146,6 +146,15 @@ function NewRequest() {
       }
     }
 
+    // Best-effort automatic matching — the request is considered created
+    // regardless of whether candidates were found.
+    supabase
+      .rpc("rank_and_match", { p_request_id: requestId, p_limit: 6 })
+      .then(({ error: matchError }) => {
+        if (matchError) console.warn("Automatic matching skipped:", matchError.message);
+      })
+      .catch((err) => console.warn("Automatic matching skipped:", err));
+
     setBusy(false);
     setSubmittedRequestId(requestId);
   }
