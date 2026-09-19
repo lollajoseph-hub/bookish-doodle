@@ -24,6 +24,7 @@ export interface FullPoolProfile {
   candidate_id: string;
   full_name: string | null;
   headline: string | null;
+  availability: string | null;
   country: string | null;
   timezone: string | null;
   weekly_hours_available: number | null;
@@ -42,7 +43,20 @@ export interface FullPoolProfile {
 }
 
 const PROFILE_SELECT =
-  "candidate_id,full_name,headline,country,timezone,weekly_hours_available,preferred_shift,years_experience,earliest_start_date,approved_summary,highlights,skills,work_history,education,primary_role,secondary_roles,profile_photo_path,intro_video_path";
+  "candidate_id,full_name,headline,availability,country,timezone,weekly_hours_available,preferred_shift,years_experience,earliest_start_date,approved_summary,highlights,skills,work_history,education,primary_role,secondary_roles,profile_photo_path,intro_video_path";
+
+function availabilityLabel(value: string | null | undefined) {
+  switch (value) {
+    case "available":
+      return "Available Immediately";
+    case "open_to_offers":
+      return "Open to offers";
+    case "not_available":
+      return "Not available";
+    default:
+      return null;
+  }
+}
 
 interface Entry {
   title: string | null;
@@ -230,6 +244,7 @@ export function CandidateProfileDialog({
               <section className="space-y-3">
                 <h4 className="text-sm font-semibold tracking-tight">Availability</h4>
                 <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+                <Row label="Status" value={availabilityLabel(profile.availability)} />
                 <Row label="Country" value={profile.country} />
                 <Row label="Timezone" value={profile.timezone} />
                 <Row
