@@ -251,16 +251,20 @@ function GetStartedPage() {
                 <h1 className="text-2xl font-semibold tracking-tight">Your request is submitted!</h1>
               <p className="max-w-md text-muted-foreground">
                 {result.invited
-                  ? "Check your email to set your password and get started."
+                  ? "One last step — set a password for your new account."
                   : "Your request has been added — log in to view it."}
               </p>
               </div>
               <div className="w-full rounded-lg bg-primary-soft/60 p-5">
                 <RequestRecap items={allItems} expanded />
               </div>
-              <Button asChild className="login-submit-button">
-                <Link to="/login">Go to sign in</Link>
-              </Button>
+              {result.invited ? (
+                <SetPasswordForm />
+              ) : (
+                <Button asChild className="login-submit-button">
+                  <Link to="/login">Go to sign in</Link>
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
