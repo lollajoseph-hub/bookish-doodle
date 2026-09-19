@@ -31,7 +31,7 @@ export const Route = createFileRoute("/recruiters/$staffId")({
 });
 
 const PIPELINE_STATUSES = [
-  "new",
+  "available",
   "shortlisted",
   "interviewed",
   "hired",
@@ -115,7 +115,7 @@ function RecruiterDetailPage() {
   const owned = candidates.filter((c) => c.recruiter_id === staffId);
   const breakdown = PIPELINE_STATUSES.map((status) => ({
     status,
-    count: owned.filter((c) => (c.status ?? "new") === status).length,
+    count: owned.filter((c) => (c.status ?? "available") === status).length,
   })).filter((b) => b.count > 0);
   const pendingInvite = signinStatus ? signinStatus[member.id] === false : true;
 
@@ -210,7 +210,7 @@ function RecruiterDetailPage() {
                   )}
                 </div>
                 <Badge variant="secondary" className="shrink-0 capitalize">
-                  {labelize(c.status ?? "new")}
+                  {labelize(c.status ?? "available")}
                 </Badge>
               </Link>
             ))}

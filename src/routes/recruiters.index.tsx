@@ -59,7 +59,7 @@ function invokeError(error: unknown, data: unknown): string | null {
 }
 
 const PIPELINE_STATUSES = [
-  "new",
+  "available",
   "shortlisted",
   "interviewed",
   "hired",
@@ -116,7 +116,7 @@ function TeamPage() {
           const owned = ownedList.length;
           const breakdown = PIPELINE_STATUSES.map((status) => ({
             status,
-            count: ownedList.filter((c) => (c.status ?? "new") === status).length,
+            count: ownedList.filter((c) => (c.status ?? "available") === status).length,
           })).filter((b) => b.count > 0);
           const pendingInvite = signinStatus ? signinStatus[s.id] === false : true;
           return (

@@ -138,13 +138,13 @@ function DashboardPage() {
 
   const stats = useMemo(() => {
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const byStatus = (st: string) => candidates.filter((c) => (c.status ?? "new") === st).length;
+    const byStatus = (st: string) => candidates.filter((c) => (c.status ?? "available") === st).length;
     const byMatch = (...sts: string[]) =>
       matches.filter((m) => sts.includes(m.status ?? "")).length;
     return {
       total: candidates.length,
       newThisWeek: candidates.filter((c) => new Date(c.created_at).getTime() >= weekAgo).length,
-      new: byStatus("new"),
+      new: byStatus("available"),
       shortlisted: byStatus("shortlisted"),
       interviewed: byStatus("interviewed"),
       hiredCandidates: byStatus("hired"),
@@ -175,14 +175,14 @@ function DashboardPage() {
   );
   const myStats = useMemo(() => {
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const byStatus = (st: string) => myCandidates.filter((c) => (c.status ?? "new") === st).length;
+    const byStatus = (st: string) => myCandidates.filter((c) => (c.status ?? "available") === st).length;
     const myCandidateIds = new Set(myCandidates.map((c) => c.id));
     const myMatchesList = matches.filter((m) => myCandidateIds.has(m.candidate_id));
     const byMatch = (...sts: string[]) => myMatchesList.filter((m) => sts.includes(m.status ?? "")).length;
     return {
       total: myCandidates.length,
       newThisWeek: myCandidates.filter((c) => new Date(c.created_at).getTime() >= weekAgo).length,
-      new: byStatus("new"),
+      new: byStatus("available"),
       shortlisted: byStatus("shortlisted"),
       interviewed: byStatus("interviewed"),
       hiredCandidates: byStatus("hired"),
@@ -269,7 +269,7 @@ function DashboardPage() {
                 hint="Added in the last 7 days"
                 loading={loadingCore}
               />
-              <StatCard label="New" value={stats.new} icon={Sparkles} loading={loadingCore} />
+              <StatCard label="Available" value={stats.new} icon={Sparkles} loading={loadingCore} />
               <StatCard
                 label="Shortlisted"
                 value={stats.shortlisted}
@@ -324,7 +324,7 @@ function DashboardPage() {
                 hint="Added in the last 7 days"
                 loading={loadingCore}
               />
-              <StatCard label="New" value={myStats.new} icon={Sparkles} loading={loadingCore} />
+              <StatCard label="Available" value={myStats.new} icon={Sparkles} loading={loadingCore} />
               <StatCard
                 label="Shortlisted"
                 value={myStats.shortlisted}
@@ -571,7 +571,7 @@ function DashboardPage() {
                   >
                     <div className="min-w-0">
                       <span className="font-medium">{c.full_name}</span>{" "}
-                      <span className="text-muted-foreground">· {labelize(c.status ?? "new")}</span>
+                      <span className="text-muted-foreground">· {labelize(c.status ?? "available")}</span>
                     </div>
                     <span className="text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
