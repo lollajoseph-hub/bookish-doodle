@@ -1,21 +1,28 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+  BriefcaseBusiness,
   CalendarCheck,
   CalendarClock,
   CheckCircle2,
   Clock,
   Loader2,
   Mail,
+  MapPin,
   Sparkles,
   Star,
   ThumbsDown,
+  Timer,
   UserSearch,
   Video,
 } from "lucide-react";
 import {
   MATCH_STATUS_LABELS,
   displayName,
+  formatDate,
+  formatDateTime,
+  rejectionReasonLabel,
+  toStringList,
   type MatchStatus,
 } from "@/lib/matches";
 
@@ -147,19 +154,30 @@ export function CandidateCard({
   // Per-match rule: the full name is revealed only when THIS match is hired.
   const name = displayName(p?.full_name, status);
   const initial = name.slice(0, 1).toUpperCase();
+  const primaryRole = toStringList(p?.primary_role)[0] ?? null;
+  const scheduled = formatDateTime(match.interview_scheduled_at);
   const availabilityStatus = availabilityLabel(p?.availability);
+
+  const scheduleDetails = [
+    p?.weekly_hours_available ? `${p.weekly_hours_available} hrs/week` : null,
+    p?.preferred_shift,
+    p?.timezone,
+    p?.earliest_start_date ? `available from ${formatDate(p.earliest_start_date)}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   const canAct = status === "recommended" || status === "shortlisted";
 
   return (
-    <Card className={`card-amber relative h-full rounded-2xl ${isRejected ? "opacity-60" : ""}`}>
+    <Card className={`card-amber relative rounded-2xl ${isRejected ? "opacity-60" : ""}`}>
       <span
         className={`absolute right-4 top-4 z-10 inline-flex w-fit max-w-[calc(100%-2rem)] items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(status)}`}
       >
         <MatchStatusIcon status={status} />
         {MATCH_STATUS_LABELS[status] ?? status}
       </span>
-      <CardContent className="flex h-full flex-col p-5">
+      <CardContent className="space-y-3 p-5">
         <div className="flex items-start gap-4">
           {photoUrl ? (
             <img src={photoUrl} alt="" className="h-24 w-24 flex-none rounded-full object-cover ring-2 ring-primary/15" />
@@ -184,9 +202,85 @@ export function CandidateCard({
           </div>
         </div>
 
+        <div className="grid gap-2 border-t border-border/70 pt-3 text-xs text-muted-foreground sm:grid-cols-2">
+          {primaryRole && (
+            <p className="flex min-w-0 items-center gap-2">
+              <BriefcaseBusiness className="h-3.5 w-3.5 flex-none text-primary" />
+              <span className="truncate font-medium text-foreground/80">{primaryRole}</span>
+            </p>
+          )}
+          {p?.years_experience != null && (
+            <p className="flex items-center gap-2">
+              <Timer className="h-3.5 w-3.5 flex-none text-primary" />
+              <span>{p.years_experience} {p.years_experience === 1 ? "Year" : "Years"} Experience</span>
+            </p>
+          )}
+          {p?.country && (
+            <p className="flex min-w-0 items-center gap-2">
+              <MapPin className="h-3.5 w-3.5 flex-none text-primary" />
+              <span className="truncate">{p.country}</span>
+            </p>
+          )}
+          {scheduleDetails && (
+            <p className="flex min-w-0 items-center gap-2 sm:col-span-2">
+              <Clock className="h-3.5 w-3.5 flex-none text-primary" />
+              <span className="leading-relaxed">{scheduleDetails}</span>
+            </p>
+          )}
+        </div>
         {contextLabel && <div className="text-xs text-muted-foreground">{contextLabel}</div>}
 
-        <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
+        {status === "interview_requested" && (
+          <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <Clock className="h-4 w-4 flex-none" />
+            {match.interview_proposed_at
+              ? `You proposed ${formatDateTime(match.interview_proposed_at)} — waiting for ScaleSource to confirm.`
+              : "Interview requested — waiting for ScaleSource to confirm."}
+          </div>
+        )}
+
+        {status === "interview_confirmed" && (
+          <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+            <p className="flex items-center gap-2 text-sm font-medium text-primary">
+              <CalendarClock className="h-4 w-4 flex-none" />
+              {scheduled ? `Interview on ${scheduled}` : "Interview confirmed"}
+            </p>
+            {match.meet_url && (
+              <Button asChild size="sm" className="w-full">
+                <a href={match.meet_url} target="_blank" rel="noreferrer">
+                  <Video className="mr-1.5 h-4 w-4" />
+                  Join Meet
+                </a>
+              </Button>
+            )}
+          </div>
+        )}
+
+        {status === "interview_completed" && (
+          <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+            <p className="flex items-center gap-2 text-sm font-medium text-primary">
+              <CalendarClock className="h-4 w-4 flex-none" />
+              {scheduled ? `Interview held on ${scheduled}` : "Interview completed"}
+            </p>
+            {match.interview_notes && (
+              <p className="whitespace-pre-line text-sm text-muted-foreground">{match.interview_notes}</p>
+            )}
+          </div>
+        )}
+
+        {isRejected && (
+          <div className="rounded-lg bg-muted px-3 py-2 text-sm">
+            <p className="font-medium">Not a fit — {rejectionReasonLabel(match.rejection_reason)}</p>
+            {match.rejection_reason_note && (
+              <p className="mt-0.5 text-muted-foreground">{match.rejection_reason_note}</p>
+            )}
+            {match.rejected_at && (
+              <p className="mt-0.5 text-xs text-muted-foreground">{formatDate(match.rejected_at)}</p>
+            )}
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-2 pt-1">
           {onViewProfile && (
             <Button variant="secondary" size="sm" onClick={onViewProfile}>
               <UserSearch className="mr-1.5 h-4 w-4" />
