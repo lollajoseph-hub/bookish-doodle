@@ -143,7 +143,8 @@ function GetStartedPage() {
   });
   const allItems = buildRequestRecap({ company, contact, request, catalog });
 
-  function next() {
+  function next(event?: React.MouseEvent<HTMLButtonElement>) {
+    event?.preventDefault();
     if (stage === 0 && !company.name.trim()) {
       toast.error("Enter your company name.");
       return;
