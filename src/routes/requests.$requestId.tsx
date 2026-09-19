@@ -97,6 +97,16 @@ function RequestDetailPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const confirm = useMutation({
+    mutationFn: (id: string) => confirmInterview(id),
+    onSuccess: () => {
+      toast.success("Interview confirmed");
+      setConfirmFor(null);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const reject = useMutation({
     mutationFn: async () => {
       if (!rejectFor) return;
