@@ -161,7 +161,7 @@ export function CandidateProfileDialog({
 
   return (
     <Dialog open={!!candidateId} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="card-amber max-h-[90vh] max-w-2xl overflow-hidden p-0">
+      <DialogContent className="card-amber max-h-[90vh] max-w-2xl overflow-hidden bg-card p-0">
         <div ref={scrollRef} className="candidate-profile-scroll max-h-[90vh] overflow-y-auto scroll-smooth" tabIndex={0}>
         {err && (
           <div className="space-y-4 p-6">
