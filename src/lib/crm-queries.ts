@@ -381,7 +381,7 @@ export async function updateMatchStatus(
 }
 
 /**
- * Candidate lifecycle: new -> shortlisted / rejected -> interviewed -> hired -> placed.
+ * Candidate lifecycle: available -> shortlisted / rejected -> interviewed -> hired -> placed.
  * "placed" is only set when an admin creates the actual placement record.
  */
 async function applyCandidateStatusForMatch(matchId: string, status: MatchStatus): Promise<void> {
