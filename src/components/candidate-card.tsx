@@ -127,11 +127,11 @@ export function CandidateCard({
   return (
     <Card className={`card-amber relative rounded-2xl ${isRejected ? "opacity-60" : ""}`}>
       <CardContent className="space-y-3 p-5">
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-4">
           {photoUrl ? (
-            <img src={photoUrl} alt="" className="h-16 w-16 flex-none rounded-full object-cover ring-2 ring-primary/15" />
+            <img src={photoUrl} alt="" className="h-24 w-24 flex-none rounded-full object-cover ring-2 ring-primary/15" />
           ) : (
-            <div className="grid h-16 w-16 flex-none place-items-center rounded-full bg-primary/10 text-2xl font-semibold text-primary">
+            <div className="grid h-24 w-24 flex-none place-items-center rounded-full bg-primary/10 text-3xl font-semibold text-primary">
               {initial}
             </div>
           )}
