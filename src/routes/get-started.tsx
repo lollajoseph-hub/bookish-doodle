@@ -208,7 +208,19 @@ function GetStartedPage() {
       toast.error(payloadError || "We couldn't submit your request. Please try again.");
       return;
     }
-    setResult({ invited: Boolean((data as { invited?: boolean } | null)?.invited) });
+    const invited = Boolean((data as { invited?: boolean } | null)?.invited);
+    const inviteToken = (data as { invite_token?: string } | null)?.invite_token ?? null;
+    if (invited && inviteToken) {
+      const { error: otpError } = await supabase.auth.verifyOtp({ token_hash: inviteToken, type: "invite" });
+      if (otpError) {
+        // The account exists but we couldn't open a session here; fall back to the emailed link.
+        setResult({ invited: false });
+        return;
+      }
+      setResult({ invited: true });
+      return;
+    }
+    setResult({ invited: false });
   }
 
   return (
