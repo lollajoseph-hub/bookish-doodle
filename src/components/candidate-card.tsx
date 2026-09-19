@@ -1,6 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   CalendarClock,
   CheckCircle2,
@@ -14,7 +13,6 @@ import {
 import {
   MATCH_STATUS_LABELS,
   displayName,
-  firstNameOnlyAnalysis,
   formatDate,
   formatDateTime,
   rejectionReasonLabel,
@@ -64,15 +62,17 @@ export const MATCH_SELECT =
 export function statusTone(s: MatchStatus | string) {
   switch (s) {
     case "hired":
-      return "bg-emerald-100 text-emerald-800";
+      return "bg-success text-success-foreground";
     case "shortlisted":
-      return "bg-amber-100 text-amber-900";
+      return "bg-amber text-amber-foreground";
     case "rejected":
-      return "bg-slate-200 text-slate-700";
+      return "bg-muted text-muted-foreground";
+    case "interview_requested":
+      return "bg-primary text-primary-foreground";
     case "interview_confirmed":
     case "interview_completed":
     case "offer_extended":
-      return "bg-primary/10 text-primary";
+      return "bg-primary-soft text-primary";
     default:
       return "bg-secondary text-secondary-foreground";
   }
@@ -110,7 +110,6 @@ export function CandidateCard({
   // Per-match rule: the full name is revealed only when THIS match is hired.
   const name = displayName(p?.full_name, status);
   const initial = name.slice(0, 1).toUpperCase();
-  const approvedSummary = firstNameOnlyAnalysis(p?.approved_summary, p?.full_name);
 
   const primaryRole = toStringList(p?.primary_role)[0] ?? null;
   const scheduled = formatDateTime(match.interview_scheduled_at);
@@ -141,13 +140,13 @@ export function CandidateCard({
             <div className="min-w-0">
               {!isHired && <p className="text-sm italic leading-none text-muted-foreground">Meet</p>}
               <h3 className="truncate text-base font-semibold leading-tight">{name}</h3>
-              <Badge
-                variant="secondary"
-                className={`mt-2 w-fit max-w-full flex-none whitespace-nowrap ${statusTone(status)}`}
+              <span
+                className={`mt-2 inline-flex w-fit max-w-full flex-none items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusTone(status)}`}
               >
-                {isHired && <CheckCircle2 className="mr-1 h-3 w-3" />}
+                {status === "shortlisted" && <Star className="h-3 w-3 fill-current" />}
+                {isHired && <CheckCircle2 className="h-3 w-3" />}
                 {MATCH_STATUS_LABELS[status] ?? status}
-              </Badge>
+              </span>
             </div>
             {p?.headline && <p className="truncate text-xs text-muted-foreground">{p.headline}</p>}
             <p className="mt-0.5 text-xs text-muted-foreground">
@@ -164,10 +163,6 @@ export function CandidateCard({
             {contextLabel && <div className="mt-1 text-xs text-muted-foreground">{contextLabel}</div>}
           </div>
         </div>
-
-        {approvedSummary && (
-          <p className="line-clamp-4 text-sm text-muted-foreground">{approvedSummary}</p>
-        )}
 
         {availability && <p className="text-xs text-muted-foreground">{availability}</p>}
 
