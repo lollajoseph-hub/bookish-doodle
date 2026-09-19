@@ -316,7 +316,7 @@ function GetStartedPage() {
 
       <main className="mx-auto max-w-3xl px-6 py-10">
         {result ? (
-          <Card className="overflow-hidden rounded-2xl">
+          <Card className="card-amber overflow-hidden rounded-2xl">
             <CardContent className="flex flex-col items-center gap-5 px-6 py-10 text-center sm:px-10">
               <SuccessFlourish />
               <div>
@@ -359,7 +359,7 @@ function GetStartedPage() {
               </div>
             )}
 
-            <Card className="overflow-hidden rounded-2xl">
+            <Card className="card-amber overflow-hidden rounded-2xl">
             <div key={stage} className={direction === "forward" ? "wizard-forward-enter" : "wizard-back-enter"}>
             {stage === 0 && (
               <>

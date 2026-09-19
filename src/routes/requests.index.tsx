@@ -96,7 +96,7 @@ function RequestsList() {
               ENGAGEMENT_TYPES.find((e) => e.value === r.engagement_type)?.label ?? r.engagement_type;
             return (
               <Link key={r.id} to="/requests/$id" params={{ id: r.id }} className="block">
-                <Card className="rounded-2xl transition hover:border-primary/40 hover:shadow-sm">
+                <Card className="card-amber rounded-2xl transition hover:shadow-sm">
                   <CardContent className="flex items-center justify-between gap-4 p-5">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">

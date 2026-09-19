@@ -8,8 +8,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Loader2 } from "lucide-react";
+import { ArrowDown, ArrowRight, Loader2 } from "lucide-react";
 import { displayName, formatDate, signedPhotoUrl, signedVideoUrl, toStringList } from "@/lib/matches";
 
 export interface FullPoolProfile {
@@ -86,6 +87,7 @@ export function CandidateProfileDialog({
   const [video, setVideo] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [visibleWorkCount, setVisibleWorkCount] = useState(5);
 
   useEffect(() => {
     if (!candidateId) {
@@ -95,6 +97,7 @@ export function CandidateProfileDialog({
       setErr(null);
       return;
     }
+    setVisibleWorkCount(5);
     let cancelled = false;
     setLoading(true);
     void (async () => {
@@ -130,36 +133,63 @@ export function CandidateProfileDialog({
   const roles = [...toStringList(profile?.primary_role), ...toStringList(profile?.secondary_roles)];
   const work = toEntries(profile?.work_history);
   const education = toEntries(profile?.education);
+  const isHired = matchStatus === "hired";
 
   return (
     <Dialog open={!!candidateId} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{loading ? "Loading profile…" : name}</DialogTitle>
-          <DialogDescription>{profile?.headline ?? "Full candidate profile"}</DialogDescription>
-        </DialogHeader>
-
+      <DialogContent className="card-amber max-h-[90vh] max-w-2xl overflow-y-auto p-0">
         {err && (
-          <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
-            {err}
+          <div className="space-y-4 p-6">
+            <DialogHeader>
+              <DialogTitle>Candidate profile</DialogTitle>
+              <DialogDescription>We couldn&apos;t load this profile.</DialogDescription>
+            </DialogHeader>
+            <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+              {err}
+            </div>
           </div>
         )}
 
         {loading && !profile ? (
-          <div className="flex items-center gap-2 py-10 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+          <div className="p-6">
+            <DialogHeader>
+              <DialogTitle>Loading profile…</DialogTitle>
+              <DialogDescription>Full candidate profile</DialogDescription>
+            </DialogHeader>
+            <div className="flex items-center gap-2 py-10 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+            </div>
           </div>
         ) : profile ? (
-          <div className="space-y-5">
-            <div className="flex items-start gap-4">
+          <div>
+            <div className="flex flex-col items-center bg-primary-soft/60 px-6 pb-6 pt-8 text-center">
               {photo ? (
-                <img src={photo} alt="" className="h-24 w-24 flex-none rounded-2xl object-cover ring-2 ring-primary/15" />
+                <img
+                  src={photo}
+                  alt=""
+                  className="h-40 w-40 rounded-2xl object-cover shadow-md ring-2 ring-primary/20 sm:h-48 sm:w-48"
+                />
               ) : (
-                <div className="grid h-24 w-24 flex-none place-items-center rounded-2xl bg-primary/10 text-3xl font-semibold text-primary">
+                <div className="grid h-40 w-40 place-items-center rounded-2xl bg-primary/10 text-5xl font-semibold text-primary ring-2 ring-primary/15 sm:h-48 sm:w-48">
                   {name.slice(0, 1).toUpperCase()}
                 </div>
               )}
-              <dl className="grid flex-1 grid-cols-2 gap-x-6 gap-y-2 text-sm">
+              <DialogHeader className="mt-5 items-center text-center">
+                <DialogTitle className="text-2xl">
+                  {isHired ? name : <><em>Meet</em> {name}</>}
+                </DialogTitle>
+                <DialogDescription className="max-w-lg text-sm">
+                  {profile.headline ?? "Full candidate profile"}
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+
+            <div className="space-y-6 px-6 py-6">
+              <Separator />
+
+              <section className="space-y-3">
+                <h4 className="text-sm font-semibold tracking-tight">Availability</h4>
+                <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
                 <Row label="Country" value={profile.country} />
                 <Row label="Timezone" value={profile.timezone} />
                 <Row
@@ -172,64 +202,82 @@ export function CandidateProfileDialog({
                   value={profile.years_experience ? `${profile.years_experience} years` : null}
                 />
                 <Row label="Earliest start" value={formatDate(profile.earliest_start_date)} />
-              </dl>
+                </dl>
+              </section>
+
+              {video && (
+                <Section title="Intro video">
+                  <video src={video} controls className="w-full rounded-xl bg-foreground" preload="metadata" />
+                </Section>
+              )}
+
+              {(roles.length > 0 || skills.length > 0) && (
+                <Section title="Roles & skills">
+                  {roles.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {roles.map((role, index) => (
+                        <Badge
+                          key={`${role}-${index}`}
+                          variant="secondary"
+                          className={index === 0 ? "bg-primary/10 text-primary" : ""}
+                        >
+                          {role}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  {skills.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {skills.map((skill, index) => (
+                        <Badge key={`${skill}-${index}`} variant="outline">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </Section>
+              )}
+
+              {work.length > 0 && (
+                <Section title="Work history">
+                  <EntryList entries={work.slice(0, visibleWorkCount)} />
+                  {visibleWorkCount < work.length && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="mx-auto flex text-primary"
+                      onClick={() => setVisibleWorkCount((count) => Math.min(count + 5, work.length))}
+                    >
+                      See more
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
+                  )}
+                </Section>
+              )}
+
+              {education.length > 0 && (
+                <Section title="Education">
+                  <EntryList entries={education} />
+                </Section>
+              )}
+
+              {(profile.approved_summary || highlights.length > 0) && (
+                <Section title="AI Analysis">
+                  {profile.approved_summary && (
+                    <p className="whitespace-pre-line text-sm text-muted-foreground">{profile.approved_summary}</p>
+                  )}
+                  {highlights.length > 0 && (
+                    <div className="space-y-2">
+                      <h5 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Highlights</h5>
+                      <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                        {highlights.map((highlight, index) => <li key={index}>{highlight}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                </Section>
+              )}
             </div>
-
-            {roles.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {roles.map((r, i) => (
-                  <Badge key={`${r}-${i}`} variant="secondary" className={i === 0 ? "bg-primary/10 text-primary" : ""}>
-                    {r}
-                  </Badge>
-                ))}
-              </div>
-            )}
-
-            {video && (
-              <Section title="Intro video">
-                <video src={video} controls className="w-full rounded-xl bg-black" preload="metadata" />
-              </Section>
-            )}
-
-            {profile.approved_summary && (
-              <Section title="Summary">
-                <p className="whitespace-pre-line text-sm text-muted-foreground">{profile.approved_summary}</p>
-              </Section>
-            )}
-
-            {highlights.length > 0 && (
-              <Section title="Highlights">
-                <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-                  {highlights.map((h, i) => (
-                    <li key={i}>{h}</li>
-                  ))}
-                </ul>
-              </Section>
-            )}
-
-            {skills.length > 0 && (
-              <Section title="Skills">
-                <div className="flex flex-wrap gap-1.5">
-                  {skills.map((s, i) => (
-                    <Badge key={`${s}-${i}`} variant="outline">
-                      {s}
-                    </Badge>
-                  ))}
-                </div>
-              </Section>
-            )}
-
-            {work.length > 0 && (
-              <Section title="Work history">
-                <EntryList entries={work} />
-              </Section>
-            )}
-
-            {education.length > 0 && (
-              <Section title="Education">
-                <EntryList entries={education} />
-              </Section>
-            )}
           </div>
         ) : null}
       </DialogContent>
@@ -259,14 +307,16 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function EntryList({ entries }: { entries: Entry[] }) {
   return (
-    <ol className="space-y-3 border-l pl-4">
+    <ol className="space-y-3">
       {entries.map((e, i) => (
-        <li key={i} className="relative">
-          <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-primary" />
-          <p className="text-sm font-medium">{e.title ?? "—"}</p>
-          {e.subtitle && <p className="text-sm text-muted-foreground">{e.subtitle}</p>}
-          {e.period && <p className="text-xs text-muted-foreground">{e.period}</p>}
-          {e.detail && <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{e.detail}</p>}
+        <li key={i} className="flex items-start gap-3 rounded-md bg-primary-soft/45 p-3">
+          <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium">{e.title ?? "—"}</p>
+            {e.subtitle && <p className="text-sm text-muted-foreground">{e.subtitle}</p>}
+            {e.period && <p className="text-xs text-muted-foreground">{e.period}</p>}
+            {e.detail && <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{e.detail}</p>}
+          </div>
         </li>
       ))}
     </ol>

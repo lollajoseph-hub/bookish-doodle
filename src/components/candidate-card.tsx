@@ -43,6 +43,7 @@ export interface MatchRow {
   id: string;
   status: MatchStatus;
   client_request_id: string;
+  interview_proposed_at: string | null;
   interview_scheduled_at: string | null;
   meet_url: string | null;
   interview_notes: string | null;
@@ -56,7 +57,7 @@ export interface MatchRow {
 }
 
 export const MATCH_SELECT =
-  "id,status,client_request_id,interview_scheduled_at,meet_url,interview_notes,rejection_reason,rejection_reason_note,rejected_at,match_score,match_reason,candidate_id," +
+  "id,status,client_request_id,interview_proposed_at,interview_scheduled_at,meet_url,interview_notes,rejection_reason,rejection_reason_note,rejected_at,match_score,match_reason,candidate_id," +
   "candidate_pool_profile(candidate_id,full_name,headline,country,timezone,weekly_hours_available,preferred_shift,years_experience,earliest_start_date,approved_summary,highlights,skills,primary_role,secondary_roles,profile_photo_path)";
 
 export function statusTone(s: MatchStatus | string) {
@@ -124,7 +125,7 @@ export function CandidateCard({
   const canAct = status === "recommended" || status === "shortlisted";
 
   return (
-    <Card className={`relative rounded-2xl ${isRejected ? "opacity-60" : ""}`}>
+    <Card className={`card-amber relative rounded-2xl ${isRejected ? "opacity-60" : ""}`}>
       <CardContent className="space-y-3 p-5">
         <div className="flex items-start gap-3">
           {photoUrl ? (
@@ -136,7 +137,9 @@ export function CandidateCard({
           )}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="truncate text-base font-semibold leading-tight">{name}</h3>
+              <h3 className="truncate text-base font-semibold leading-tight">
+                {isHired ? name : <><em>Meet</em> {name}</>}
+              </h3>
               <Badge variant="secondary" className={statusTone(status)}>
                 {isHired && <CheckCircle2 className="mr-1 h-3 w-3" />}
                 {MATCH_STATUS_LABELS[status] ?? status}
@@ -167,7 +170,9 @@ export function CandidateCard({
         {status === "interview_requested" && (
           <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
             <Clock className="h-4 w-4 flex-none" />
-            Interview requested — awaiting scheduling
+            {match.interview_proposed_at
+              ? `You proposed ${formatDateTime(match.interview_proposed_at)} — waiting for ScaleSource to confirm.`
+              : "Interview requested — waiting for ScaleSource to confirm."}
           </div>
         )}
 

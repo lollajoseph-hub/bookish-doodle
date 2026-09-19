@@ -80,8 +80,10 @@ function InterviewsPage() {
     const list = ((matchRes.data ?? []) as unknown as MatchRow[]).slice().sort((a, b) => {
       const rank = ORDER.indexOf(a.status) - ORDER.indexOf(b.status);
       if (rank !== 0) return rank;
-      const ta = a.interview_scheduled_at ? new Date(a.interview_scheduled_at).getTime() : Infinity;
-      const tb = b.interview_scheduled_at ? new Date(b.interview_scheduled_at).getTime() : Infinity;
+       const aTime = a.interview_scheduled_at ?? a.interview_proposed_at;
+       const bTime = b.interview_scheduled_at ?? b.interview_proposed_at;
+       const ta = aTime ? new Date(aTime).getTime() : Infinity;
+       const tb = bTime ? new Date(bTime).getTime() : Infinity;
       return ta - tb;
     });
     setRows(list);
@@ -140,9 +142,10 @@ function InterviewsPage() {
             const p = m.candidate_pool_profile;
             const name = displayName(p?.full_name, m.status);
             const when = formatDateTime(m.interview_scheduled_at);
+            const proposed = formatDateTime(m.interview_proposed_at);
             const photo = photos[m.id] ?? null;
             return (
-              <Card key={m.id} className="rounded-2xl">
+              <Card key={m.id} className="card-amber rounded-2xl">
                 <CardContent className="space-y-3 p-5">
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="flex min-w-0 items-start gap-3">
@@ -155,7 +158,9 @@ function InterviewsPage() {
                       )}
                       <div className="min-w-0 space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="truncate font-semibold">{name}</h3>
+                          <h3 className="truncate font-semibold">
+                            {m.status === "hired" ? name : <><em>Meet</em> {name}</>}
+                          </h3>
                           <Badge variant="secondary" className={statusTone(m.status)}>
                             {MATCH_STATUS_LABELS[m.status] ?? m.status}
                           </Badge>
@@ -191,7 +196,9 @@ function InterviewsPage() {
                   {m.status === "interview_requested" && (
                     <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
                       <Clock className="h-4 w-4 flex-none" />
-                      Requested — ScaleSource is arranging a time with the candidate.
+                      {proposed
+                        ? `You proposed ${proposed} — waiting for ScaleSource to confirm.`
+                        : "Interview requested — waiting for ScaleSource to confirm."}
                     </div>
                   )}
 

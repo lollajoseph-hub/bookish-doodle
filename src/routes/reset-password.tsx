@@ -96,7 +96,7 @@ function ResetPasswordPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md rounded-2xl shadow-lg">
+      <Card className="card-amber w-full max-w-md rounded-2xl shadow-lg">
         <CardHeader className="text-center">
           <div className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-primary text-primary-foreground">
             {phase === "done" ? <CheckCircle2 className="h-6 w-6" /> : <Users className="h-6 w-6" />}
