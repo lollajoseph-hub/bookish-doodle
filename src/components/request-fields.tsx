@@ -199,6 +199,7 @@ function ChoiceCards({
   pageSize?: number;
 }) {
   const [visibleCount, setVisibleCount] = useState(pageSize ?? options.length);
+  const [revealFrom, setRevealFrom] = useState<number | null>(null);
   const selectedIndex = options.findIndex((option) => option.value === value);
   const displayedOptions = pageSize
     ? options.slice(0, Math.max(visibleCount, selectedIndex + 1))
@@ -208,9 +209,10 @@ function ChoiceCards({
   return (
     <div className="space-y-2.5">
       <div className={cn("grid gap-2", columns)} role="radiogroup">
-        {displayedOptions.map((option) => {
+        {displayedOptions.map((option, index) => {
           const selected = value === option.value;
           const Icon = option.icon ?? BriefcaseBusiness;
+          const revealed = revealFrom !== null && index >= revealFrom;
           return (
             <Button
               key={option.value}
@@ -224,7 +226,11 @@ function ChoiceCards({
                 selected
                   ? "scale-[1.02] border-primary bg-primary text-primary-foreground shadow-md hover:bg-primary hover:text-primary-foreground"
                   : "bg-card text-foreground hover:border-primary/40 hover:bg-primary-soft",
+                revealed && "wizard-choice-reveal",
               )}
+              style={
+                revealed ? { animationDelay: `${(index - revealFrom) * 70}ms` } : undefined
+              }
             >
               <span className="flex min-w-0 flex-1 items-center gap-2.5">
                 <span
@@ -252,7 +258,10 @@ function ChoiceCards({
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => setVisibleCount((count) => Math.min(count + (pageSize ?? 0), options.length))}
+          onClick={() => {
+            setRevealFrom(visibleCount);
+            setVisibleCount((count) => Math.min(count + (pageSize ?? 0), options.length));
+          }}
           className="mx-auto flex text-primary"
         >
           See more
