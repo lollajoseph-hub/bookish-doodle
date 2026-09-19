@@ -363,6 +363,19 @@ export async function addMatch(input: {
   }
 }
 
+/**
+ * Confirm the client's proposed interview time. The RPC copies
+ * interview_proposed_at -> interview_scheduled_at and sets the match to
+ * interview_confirmed; it errors when the client hasn't proposed a time yet.
+ */
+export async function confirmInterview(matchId: string, notes?: string): Promise<void> {
+  const { error } = await supabase.rpc("confirm_interview", {
+    p_match_id: matchId,
+    p_notes: notes ?? null,
+  });
+  if (error) throw error;
+}
+
 export async function updateMatchStatus(
   id: string,
   status: MatchStatus,

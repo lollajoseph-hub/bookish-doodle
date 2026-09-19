@@ -9,6 +9,7 @@ import {
   MATCH_STATUSES,
   REJECTION_REASONS,
   addMatch,
+  confirmInterview,
   fetchClientRequestDetail,
   labelize,
   updateMatchStatus,
@@ -60,6 +61,7 @@ function RequestDetailPage() {
   const [candidateId, setCandidateId] = useState("");
   const [reason, setReason] = useState("");
   const [rejectFor, setRejectFor] = useState<string | null>(null);
+  const [confirmFor, setConfirmFor] = useState<{ id: string; proposedAt: string | null } | null>(null);
   const [rejectReason, setRejectReason] = useState<RejectionReason>("skill_mismatch");
   const [rejectNote, setRejectNote] = useState("");
 
@@ -92,6 +94,16 @@ function RequestDetailPage() {
   const setStatus = useMutation({
     mutationFn: ({ id, status }: { id: string; status: MatchStatus }) => updateMatchStatus(id, status),
     onSuccess: invalidate,
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const confirm = useMutation({
+    mutationFn: (id: string) => confirmInterview(id),
+    onSuccess: () => {
+      toast.success("Interview confirmed");
+      setConfirmFor(null);
+      invalidate();
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -209,6 +221,10 @@ function RequestDetailPage() {
                         onValueChange={(v: string) => {
                           if (v === "rejected") {
                             setRejectFor(m.id);
+                            return;
+                          }
+                          if (m.status === "interview_requested" && v === "interview_confirmed") {
+                            setConfirmFor({ id: m.id, proposedAt: m.interview_proposed_at });
                             return;
                           }
                           setStatus.mutate({ id: m.id, status: v as MatchStatus });
@@ -348,6 +364,40 @@ function RequestDetailPage() {
             </Button>
             <Button onClick={() => add.mutate()} disabled={add.isPending}>
               {add.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Add to batch
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!confirmFor} onOpenChange={(o) => !o && setConfirmFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm interview</DialogTitle>
+            <DialogDescription>Accept the time proposed by the client.</DialogDescription>
+          </DialogHeader>
+          {confirmFor?.proposedAt ? (
+            <p className="rounded-xl bg-primary-soft/60 p-3 text-sm">
+              Client proposed{" "}
+              <span className="font-medium">
+                {new Date(confirmFor.proposedAt).toLocaleString()}
+              </span>
+              . Confirming locks this in as the scheduled interview time.
+            </p>
+          ) : (
+            <p className="rounded-xl bg-primary-soft/60 p-3 text-sm">
+              The client hasn't proposed a time for this interview yet — confirmation will fail
+              until they do.
+            </p>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setConfirmFor(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => confirmFor && confirm.mutate(confirmFor.id)}
+              disabled={confirm.isPending || !confirmFor?.proposedAt}
+            >
+              {confirm.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Confirm
             </Button>
           </DialogFooter>
         </DialogContent>

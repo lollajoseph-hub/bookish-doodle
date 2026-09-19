@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { CalendarCheck } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { MatchStatusBadge } from "@/components/match-status";
-import { fetchMatchesByStatus, updateMatchStatus } from "@/lib/crm-queries";
+import { confirmInterview, fetchMatchesByStatus, updateMatchStatus } from "@/lib/crm-queries";
 import type { MatchStatus } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,6 @@ import {
 const STAGES: MatchStatus[] = ["interview_requested", "interview_confirmed", "interview_completed"];
 
 const NEXT_STAGE: Partial<Record<MatchStatus, MatchStatus>> = {
-  interview_requested: "interview_confirmed",
   interview_confirmed: "interview_completed",
   interview_completed: "offer_extended",
 };
@@ -50,6 +49,15 @@ function InterviewReviewPage() {
     mutationFn: ({ id, status }: { id: string; status: MatchStatus }) => updateMatchStatus(id, status),
     onSuccess: () => {
       toast.success("Status updated");
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const confirm = useMutation({
+    mutationFn: (id: string) => confirmInterview(id),
+    onSuccess: () => {
+      toast.success("Interview confirmed");
       queryClient.invalidateQueries({ queryKey: ["matches"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -92,7 +100,30 @@ function InterviewReviewPage() {
                     <MatchStatusBadge status={m.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex flex-wrap justify-end gap-2">
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      {m.status === "interview_requested" && (
+                        <>
+                          {m.interview_proposed_at ? (
+                            <>
+                              <span className="text-xs text-muted-foreground">
+                                Client proposed{" "}
+                                {new Date(m.interview_proposed_at).toLocaleString()}
+                              </span>
+                              <Button
+                                size="sm"
+                                disabled={confirm.isPending}
+                                onClick={() => confirm.mutate(m.id)}
+                              >
+                                Confirm this time
+                              </Button>
+                            </>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">
+                              Waiting on client to propose a time
+                            </span>
+                          )}
+                        </>
+                      )}
                       {next && (
                         <Button
                           size="sm"
