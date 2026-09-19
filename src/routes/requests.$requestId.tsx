@@ -223,6 +223,10 @@ function RequestDetailPage() {
                             setRejectFor(m.id);
                             return;
                           }
+                          if (m.status === "interview_requested" && v === "interview_confirmed") {
+                            setConfirmFor({ id: m.id, proposedAt: m.interview_proposed_at });
+                            return;
+                          }
                           setStatus.mutate({ id: m.id, status: v as MatchStatus });
                         }}
                       >
