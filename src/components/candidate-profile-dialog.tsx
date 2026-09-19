@@ -202,11 +202,11 @@ export function CandidateProfileDialog({
                 )}
                 <div className="min-w-0">
                   {!isHired && (
-                    <p className="text-sm italic text-muted-foreground">Meet</p>
+                    <p className="text-sm italic text-foreground/70">Meet</p>
                   )}
                   <DialogHeader className="mt-0.5 items-start text-left">
                     <DialogTitle className="text-2xl leading-tight">{name}</DialogTitle>
-                    <DialogDescription className="text-sm">
+                    <DialogDescription className="text-sm text-foreground/80">
                       {profile.headline ?? "Full candidate profile"}
                     </DialogDescription>
                   </DialogHeader>
