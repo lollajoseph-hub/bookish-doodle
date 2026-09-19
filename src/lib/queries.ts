@@ -260,7 +260,7 @@ export async function createCandidate(
       email: input.email,
       phone: input.phone,
       recruiter_id: input.recruiter_id,
-      status: "new",
+      // status omitted on purpose — DB default 'available' applies (candidates are pre-vetted)
       headline: input.headline,
       years_experience: input.years_experience,
       country: input.country,

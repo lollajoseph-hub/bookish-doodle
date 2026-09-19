@@ -20,12 +20,13 @@ import {
 } from "@/components/ui/select";
 
 const CANDIDATE_STATUSES = [
-  "new",
+  "available",
   "shortlisted",
   "interviewed",
   "hired",
   "placed",
   "rejected",
+  "inactive",
   "archived",
 ];
 
@@ -159,7 +160,7 @@ function AdminToolsPage() {
               <div className="space-y-2">
                 <Label>Status</Label>
                 <Select
-                  value={selected.status ?? "new"}
+                  value={selected.status ?? "available"}
                   onValueChange={(status) => statusMutation.mutate({ id: selected.id, status })}
                 >
                   <SelectTrigger>

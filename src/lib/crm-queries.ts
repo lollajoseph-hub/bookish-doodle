@@ -352,13 +352,13 @@ export async function addMatch(input: {
   });
   if (error) throw error;
 
-  // A brand-new candidate becomes "shortlisted" the moment they enter a client pipeline.
+  // An available candidate becomes "shortlisted" the moment they enter a client pipeline.
   const { data: candidate } = await supabase
     .from("candidates")
     .select("status")
     .eq("id", input.candidate_id)
     .maybeSingle();
-  if (candidate?.status === "new") {
+  if (candidate?.status === "available") {
     await supabase.from("candidates").update({ status: "shortlisted" }).eq("id", input.candidate_id);
   }
 }
@@ -381,7 +381,7 @@ export async function updateMatchStatus(
 }
 
 /**
- * Candidate lifecycle: new -> shortlisted / rejected -> interviewed -> hired -> placed.
+ * Candidate lifecycle: available -> shortlisted / rejected -> interviewed -> hired -> placed.
  * "placed" is only set when an admin creates the actual placement record.
  */
 async function applyCandidateStatusForMatch(matchId: string, status: MatchStatus): Promise<void> {
