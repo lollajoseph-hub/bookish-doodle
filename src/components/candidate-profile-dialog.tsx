@@ -139,8 +139,14 @@ export function CandidateProfileDialog({
     <Dialog open={!!candidateId} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="card-amber max-h-[90vh] max-w-2xl overflow-y-auto p-0">
         {err && (
-          <div className="m-6 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
-            {err}
+          <div className="space-y-4 p-6">
+            <DialogHeader>
+              <DialogTitle>Candidate profile</DialogTitle>
+              <DialogDescription>We couldn&apos;t load this profile.</DialogDescription>
+            </DialogHeader>
+            <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+              {err}
+            </div>
           </div>
         )}
 

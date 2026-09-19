@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { format } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { CalendarClock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -86,7 +86,7 @@ export function InterviewRequestDialog({
                   mode="single"
                   selected={date}
                   onSelect={setDate}
-                  disabled={{ before: new Date() }}
+                  disabled={{ before: startOfDay(new Date()) }}
                   initialFocus
                   className="pointer-events-auto p-3"
                   classNames={{

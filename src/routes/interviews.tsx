@@ -80,8 +80,10 @@ function InterviewsPage() {
     const list = ((matchRes.data ?? []) as unknown as MatchRow[]).slice().sort((a, b) => {
       const rank = ORDER.indexOf(a.status) - ORDER.indexOf(b.status);
       if (rank !== 0) return rank;
-      const ta = a.interview_scheduled_at ? new Date(a.interview_scheduled_at).getTime() : Infinity;
-      const tb = b.interview_scheduled_at ? new Date(b.interview_scheduled_at).getTime() : Infinity;
+       const aTime = a.interview_scheduled_at ?? a.interview_proposed_at;
+       const bTime = b.interview_scheduled_at ?? b.interview_proposed_at;
+       const ta = aTime ? new Date(aTime).getTime() : Infinity;
+       const tb = bTime ? new Date(bTime).getTime() : Infinity;
       return ta - tb;
     });
     setRows(list);
