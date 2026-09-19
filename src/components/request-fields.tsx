@@ -99,7 +99,11 @@ export function TagInput({
     <div
       className="rounded-md border border-input bg-background p-2"
       onKeyDownCapture={(event) => {
-        if (event.key === "Enter") event.preventDefault();
+        if (event.key === "Enter") {
+          event.preventDefault();
+          event.stopPropagation();
+          commit(draft);
+        }
       }}
     >
       {value.length > 0 && (
@@ -133,11 +137,7 @@ export function TagInput({
           }
         }}
         onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            e.stopPropagation();
-            commit(draft);
-          } else if (e.key === "Backspace" && !draft && value.length > 0) {
+          if (e.key === "Backspace" && !draft && value.length > 0) {
             onChange(value.slice(0, -1));
           }
         }}
