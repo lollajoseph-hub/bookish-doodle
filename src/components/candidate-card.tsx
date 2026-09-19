@@ -231,7 +231,7 @@ export function CandidateCard({
         {contextLabel && <div className="text-xs text-muted-foreground">{contextLabel}</div>}
 
         {status === "interview_requested" && (
-          <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary">
             <Clock className="h-4 w-4 flex-none" />
             {match.interview_proposed_at
               ? `You proposed ${formatDateTime(match.interview_proposed_at)} — waiting for ScaleSource to confirm.`
