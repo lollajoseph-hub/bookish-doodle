@@ -196,7 +196,7 @@ function NewRequest() {
         <p className="text-sm text-muted-foreground">Tell us about the role you need filled.</p>
       </div>
 
-      <Card className="card-amber rounded-2xl">
+      <Card className="rounded-2xl">
         <CardContent className="flex items-center gap-3 py-4">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
             <Building2 className="h-5 w-5" />
@@ -227,7 +227,7 @@ function NewRequest() {
         </div>
       )}
 
-      <Card className="rounded-2xl">
+      <Card className="card-amber rounded-2xl">
         <CardHeader>
           <CardTitle>Role requirements</CardTitle>
           <CardDescription>What does the role look like?</CardDescription>
