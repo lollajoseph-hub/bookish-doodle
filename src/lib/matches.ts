@@ -92,33 +92,98 @@ export function displayName(fullName: string | null | undefined, status: string 
   return name.split(/\s+/)[0] ?? name;
 }
 
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** Generic words that can appear in placeholder names — never safe to replace on their own. */
+const NAME_PART_STOPWORDS = new Set([
+  "candidate",
+  "test",
+  "pipeline",
+  "profile",
+  "the",
+  "and",
+  "ltd",
+  "inc",
+]);
+
+/** Verbs that typically follow a person's name at the start of an AI-written bio. */
+const NAME_FOLLOWING_VERBS =
+  "is|was|has|had|brings|combines|offers|delivers|specializes|specialises|excels|leads|works|holds|joined|builds|manages|supports|thrives";
+
+/** Detects "Omolola Joseph is …" style openers so a name that differs from the stored one is caught too. */
+function detectNamesInText(text: string): string[][] {
+  const pattern = new RegExp(
+    `(?:^|[.!?]\\s+|\\n)((?:[A-Z][\\p{L}'’-]+)(?:\\s+(?:de|la|del|della|van|von|da|dos|di|bin|al)?\\s*[A-Z][\\p{L}'’-]+){1,3})\\s+(?:${NAME_FOLLOWING_VERBS})\\b`,
+    "gu",
+  );
+  const found: string[][] = [];
+  for (const match of text.matchAll(pattern)) {
+    const parts = (match[1] ?? "").trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) found.push(parts);
+  }
+  return found;
+}
+
+/** Every contiguous run of name parts, longest first, so "De La Cruz" is replaced before "Cruz". */
+function nameSequences(parts: string[]): string[][] {
+  const seqs: string[][] = [];
+  for (let i = 0; i < parts.length; i += 1) {
+    for (let j = parts.length; j > i; j -= 1) {
+      const seq = parts.slice(i, j);
+      if (seq.length === 1) {
+        const only = (seq[0] ?? "").toLowerCase();
+        if (only.length < 3 || NAME_PART_STOPWORDS.has(only)) continue;
+      }
+      seqs.push(seq);
+    }
+  }
+  return seqs.sort((a, b) => b.length - a.length);
+}
+
 /**
  * Generated analysis may predate the first-name-only client display rule.
  * Replace stored full-name mentions at render time so existing content cannot reveal a surname.
+ * Handles multi-part surnames, possessives, any capitalization, and names that differ from the
+ * stored `full_name` (an opener like "Omolola Joseph is …" is treated as the candidate's name).
  */
 export function firstNameOnlyAnalysis(
   text: string | null | undefined,
   fullName: string | null | undefined,
 ) {
   if (!text) return "";
-  const nameParts = (fullName ?? "").trim().split(/\s+/).filter(Boolean);
-  if (nameParts.length < 2) return text;
+  const storedParts = (fullName ?? "").trim().split(/\s+/).filter(Boolean);
+  const detected = detectNamesInText(text);
+  if (storedParts.length < 2 && detected.length === 0) return text;
 
-  const firstName = nameParts[0] ?? "Candidate";
-  const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const escapedParts = nameParts.map(escape);
-  const fullNamePattern = new RegExp(`\\b${escapedParts.join("\\s+")}\\b`, "gi");
-  let result = text.replace(fullNamePattern, firstName);
-  // Standalone surname/middle-name mentions (e.g. "Santos has strong client-facing experience").
-  // Whole-word, case-insensitive; skip very short parts to avoid clobbering common words.
-  for (const part of nameParts.slice(1)) {
-    if (part.length < 3) continue;
-    const wordPattern = new RegExp(`\\b${escape(part)}\\b`, "gi");
-    result = result.replace(wordPattern, firstName);
+  const firstName = storedParts[0] && storedParts.length >= 2 ? storedParts[0] : null;
+  let result = text;
+
+  const applyAll = (parts: string[], replacement: string) => {
+    for (const seq of nameSequences(parts)) {
+      const body = seq.map(escapeRe).join("\\s+");
+      // Keep possessives readable: "Santos'" / "Santos’s" -> "Maria's".
+      const pattern = new RegExp(`\\b${body}(['’]s|['’])?(?![\\p{L}])`, "giu");
+      result = result.replace(pattern, (_m, poss: string | undefined) =>
+        poss ? `${replacement}'s` : replacement,
+      );
+    }
+  };
+
+  // Names written in the text (possibly different from the stored one) collapse to their own first name.
+  for (const parts of detected) {
+    const target = firstName ?? parts[0] ?? "";
+    if (!target) continue;
+    applyAll(parts, target);
   }
+  if (firstName) applyAll(storedParts, firstName);
+
   // Collapse stutters like "Maria Maria" produced when only part of the full name appeared.
-  const stutter = new RegExp(`\\b${escape(firstName)}(?:\\s+${escape(firstName)})+\\b`, "gi");
-  return result.replace(stutter, firstName);
+  const anchor = firstName ?? detected[0]?.[0];
+  if (anchor) {
+    const stutter = new RegExp(`\\b${escapeRe(anchor)}(?:\\s+${escapeRe(anchor)})+\\b`, "gi");
+    result = result.replace(stutter, anchor);
+  }
+  return result;
 }
 
 export function formatDateTime(v: string | null | undefined) {
