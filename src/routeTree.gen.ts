@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as SystemMonitorRouteImport } from './routes/system-monitor'
+import { Route as SkillsRouteImport } from './routes/skills'
 import { Route as RolesRouteImport } from './routes/roles'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RequestsRouteImport } from './routes/requests'
@@ -47,6 +48,11 @@ const TeamRoute = TeamRouteImport.update({
 const SystemMonitorRoute = SystemMonitorRouteImport.update({
   id: '/system-monitor',
   path: '/system-monitor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SkillsRoute = SkillsRouteImport.update({
+  id: '/skills',
+  path: '/skills',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RolesRoute = RolesRouteImport.update({
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
+  '/skills': typeof SkillsRoute
   '/system-monitor': typeof SystemMonitorRoute
   '/team': typeof TeamRoute
   '/candidates/$candidateId': typeof CandidatesCandidateIdRoute
@@ -232,6 +239,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
+  '/skills': typeof SkillsRoute
   '/system-monitor': typeof SystemMonitorRoute
   '/team': typeof TeamRoute
   '/candidates/$candidateId': typeof CandidatesCandidateIdRoute
@@ -264,6 +272,7 @@ export interface FileRoutesById {
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/roles': typeof RolesRoute
+  '/skills': typeof SkillsRoute
   '/system-monitor': typeof SystemMonitorRoute
   '/team': typeof TeamRoute
   '/candidates/$candidateId': typeof CandidatesCandidateIdRoute
@@ -297,6 +306,7 @@ export interface FileRouteTypes {
     | '/requests'
     | '/reset-password'
     | '/roles'
+    | '/skills'
     | '/system-monitor'
     | '/team'
     | '/candidates/$candidateId'
@@ -325,6 +335,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/reset-password'
     | '/roles'
+    | '/skills'
     | '/system-monitor'
     | '/team'
     | '/candidates/$candidateId'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/requests'
     | '/reset-password'
     | '/roles'
+    | '/skills'
     | '/system-monitor'
     | '/team'
     | '/candidates/$candidateId'
@@ -388,6 +400,7 @@ export interface RootRouteChildren {
   RequestsRoute: typeof RequestsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   RolesRoute: typeof RolesRoute
+  SkillsRoute: typeof SkillsRoute
   SystemMonitorRoute: typeof SystemMonitorRoute
   TeamRoute: typeof TeamRoute
   RecruitersStaffIdRoute: typeof RecruitersStaffIdRoute
@@ -408,6 +421,13 @@ declare module '@tanstack/react-router' {
       path: '/system-monitor'
       fullPath: '/system-monitor'
       preLoaderRoute: typeof SystemMonitorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/skills': {
+      id: '/skills'
+      path: '/skills'
+      fullPath: '/skills'
+      preLoaderRoute: typeof SkillsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/roles': {
@@ -664,6 +684,7 @@ const rootRouteChildren: RootRouteChildren = {
   RequestsRoute: RequestsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   RolesRoute: RolesRoute,
+  SkillsRoute: SkillsRoute,
   SystemMonitorRoute: SystemMonitorRoute,
   TeamRoute: TeamRoute,
   RecruitersStaffIdRoute: RecruitersStaffIdRoute,

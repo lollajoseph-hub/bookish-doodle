@@ -23,6 +23,7 @@ import {
   Bell,
   History,
   UserPlus,
+  ListChecks,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
@@ -60,6 +61,7 @@ type NavItem = {
     | "/reports"
     | "/notifications"
     | "/recruiter-activity"
+    | "/skills"
     | "/team";
   label: string;
   icon: typeof LayoutDashboard;
@@ -94,6 +96,7 @@ const navGroups: Array<{ label: string; items: NavItem[]; adminOnly?: boolean }>
       { to: "/admin-tools", label: "Admin Tools", icon: Wrench },
       { to: "/team", label: "Add to Team", icon: UserPlus },
       { to: "/roles", label: "Roles", icon: ShieldCheck },
+      { to: "/skills", label: "Manage Skills", icon: ListChecks },
       { to: "/system-monitor", label: "System Monitor", icon: Activity },
       { to: "/reports", label: "Reports", icon: BarChart3 },
     ],
