@@ -271,6 +271,8 @@ export interface CandidateMatchRow {
   rejected_at: string | null;
   meet_url: string | null;
   interview_at: string | null;
+  interview_proposed_at: string | null;
+  interview_scheduled_at: string | null;
   created_at: string;
   updated_at: string | null;
 }
