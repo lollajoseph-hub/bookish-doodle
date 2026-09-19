@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Dialog,
@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ArrowDown, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowDown, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { displayName, formatDate, signedPhotoUrl, signedVideoUrl, toStringList } from "@/lib/matches";
 
 export interface FullPoolProfile {
@@ -88,6 +88,9 @@ export function CandidateProfileDialog({
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [visibleWorkCount, setVisibleWorkCount] = useState(5);
+  const [isAtTop, setIsAtTop] = useState(true);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!candidateId) {
@@ -127,6 +130,27 @@ export function CandidateProfileDialog({
     };
   }, [candidateId]);
 
+  useEffect(() => {
+    const scrollArea = scrollRef.current;
+    if (!scrollArea || !candidateId) return;
+
+    const updateScrollState = () => {
+      setIsAtTop(scrollArea.scrollTop <= 1);
+      setIsAtBottom(scrollArea.scrollTop + scrollArea.clientHeight >= scrollArea.scrollHeight - 1);
+    };
+
+    updateScrollState();
+    scrollArea.addEventListener("scroll", updateScrollState, { passive: true });
+    const observer = new ResizeObserver(updateScrollState);
+    observer.observe(scrollArea);
+    if (scrollArea.firstElementChild) observer.observe(scrollArea.firstElementChild);
+
+    return () => {
+      scrollArea.removeEventListener("scroll", updateScrollState);
+      observer.disconnect();
+    };
+  }, [candidateId, loading, profile, visibleWorkCount]);
+
   const name = displayName(profile?.full_name, matchStatus);
   const highlights = toStringList(profile?.highlights);
   const skills = toStringList(profile?.skills);
@@ -137,7 +161,8 @@ export function CandidateProfileDialog({
 
   return (
     <Dialog open={!!candidateId} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="card-amber max-h-[90vh] max-w-2xl overflow-y-auto p-0">
+      <DialogContent className="card-amber max-h-[90vh] max-w-2xl overflow-hidden p-0">
+        <div ref={scrollRef} className="candidate-profile-scroll max-h-[90vh] overflow-y-auto scroll-smooth" tabIndex={0}>
         {err && (
           <div className="space-y-4 p-6">
             <DialogHeader>
@@ -280,6 +305,34 @@ export function CandidateProfileDialog({
             </div>
           </div>
         ) : null}
+        </div>
+
+        {profile && (
+          <div className="absolute right-3 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-1 rounded-md border bg-card/95 p-1 shadow-md backdrop-blur-sm">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              aria-label="Scroll profile up"
+              disabled={isAtTop}
+              onClick={() => scrollRef.current?.scrollBy({ top: -300, behavior: "smooth" })}
+            >
+              <ChevronUp className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              aria-label="Scroll profile down"
+              disabled={isAtBottom}
+              onClick={() => scrollRef.current?.scrollBy({ top: 300, behavior: "smooth" })}
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -307,16 +360,14 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function EntryList({ entries }: { entries: Entry[] }) {
   return (
-    <ol className="space-y-3">
+    <ol className="space-y-3 border-l pl-4">
       {entries.map((e, i) => (
-        <li key={i} className="flex items-start gap-3 rounded-md bg-primary-soft/45 p-3">
-          <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-          <div className="min-w-0">
-            <p className="text-sm font-medium">{e.title ?? "—"}</p>
-            {e.subtitle && <p className="text-sm text-muted-foreground">{e.subtitle}</p>}
-            {e.period && <p className="text-xs text-muted-foreground">{e.period}</p>}
-            {e.detail && <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{e.detail}</p>}
-          </div>
+        <li key={i} className="relative">
+          <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-primary" />
+          <p className="text-sm font-medium">{e.title ?? "—"}</p>
+          {e.subtitle && <p className="text-sm text-muted-foreground">{e.subtitle}</p>}
+          {e.period && <p className="text-xs text-muted-foreground">{e.period}</p>}
+          {e.detail && <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{e.detail}</p>}
         </li>
       ))}
     </ol>
