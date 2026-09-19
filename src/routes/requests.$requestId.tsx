@@ -369,6 +369,40 @@ function RequestDetailPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!confirmFor} onOpenChange={(o) => !o && setConfirmFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm interview</DialogTitle>
+            <DialogDescription>Accept the time proposed by the client.</DialogDescription>
+          </DialogHeader>
+          {confirmFor?.proposedAt ? (
+            <p className="rounded-xl bg-primary-soft/60 p-3 text-sm">
+              Client proposed{" "}
+              <span className="font-medium">
+                {new Date(confirmFor.proposedAt).toLocaleString()}
+              </span>
+              . Confirming locks this in as the scheduled interview time.
+            </p>
+          ) : (
+            <p className="rounded-xl bg-primary-soft/60 p-3 text-sm">
+              The client hasn't proposed a time for this interview yet — confirmation will fail
+              until they do.
+            </p>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setConfirmFor(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => confirmFor && confirm.mutate(confirmFor.id)}
+              disabled={confirm.isPending || !confirmFor?.proposedAt}
+            >
+              {confirm.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!rejectFor} onOpenChange={(o) => !o && setRejectFor(null)}>
         <DialogContent>
           <DialogHeader>
