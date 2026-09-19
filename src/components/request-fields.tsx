@@ -222,7 +222,7 @@ function ChoiceCards({
               aria-checked={selected}
               onClick={() => onChange(option.value)}
               className={cn(
-                "group relative h-auto min-h-20 whitespace-normal px-3 py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5",
+                "group relative h-auto min-h-14 whitespace-normal px-2.5 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5",
                 selected
                   ? "scale-[1.02] border-primary bg-primary text-primary-foreground shadow-md hover:bg-primary hover:text-primary-foreground"
                   : "bg-card text-foreground hover:border-primary/40 hover:bg-primary-soft",
@@ -232,16 +232,16 @@ function ChoiceCards({
                 revealed ? { animationDelay: `${(index - revealFrom) * 70}ms` } : undefined
               }
             >
-              <span className="flex min-w-0 flex-1 items-center gap-2.5">
+              <span className="flex min-w-0 flex-1 items-center gap-2">
                 <span
                   className={cn(
-                    "grid h-9 w-9 shrink-0 place-items-center rounded-md transition-colors duration-300",
+                    "grid h-7 w-7 shrink-0 place-items-center rounded transition-colors duration-300",
                     selected ? "bg-primary-foreground/15 text-primary-foreground" : "bg-primary/10 text-primary",
                   )}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-3.5 w-3.5" />
                 </span>
-                <span className="min-w-0 text-sm font-medium leading-tight">{option.label}</span>
+                <span className="min-w-0 text-xs font-medium leading-tight">{option.label}</span>
               </span>
               <Check
                 className={cn(
