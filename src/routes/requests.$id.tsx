@@ -181,7 +181,7 @@ function RequestDetail() {
           </Card>
         </div>
 
-        <div aria-hidden className="hidden lg:block lg:w-px lg:bg-border" />
+        <div aria-hidden className="hidden lg:block lg:w-px lg:bg-amber" />
 
         <div className="min-w-0 space-y-4">
           <div>
