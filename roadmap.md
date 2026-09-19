@@ -12,3 +12,4 @@
 - [x] Sanitize AI Analysis names to first-name-only everywhere and verify the rendered dialog
 - [x] Add availability data, top-right statuses, and clearer candidate-card details; verify rendered cards
 - [ ] Separate profile roles and skills, add all status icons, hide the Lovable badge, and verify
+- [ ] Simplify candidate cards to identity, availability, status, and actions only; verify the compact grid
