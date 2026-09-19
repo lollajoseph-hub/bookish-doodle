@@ -54,6 +54,15 @@ function InterviewReviewPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const confirm = useMutation({
+    mutationFn: (id: string) => confirmInterview(id),
+    onSuccess: () => {
+      toast.success("Interview confirmed");
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <AppShell title="Interview review" description="Candidates in the interview stages">
       {isLoading && <p className="text-sm text-muted-foreground">Loading interviews…</p>}
