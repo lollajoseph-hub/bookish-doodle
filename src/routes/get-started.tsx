@@ -191,9 +191,21 @@ function GetStartedPage() {
     });
     setBusy(false);
 
-    const payloadError = (data as { error?: string } | null)?.error;
+    let payloadError = (data as { error?: string } | null)?.error ?? null;
+    if (error && !payloadError) {
+      // Non-2xx responses surface as FunctionsHttpError; the useful message is in the response body.
+      const response = (error as { context?: Response }).context;
+      if (response && typeof response.json === "function") {
+        try {
+          const body = (await response.clone().json()) as { error?: string };
+          payloadError = body?.error ?? null;
+        } catch {
+          payloadError = null;
+        }
+      }
+    }
     if (error || payloadError) {
-      toast.error(payloadError || error?.message || "We couldn't submit your request. Please try again.");
+      toast.error(payloadError || "We couldn't submit your request. Please try again.");
       return;
     }
     setResult({ invited: Boolean((data as { invited?: boolean } | null)?.invited) });
