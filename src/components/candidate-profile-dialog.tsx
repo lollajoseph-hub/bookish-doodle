@@ -187,26 +187,31 @@ export function CandidateProfileDialog({
           </div>
         ) : profile ? (
           <div>
-            <div className="flex flex-col items-center bg-primary-soft/60 px-6 pb-6 pt-8 text-center">
-              {photo ? (
-                <img
-                  src={photo}
-                  alt=""
-                  className="h-40 w-40 rounded-2xl object-cover shadow-md ring-2 ring-primary/20 sm:h-48 sm:w-48"
-                />
-              ) : (
-                <div className="grid h-40 w-40 place-items-center rounded-2xl bg-primary/10 text-5xl font-semibold text-primary ring-2 ring-primary/15 sm:h-48 sm:w-48">
-                  {name.slice(0, 1).toUpperCase()}
+            <div className="bg-primary-soft/60 px-6 py-6">
+              <div className="flex items-center gap-5">
+                {photo ? (
+                  <img
+                    src={photo}
+                    alt=""
+                    className="h-24 w-24 shrink-0 rounded-2xl object-cover shadow-md ring-2 ring-primary/20"
+                  />
+                ) : (
+                  <div className="grid h-24 w-24 shrink-0 place-items-center rounded-2xl bg-primary/10 text-3xl font-semibold text-primary ring-2 ring-primary/15">
+                    {name.slice(0, 1).toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  {!isHired && (
+                    <p className="text-sm italic text-muted-foreground">Meet</p>
+                  )}
+                  <DialogHeader className="mt-0.5 items-start text-left">
+                    <DialogTitle className="text-2xl leading-tight">{name}</DialogTitle>
+                    <DialogDescription className="text-sm">
+                      {profile.headline ?? "Full candidate profile"}
+                    </DialogDescription>
+                  </DialogHeader>
                 </div>
-              )}
-              <DialogHeader className="mt-5 items-center text-center">
-                <DialogTitle className="text-2xl">
-                  {isHired ? name : <><em>Meet</em> {name}</>}
-                </DialogTitle>
-                <DialogDescription className="max-w-lg text-sm">
-                  {profile.headline ?? "Full candidate profile"}
-                </DialogDescription>
-              </DialogHeader>
+              </div>
             </div>
 
             <div className="space-y-6 px-6 py-6">
