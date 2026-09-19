@@ -96,7 +96,12 @@ export function TagInput({
   };
 
   return (
-    <div className="rounded-md border border-input bg-background p-2">
+    <div
+      className="rounded-md border border-input bg-background p-2"
+      onKeyDownCapture={(event) => {
+        if (event.key === "Enter") event.preventDefault();
+      }}
+    >
       {value.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1.5">
           {value.map((name) => (
@@ -130,6 +135,7 @@ export function TagInput({
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
+            e.stopPropagation();
             commit(draft);
           } else if (e.key === "Backspace" && !draft && value.length > 0) {
             onChange(value.slice(0, -1));
