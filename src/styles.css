@@ -377,6 +377,15 @@
   border-width: 2px;
 }
 
+.candidate-profile-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.candidate-profile-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
