@@ -4,4 +4,4 @@
 - [x] Convert shared single-choice fields to animated cards
 - [x] Add an animated inline date calendar
 - [x] Add public and authenticated success recap screens
-- [ ] Verify desktop, mobile, validation, submissions, and reduced motion
+- [x] Verify desktop, mobile, validation, submissions, and reduced motion
