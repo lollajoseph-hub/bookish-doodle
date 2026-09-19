@@ -178,7 +178,7 @@ export function CandidateCard({
         {MATCH_STATUS_LABELS[status] ?? status}
       </span>
       <CardContent className="space-y-3 p-5">
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-4 pt-8">
           {photoUrl ? (
             <img src={photoUrl} alt="" className="h-24 w-24 flex-none rounded-full object-cover ring-2 ring-primary/15" />
           ) : (
@@ -186,7 +186,7 @@ export function CandidateCard({
               {initial}
             </div>
           )}
-          <div className="min-w-0 flex-1 pt-8">
+          <div className="min-w-0 flex-1">
             <div className="min-w-0 space-y-1">
               {!isHired && <p className="text-sm italic leading-none text-muted-foreground">Meet</p>}
               <h3 className="truncate text-lg font-semibold leading-tight">{name}</h3>
