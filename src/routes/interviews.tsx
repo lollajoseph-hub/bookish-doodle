@@ -199,7 +199,7 @@ function InterviewsPage() {
                   </div>
 
                   {m.status === "interview_requested" && (
-                    <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                    <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary">
                       <Clock className="h-4 w-4 flex-none" />
                       {proposed
                         ? `You proposed ${proposed} — waiting for ScaleSource to confirm.`
