@@ -4,6 +4,7 @@ import {
   BriefcaseBusiness,
   CalendarIcon,
   Check,
+  ChevronDown,
   Clock3,
   FolderKanban,
   X,
@@ -189,52 +190,75 @@ function ChoiceCards({
   onChange,
   options,
   columns = "grid-cols-2 sm:grid-cols-3",
+  pageSize,
 }: {
   value: string;
   onChange: (value: string) => void;
   options: ChoiceOption[];
   columns?: string;
+  pageSize?: number;
 }) {
+  const [visibleCount, setVisibleCount] = useState(pageSize ?? options.length);
+  const selectedIndex = options.findIndex((option) => option.value === value);
+  const displayedOptions = pageSize
+    ? options.slice(0, Math.max(visibleCount, selectedIndex + 1))
+    : options;
+  const canShowMore = Boolean(pageSize && !value && displayedOptions.length < options.length);
+
   return (
-    <div className={cn("grid gap-2", columns)} role="radiogroup">
-      {options.map((option) => {
-        const selected = value === option.value;
-        const Icon = option.icon ?? BriefcaseBusiness;
-        return (
-          <Button
-            key={option.value}
-            type="button"
-            variant="outline"
-            role="radio"
-            aria-checked={selected}
-            onClick={() => onChange(option.value)}
-            className={cn(
-              "group relative h-auto min-h-20 whitespace-normal px-3 py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5",
-              selected
-                ? "scale-[1.02] border-primary bg-primary text-primary-foreground shadow-md hover:bg-primary hover:text-primary-foreground"
-                : "bg-card text-foreground hover:border-primary/40 hover:bg-primary-soft",
-            )}
-          >
-            <span className="flex min-w-0 flex-1 items-center gap-2.5">
-              <span
-                className={cn(
-                  "grid h-9 w-9 shrink-0 place-items-center rounded-md transition-colors duration-300",
-                  selected ? "bg-primary-foreground/15 text-primary-foreground" : "bg-primary/10 text-primary",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-              </span>
-              <span className="min-w-0 text-sm font-medium leading-tight">{option.label}</span>
-            </span>
-            <Check
+    <div className="space-y-2.5">
+      <div className={cn("grid gap-2", columns)} role="radiogroup">
+        {displayedOptions.map((option) => {
+          const selected = value === option.value;
+          const Icon = option.icon ?? BriefcaseBusiness;
+          return (
+            <Button
+              key={option.value}
+              type="button"
+              variant="outline"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => onChange(option.value)}
               className={cn(
-                "absolute right-2 top-2 h-3.5 w-3.5 transition-all duration-300",
-                selected ? "scale-100 opacity-100" : "scale-50 opacity-0",
+                "group relative h-auto min-h-20 whitespace-normal px-3 py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5",
+                selected
+                  ? "scale-[1.02] border-primary bg-primary text-primary-foreground shadow-md hover:bg-primary hover:text-primary-foreground"
+                  : "bg-card text-foreground hover:border-primary/40 hover:bg-primary-soft",
               )}
-            />
-          </Button>
-        );
-      })}
+            >
+              <span className="flex min-w-0 flex-1 items-center gap-2.5">
+                <span
+                  className={cn(
+                    "grid h-9 w-9 shrink-0 place-items-center rounded-md transition-colors duration-300",
+                    selected ? "bg-primary-foreground/15 text-primary-foreground" : "bg-primary/10 text-primary",
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 text-sm font-medium leading-tight">{option.label}</span>
+              </span>
+              <Check
+                className={cn(
+                  "absolute right-2 top-2 h-3.5 w-3.5 transition-all duration-300",
+                  selected ? "scale-100 opacity-100" : "scale-50 opacity-0",
+                )}
+              />
+            </Button>
+          );
+        })}
+      </div>
+      {canShowMore && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setVisibleCount((count) => Math.min(count + (pageSize ?? 0), options.length))}
+          className="mx-auto flex text-primary"
+        >
+          See more
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 }
@@ -260,6 +284,7 @@ export function RequestRoleFields(props: RequestFieldsProps) {
           value={f.role_id}
           onChange={(v) => set("role_id", v)}
           options={catalog.roles.map((role) => ({ value: role.id, label: role.name }))}
+          pageSize={3}
         />
       </Field>
       <Field label="Engagement type" required>

@@ -1,7 +1,6 @@
-# Animated request wizard polish
-- [x] Add the accumulating recap strip
-- [x] Add the bottom icon tracker and progress edge
-- [x] Convert shared single-choice fields to animated cards
-- [x] Add an animated inline date calendar
-- [x] Add public and authenticated success recap screens
-- [x] Verify desktop, mobile, validation, submissions, and reduced motion
+# Hybrid request wizard design
+- [x] Remove the recap strip from active wizard steps
+- [x] Keep the bottom icon tracker, animated calendar, and success recaps
+- [x] Paginate Role cards three at a time until selection or exhaustion
+- [x] Keep all three Engagement type cards visible
+- [x] Verify desktop, mobile, shared forms, and browser errors

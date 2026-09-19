@@ -134,13 +134,6 @@ function GetStartedPage() {
     position: "",
   });
   const [request, setRequest] = useState<RequestForm>(emptyRequestForm);
-  const completedItems = buildRequestRecap({
-    company,
-    contact,
-    request,
-    catalog,
-    completedThrough: stage - 1,
-  });
   const allItems = buildRequestRecap({ company, contact, request, catalog });
 
   function next(event?: React.MouseEvent<HTMLButtonElement>) {
@@ -262,11 +255,6 @@ function GetStartedPage() {
             )}
 
             <Card className="overflow-hidden rounded-2xl">
-              {completedItems.length > 0 && (
-                <div className="overflow-x-auto border-b bg-primary-soft/35 px-6 py-4">
-                  <RequestRecap items={completedItems} />
-                </div>
-              )}
             <div key={stage} className={direction === "forward" ? "wizard-forward-enter" : "wizard-back-enter"}>
             {stage === 0 && (
               <>
