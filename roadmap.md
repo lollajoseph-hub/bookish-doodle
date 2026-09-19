@@ -1,6 +1,6 @@
 # Hybrid request wizard design
 - [x] Remove the recap strip from active wizard steps
-- [ ] Relocate the icon tracker to the top of the wizard card
+- [x] Relocate the icon tracker to the top of the wizard card
 - [x] Keep the animated calendar and success recaps
 - [x] Paginate Role cards three at a time until selection or exhaustion
 - [x] Keep all three Engagement type cards visible
