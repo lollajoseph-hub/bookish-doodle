@@ -75,7 +75,7 @@ interface ContactForm {
 function Stepper({ stage }: { stage: number }) {
   const progress = ((stage + 1) / STAGES.length) * 100;
   return (
-    <div className="relative border-t bg-primary-soft/55 px-4 pb-3 pt-5 sm:px-8">
+    <div className="relative rounded-xl bg-primary-soft/55 px-4 pb-3 pt-5 sm:px-8">
       <ol className="relative flex items-start">
       {STAGES.map(({ label, icon: Icon }, i) => {
         const state = i < stage ? "done" : i === stage ? "current" : "todo";
