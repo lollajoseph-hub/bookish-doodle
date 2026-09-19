@@ -75,7 +75,7 @@ interface ContactForm {
 function Stepper({ stage }: { stage: number }) {
   const progress = ((stage + 1) / STAGES.length) * 100;
   return (
-    <div className="relative border-t bg-primary-soft/55 px-4 pb-3 pt-5 sm:px-8">
+    <div className="relative rounded-xl bg-primary-soft/55 px-4 pb-3 pt-5 sm:px-8">
       <ol className="relative flex items-start">
       {STAGES.map(({ label, icon: Icon }, i) => {
         const state = i < stage ? "done" : i === stage ? "current" : "todo";
@@ -109,7 +109,7 @@ function Stepper({ stage }: { stage: number }) {
         );
       })}
       </ol>
-      <div className="absolute inset-x-0 bottom-0 h-1 bg-border/70">
+      <div className="absolute inset-x-0 bottom-0 h-1 overflow-hidden rounded-b-xl bg-border/70">
         <div
           className="wizard-progress-fill h-full transition-[width] duration-500 ease-out"
           style={{ width: `${progress}%` }}
@@ -245,6 +245,8 @@ function GetStartedPage() {
               </p>
             </div>
 
+            <Stepper stage={stage} />
+
             {catalog.error && stage >= 2 && (
               <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -255,7 +257,6 @@ function GetStartedPage() {
             )}
 
             <Card className="overflow-hidden rounded-2xl">
-              <Stepper stage={stage} />
             <div key={stage} className={direction === "forward" ? "wizard-forward-enter" : "wizard-back-enter"}>
             {stage === 0 && (
               <>
