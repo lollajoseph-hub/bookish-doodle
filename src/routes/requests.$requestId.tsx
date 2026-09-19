@@ -9,6 +9,7 @@ import {
   MATCH_STATUSES,
   REJECTION_REASONS,
   addMatch,
+  confirmInterview,
   fetchClientRequestDetail,
   labelize,
   updateMatchStatus,
@@ -60,6 +61,7 @@ function RequestDetailPage() {
   const [candidateId, setCandidateId] = useState("");
   const [reason, setReason] = useState("");
   const [rejectFor, setRejectFor] = useState<string | null>(null);
+  const [confirmFor, setConfirmFor] = useState<{ id: string; proposedAt: string | null } | null>(null);
   const [rejectReason, setRejectReason] = useState<RejectionReason>("skill_mismatch");
   const [rejectNote, setRejectNote] = useState("");
 
