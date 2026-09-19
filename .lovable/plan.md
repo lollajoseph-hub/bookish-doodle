@@ -1,25 +1,19 @@
-# Animated request wizard polish
+# Hybrid request wizard design
 
 ## Build
-- Replace the existing top stepper in `/get-started` with a compact recap strip that accumulates completed answers, using readable catalog labels and condensed underlined label/value pairs.
-- Add a full-width bottom icon tracker inside the wizard card for Company, Your info, Role, Schedule, and Requirements. Completed/current nodes will fill with the amber-accent treatment, upcoming nodes remain outlined, dotted connectors link them, and a thin bottom-edge progress line animates forward.
-- Keep the existing directional slide-and-fade transitions, validation, Back/Continue controls, and request payload unchanged.
-- Restyle the shared Role and Engagement type single-choice controls as animated icon cards, so the treatment appears consistently in both `/get-started` and `/new-request`.
-- Replace the native desired-start-date input with an accessible inline calendar whose selected day animates into the brand highlight; retain the same `YYYY-MM-DD` form value.
-- Upgrade successful submission states: the public wizard will recap every submitted answer and keep its sign-in continuation; the authenticated form will stop auto-redirecting, show the same recap with a brief CSS confetti flourish, and provide a button to open the newly created request.
+- Restore the calm five-step field layout in `/get-started`: Company, Your info, Role, Schedule, and Requirements retain their existing headings, spacing, validation, and slide/fade transitions.
+- Remove only the accumulating recap strip above each active step. Keep the recap component for both submitted-success screens.
+- Keep the bottom icon tracker, dotted connectors, amber active/completed states, and animated bottom-edge progress line.
+- Keep the animated calendar and selected-date fill.
+- Keep both confetti success screens and their answer recaps, with no automatic redirect.
 
-## Responsive behavior
-- Keep recap items horizontally scrollable on narrow screens without wrapping the page.
-- Keep the five icon nodes evenly spaced and stable on mobile and desktop, with labels hidden only where space requires it.
-- Let choice cards and the calendar collapse cleanly to one column on small screens.
+## Shared role controls
+- Keep Role and Engagement type as animated icon cards in the shared request fields, so `/get-started` and `/new-request` stay consistent.
+- Show Role options three at a time. A `See more` control reveals the next three; continue until all roles are visible. Hide the control once all roles are shown or immediately after a role is selected.
+- Always show all three Engagement type cards with no pagination.
+- Preserve selected-card scale/color animation, keyboard semantics, form values, validation, and submission behavior.
 
 ## Validation
-- Exercise forward/back navigation and confirm the recap only shows completed-step answers.
-- Verify role and engagement selection, date selection, required-field validation, and unchanged public/authenticated submission data.
-- Check public and authenticated success screens, including their continuation buttons.
-- Test desktop and mobile layouts, reduced-motion behavior, and browser console errors.
-
-## Technical details
-- Build from existing ScaleSource semantic colors and Lucide icons; add no new backend fields or migrations.
-- Resolve recap IDs to catalog labels and format arrays/dates for display only.
-- Use CSS transitions/particles with `prefers-reduced-motion` support; no new image asset is required because the project has no existing celebration illustration.
+- Check the five-step public flow on desktop and mobile, confirming no recap strip appears during entry.
+- Verify Role pagination in both shared-form contexts, all Engagement cards, calendar selection, Back/Continue behavior, and success recap/confetti.
+- Confirm type checks and browser console remain clean. The authenticated submit itself remains limited by the disabled QA sign-in helper.
