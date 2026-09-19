@@ -105,9 +105,20 @@ export function firstNameOnlyAnalysis(
   if (nameParts.length < 2) return text;
 
   const firstName = nameParts[0] ?? "Candidate";
-  const escapedParts = nameParts.map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escapedParts = nameParts.map(escape);
   const fullNamePattern = new RegExp(`\\b${escapedParts.join("\\s+")}\\b`, "gi");
-  return text.replace(fullNamePattern, firstName);
+  let result = text.replace(fullNamePattern, firstName);
+  // Standalone surname/middle-name mentions (e.g. "Santos has strong client-facing experience").
+  // Whole-word, case-insensitive; skip very short parts to avoid clobbering common words.
+  for (const part of nameParts.slice(1)) {
+    if (part.length < 3) continue;
+    const wordPattern = new RegExp(`\\b${escape(part)}\\b`, "gi");
+    result = result.replace(wordPattern, firstName);
+  }
+  // Collapse stutters like "Maria Maria" produced when only part of the full name appeared.
+  const stutter = new RegExp(`\\b${escape(firstName)}(?:\\s+${escape(firstName)})+\\b`, "gi");
+  return result.replace(stutter, firstName);
 }
 
 export function formatDateTime(v: string | null | undefined) {
