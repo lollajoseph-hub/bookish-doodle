@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { CalendarCheck } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { MatchStatusBadge } from "@/components/match-status";
-import { fetchMatchesByStatus, updateMatchStatus } from "@/lib/crm-queries";
+import { confirmInterview, fetchMatchesByStatus, updateMatchStatus } from "@/lib/crm-queries";
 import type { MatchStatus } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,6 @@ import {
 const STAGES: MatchStatus[] = ["interview_requested", "interview_confirmed", "interview_completed"];
 
 const NEXT_STAGE: Partial<Record<MatchStatus, MatchStatus>> = {
-  interview_requested: "interview_confirmed",
   interview_confirmed: "interview_completed",
   interview_completed: "offer_extended",
 };
