@@ -4,6 +4,7 @@ import {
   BriefcaseBusiness,
   CalendarIcon,
   Check,
+  ChevronDown,
   Clock3,
   FolderKanban,
   X,
@@ -189,15 +190,25 @@ function ChoiceCards({
   onChange,
   options,
   columns = "grid-cols-2 sm:grid-cols-3",
+  pageSize,
 }: {
   value: string;
   onChange: (value: string) => void;
   options: ChoiceOption[];
   columns?: string;
+  pageSize?: number;
 }) {
+  const [visibleCount, setVisibleCount] = useState(pageSize ?? options.length);
+  const selectedIndex = options.findIndex((option) => option.value === value);
+  const displayedOptions = pageSize
+    ? options.slice(0, Math.max(visibleCount, selectedIndex + 1))
+    : options;
+  const canShowMore = Boolean(pageSize && !value && displayedOptions.length < options.length);
+
   return (
-    <div className={cn("grid gap-2", columns)} role="radiogroup">
-      {options.map((option) => {
+    <div className="space-y-2.5">
+      <div className={cn("grid gap-2", columns)} role="radiogroup">
+      {displayedOptions.map((option) => {
         const selected = value === option.value;
         const Icon = option.icon ?? BriefcaseBusiness;
         return (
@@ -235,6 +246,19 @@ function ChoiceCards({
           </Button>
         );
       })}
+      </div>
+      {canShowMore && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setVisibleCount((count) => Math.min(count + (pageSize ?? 0), options.length))}
+          className="mx-auto flex text-primary"
+        >
+          See more
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 }
@@ -267,6 +291,7 @@ export function RequestRoleFields(props: RequestFieldsProps) {
             value={f.role_id}
             onChange={(v) => set("role_id", v)}
             options={visibleRoles}
+          pageSize={3}
           />
           {hasMore && (
             <Button
