@@ -116,7 +116,9 @@ export function firstNameOnlyAnalysis(
     const wordPattern = new RegExp(`\\b${escape(part)}\\b`, "gi");
     result = result.replace(wordPattern, firstName);
   }
-  return result;
+  // Collapse stutters like "Maria Maria" produced when only part of the full name appeared.
+  const stutter = new RegExp(`\\b${escape(firstName)}(?:\\s+${escape(firstName)})+\\b`, "gi");
+  return result.replace(stutter, firstName);
 }
 
 export function formatDateTime(v: string | null | undefined) {
