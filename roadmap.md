@@ -11,3 +11,4 @@
 - [x] Add and verify request-page “Show more candidates” matching flow
 - [x] Sanitize AI Analysis names to first-name-only everywhere and verify the rendered dialog
 - [x] Add availability data, top-right statuses, and clearer candidate-card details; verify rendered cards
+- [x] Separate profile roles and skills, add all status icons, hide the Lovable badge, and verify

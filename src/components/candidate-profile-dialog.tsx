@@ -266,30 +266,31 @@ export function CandidateProfileDialog({
                 </Section>
               )}
 
-              {(roles.length > 0 || skills.length > 0) && (
-                <Section title="Roles & skills">
-                  {roles.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {roles.map((role, index) => (
-                        <Badge
-                          key={`${role}-${index}`}
-                          variant="secondary"
-                          className={index === 0 ? "bg-primary/10 text-primary" : ""}
-                        >
-                          {role}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                  {skills.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {skills.map((skill, index) => (
-                        <Badge key={`${skill}-${index}`} variant="outline">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
+              {roles.length > 0 && (
+                <Section title="Roles">
+                  <div className="flex flex-wrap gap-1.5">
+                    {roles.map((role, index) => (
+                      <Badge
+                        key={`${role}-${index}`}
+                        variant="secondary"
+                        className={index === 0 ? "bg-primary/10 text-primary" : ""}
+                      >
+                        {role}
+                      </Badge>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {skills.length > 0 && (
+                <Section title="Skills">
+                  <div className="flex flex-wrap gap-1.5">
+                    {skills.map((skill, index) => (
+                      <Badge key={`${skill}-${index}`} variant="outline">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
                 </Section>
               )}
 

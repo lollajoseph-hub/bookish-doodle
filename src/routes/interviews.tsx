@@ -5,9 +5,9 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
-import { statusTone, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
+import { MatchStatusIcon, statusTone, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { toast } from "sonner";
-import { CalendarClock, CheckCircle2, Clock, ExternalLink, Loader2, Star, UserSearch, Video } from "lucide-react";
+import { CalendarClock, Clock, ExternalLink, Loader2, UserSearch, Video } from "lucide-react";
 import {
   MATCH_STATUS_LABELS,
   displayName,
@@ -166,8 +166,7 @@ function InterviewsPage() {
                           <span
                             className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusTone(m.status)}`}
                           >
-                            {m.status === "shortlisted" && <Star className="h-3 w-3 fill-current" />}
-                            {m.status === "hired" && <CheckCircle2 className="h-3 w-3" />}
+                            <MatchStatusIcon status={m.status} />
                             {MATCH_STATUS_LABELS[m.status] ?? m.status}
                           </span>
                         </div>
