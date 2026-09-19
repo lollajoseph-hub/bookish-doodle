@@ -1,12 +1,15 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+  BriefcaseBusiness,
   CalendarClock,
   CheckCircle2,
   Clock,
   Loader2,
+  MapPin,
   Star,
   ThumbsDown,
+  Timer,
   UserSearch,
   Video,
 } from "lucide-react";
@@ -24,6 +27,7 @@ export interface PoolProfile {
   candidate_id: string;
   full_name: string | null;
   headline: string | null;
+  availability: string | null;
   country: string | null;
   timezone: string | null;
   weekly_hours_available: number | null;
@@ -57,7 +61,7 @@ export interface MatchRow {
 
 export const MATCH_SELECT =
   "id,status,client_request_id,interview_proposed_at,interview_scheduled_at,meet_url,interview_notes,rejection_reason,rejection_reason_note,rejected_at,match_score,match_reason,candidate_id," +
-  "candidate_pool_profile(candidate_id,full_name,headline,country,timezone,weekly_hours_available,preferred_shift,years_experience,earliest_start_date,approved_summary,highlights,skills,primary_role,secondary_roles,profile_photo_path)";
+  "candidate_pool_profile(candidate_id,full_name,headline,availability,country,timezone,weekly_hours_available,preferred_shift,years_experience,earliest_start_date,approved_summary,highlights,skills,primary_role,secondary_roles,profile_photo_path)";
 
 export function statusTone(s: MatchStatus | string) {
   switch (s) {
@@ -75,6 +79,19 @@ export function statusTone(s: MatchStatus | string) {
       return "bg-primary-soft text-primary";
     default:
       return "bg-secondary text-secondary-foreground";
+  }
+}
+
+function availabilityLabel(value: string | null | undefined) {
+  switch (value) {
+    case "available":
+      return "Available Immediately";
+    case "open_to_offers":
+      return "Open to offers";
+    case "not_available":
+      return "Not available";
+    default:
+      return null;
   }
 }
 
@@ -113,8 +130,9 @@ export function CandidateCard({
 
   const primaryRole = toStringList(p?.primary_role)[0] ?? null;
   const scheduled = formatDateTime(match.interview_scheduled_at);
+  const availabilityStatus = availabilityLabel(p?.availability);
 
-  const availability = [
+  const scheduleDetails = [
     p?.weekly_hours_available ? `${p.weekly_hours_available} hrs/week` : null,
     p?.preferred_shift,
     p?.timezone,
@@ -127,6 +145,13 @@ export function CandidateCard({
 
   return (
     <Card className={`card-amber relative rounded-2xl ${isRejected ? "opacity-60" : ""}`}>
+      <span
+        className={`absolute right-4 top-4 z-10 inline-flex w-fit max-w-[calc(100%-2rem)] items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(status)}`}
+      >
+        {status === "shortlisted" && <Star className="h-3 w-3 fill-current" />}
+        {isHired && <CheckCircle2 className="h-3 w-3" />}
+        {MATCH_STATUS_LABELS[status] ?? status}
+      </span>
       <CardContent className="space-y-3 p-5">
         <div className="flex items-start gap-4">
           {photoUrl ? (
@@ -136,35 +161,49 @@ export function CandidateCard({
               {initial}
             </div>
           )}
-          <div className="min-w-0 flex-1">
-            <div className="min-w-0">
+          <div className="min-w-0 flex-1 pt-8">
+            <div className="min-w-0 space-y-1">
               {!isHired && <p className="text-sm italic leading-none text-muted-foreground">Meet</p>}
-              <h3 className="truncate text-base font-semibold leading-tight">{name}</h3>
-              <span
-                className={`mt-2 inline-flex w-fit max-w-full flex-none items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusTone(status)}`}
-              >
-                {status === "shortlisted" && <Star className="h-3 w-3 fill-current" />}
-                {isHired && <CheckCircle2 className="h-3 w-3" />}
-                {MATCH_STATUS_LABELS[status] ?? status}
-              </span>
+              <h3 className="truncate text-lg font-semibold leading-tight">{name}</h3>
+              {p?.headline && <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">{p.headline}</p>}
+              {availabilityStatus && (
+                <p
+                  className={`text-sm font-semibold ${p?.availability === "not_available" ? "text-muted-foreground" : "text-success"}`}
+                >
+                  {availabilityStatus}
+                </p>
+              )}
             </div>
-            {p?.headline && <p className="truncate text-xs text-muted-foreground">{p.headline}</p>}
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {[
-                primaryRole,
-                p?.years_experience
-                  ? `${p.years_experience} ${p.years_experience === 1 ? "yr" : "yrs"} experience`
-                  : null,
-                p?.country,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-            {contextLabel && <div className="mt-1 text-xs text-muted-foreground">{contextLabel}</div>}
           </div>
         </div>
 
-        {availability && <p className="text-xs text-muted-foreground">{availability}</p>}
+        <div className="grid gap-2 border-t border-border/70 pt-3 text-xs text-muted-foreground sm:grid-cols-2">
+          {primaryRole && (
+            <p className="flex min-w-0 items-center gap-2">
+              <BriefcaseBusiness className="h-3.5 w-3.5 flex-none text-primary" />
+              <span className="truncate font-medium text-foreground/80">{primaryRole}</span>
+            </p>
+          )}
+          {p?.years_experience != null && (
+            <p className="flex items-center gap-2">
+              <Timer className="h-3.5 w-3.5 flex-none text-primary" />
+              <span>{p.years_experience} {p.years_experience === 1 ? "Year" : "Years"} Experience</span>
+            </p>
+          )}
+          {p?.country && (
+            <p className="flex min-w-0 items-center gap-2">
+              <MapPin className="h-3.5 w-3.5 flex-none text-primary" />
+              <span className="truncate">{p.country}</span>
+            </p>
+          )}
+          {scheduleDetails && (
+            <p className="flex min-w-0 items-center gap-2 sm:col-span-2">
+              <Clock className="h-3.5 w-3.5 flex-none text-primary" />
+              <span className="leading-relaxed">{scheduleDetails}</span>
+            </p>
+          )}
+        </div>
+        {contextLabel && <div className="text-xs text-muted-foreground">{contextLabel}</div>}
 
         {status === "interview_requested" && (
           <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
