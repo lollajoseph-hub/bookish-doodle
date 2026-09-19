@@ -257,7 +257,6 @@ function GetStartedPage() {
             )}
 
             <Card className="overflow-hidden rounded-2xl">
-              <Stepper stage={stage} />
             <div key={stage} className={direction === "forward" ? "wizard-forward-enter" : "wizard-back-enter"}>
             {stage === 0 && (
               <>
