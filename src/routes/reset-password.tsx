@@ -159,8 +159,8 @@ function ResetPasswordPage() {
 
           {(phase === "invalid" || phase === "done") && (
             <div className="text-center text-sm">
-              <Link to="/login" className="text-primary hover:underline">
-                Go to sign in →
+              <Link to={phase === "done" ? "/requests" : "/login"} className="text-primary hover:underline">
+                {phase === "done" ? "Go to your requests →" : "Go to sign in →"}
               </Link>
             </div>
           )}
