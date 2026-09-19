@@ -1,6 +1,14 @@
-import { useState, type LucideIcon } from "react";
+import { useState } from "react";
 import { format } from "date-fns";
-import { BriefcaseBusiness, CalendarIcon, Check, Clock3, FolderKanban, X } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  CalendarIcon,
+  Check,
+  Clock3,
+  FolderKanban,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
