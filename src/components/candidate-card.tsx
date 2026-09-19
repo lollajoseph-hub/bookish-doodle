@@ -136,10 +136,11 @@ export function CandidateCard({
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="truncate text-base font-semibold leading-tight">
-                {isHired ? name : <><em>Meet</em> {name}</>}
-              </h3>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <div className="min-w-0">
+                {!isHired && <p className="text-sm italic leading-none text-muted-foreground">Meet</p>}
+                <h3 className="truncate text-base font-semibold leading-tight">{name}</h3>
+              </div>
               <Badge variant="secondary" className={statusTone(status)}>
                 {isHired && <CheckCircle2 className="mr-1 h-3 w-3" />}
                 {MATCH_STATUS_LABELS[status] ?? status}

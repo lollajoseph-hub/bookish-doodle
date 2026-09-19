@@ -157,10 +157,13 @@ function InterviewsPage() {
                         </div>
                       )}
                       <div className="min-w-0 space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="truncate font-semibold">
-                            {m.status === "hired" ? name : <><em>Meet</em> {name}</>}
-                          </h3>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <div className="min-w-0">
+                            {m.status !== "hired" && (
+                              <p className="text-sm italic leading-none text-muted-foreground">Meet</p>
+                            )}
+                            <h3 className="truncate font-semibold leading-tight">{name}</h3>
+                          </div>
                           <Badge variant="secondary" className={statusTone(m.status)}>
                             {MATCH_STATUS_LABELS[m.status] ?? m.status}
                           </Badge>
