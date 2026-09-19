@@ -2,11 +2,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   BriefcaseBusiness,
+  CalendarCheck,
   CalendarClock,
   CheckCircle2,
   Clock,
   Loader2,
+  Mail,
   MapPin,
+  Sparkles,
   Star,
   ThumbsDown,
   Timer,
@@ -82,6 +85,30 @@ export function statusTone(s: MatchStatus | string) {
   }
 }
 
+export function MatchStatusIcon({ status }: { status: MatchStatus | string }) {
+  const iconClass = "h-3 w-3 flex-none";
+  switch (status) {
+    case "recommended":
+      return <Sparkles className={iconClass} />;
+    case "shortlisted":
+      return <Star className={`${iconClass} fill-current`} />;
+    case "interview_requested":
+      return <Clock className={iconClass} />;
+    case "interview_confirmed":
+      return <CalendarClock className={iconClass} />;
+    case "interview_completed":
+      return <CalendarCheck className={iconClass} />;
+    case "offer_extended":
+      return <Mail className={iconClass} />;
+    case "hired":
+      return <CheckCircle2 className={iconClass} />;
+    case "rejected":
+      return <ThumbsDown className={iconClass} />;
+    default:
+      return <UserSearch className={iconClass} />;
+  }
+}
+
 function availabilityLabel(value: string | null | undefined) {
   switch (value) {
     case "available":
@@ -148,8 +175,7 @@ export function CandidateCard({
       <span
         className={`absolute right-4 top-4 z-10 inline-flex w-fit max-w-[calc(100%-2rem)] items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(status)}`}
       >
-        {status === "shortlisted" && <Star className="h-3 w-3 fill-current" />}
-        {isHired && <CheckCircle2 className="h-3 w-3" />}
+        <MatchStatusIcon status={status} />
         {MATCH_STATUS_LABELS[status] ?? status}
       </span>
       <CardContent className="space-y-3 p-5">
