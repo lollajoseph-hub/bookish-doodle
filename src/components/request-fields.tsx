@@ -253,14 +253,33 @@ function useRequestFieldProps({ value: f, onChange, catalog }: RequestFieldsProp
 
 export function RequestRoleFields(props: RequestFieldsProps) {
   const { f, set, catalog } = useRequestFieldProps(props);
+  const [visibleCount, setVisibleCount] = useState(3);
+  
+  const allRoles = catalog.roles.map((role) => ({ value: role.id, label: role.name }));
+  const visibleRoles = f.role_id ? allRoles : allRoles.slice(0, visibleCount);
+  const hasMore = !f.role_id && visibleCount < allRoles.length;
+
   return (
     <div className="grid grid-cols-1 gap-5">
       <Field label={catalog.loading ? "Role — loading…" : "Role"} required>
-        <ChoiceCards
-          value={f.role_id}
-          onChange={(v) => set("role_id", v)}
-          options={catalog.roles.map((role) => ({ value: role.id, label: role.name }))}
-        />
+        <div className="space-y-3">
+          <ChoiceCards
+            value={f.role_id}
+            onChange={(v) => set("role_id", v)}
+            options={visibleRoles}
+          />
+          {hasMore && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full border-dashed border-primary/20 bg-primary/5 text-xs font-medium text-primary hover:bg-primary/10"
+              onClick={() => setVisibleCount((prev) => prev + 3)}
+            >
+              Show more roles...
+            </Button>
+          )}
+        </div>
       </Field>
       <Field label="Engagement type" required>
         <ChoiceCards

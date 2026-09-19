@@ -262,11 +262,6 @@ function GetStartedPage() {
             )}
 
             <Card className="overflow-hidden rounded-2xl">
-              {completedItems.length > 0 && (
-                <div className="overflow-x-auto border-b bg-primary-soft/35 px-6 py-4">
-                  <RequestRecap items={completedItems} />
-                </div>
-              )}
             <div key={stage} className={direction === "forward" ? "wizard-forward-enter" : "wizard-back-enter"}>
             {stage === 0 && (
               <>
