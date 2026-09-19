@@ -376,8 +376,7 @@
   border-color: var(--primary);
   border-width: 2px;
   transition: box-shadow 200ms ease;
-}
-@utility card-amber {
+
   &:hover {
     box-shadow: 0 0 0 3px color-mix(in srgb, #f59e0b 25%, transparent),
       0 4px 20px color-mix(in srgb, #f59e0b 20%, transparent);
