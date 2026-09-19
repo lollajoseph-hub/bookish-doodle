@@ -170,8 +170,10 @@ export function firstNameOnlyAnalysis(
   };
 
   // Names written in the text (possibly different from the stored one) collapse to their own first name.
+  const storedLower = new Set(storedParts.map((p) => p.toLowerCase()));
   for (const parts of detected) {
-    const target = firstName ?? parts[0] ?? "";
+    const overlaps = parts.some((p) => storedLower.has(p.toLowerCase()));
+    const target = (overlaps ? firstName : parts[0]) ?? parts[0] ?? "";
     if (!target) continue;
     applyAll(parts, target);
   }
