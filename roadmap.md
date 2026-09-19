@@ -1,7 +1,8 @@
-# Hybrid request wizard design
-- [x] Remove the recap strip from active wizard steps
-- [x] Relocate the icon tracker to the top of the wizard card
-- [x] Keep the animated calendar and success recaps
-- [x] Paginate Role cards three at a time until selection or exhaustion
-- [x] Keep all three Engagement type cards visible
-- [x] Verify desktop, mobile, shared forms, and browser errors
+# Candidate review workflow fixes
+- [ ] Add required proposed date/time dialog to every client interview request action
+- [ ] Include and display interview_proposed_at across candidate and interview views
+- [ ] Apply the pre-hire “Meet FirstName” heading pattern consistently
+- [ ] Rebuild the full profile dialog in the requested content order
+- [ ] Replace slider-like work-history treatment with arrow-led pagination, capped at five entries
+- [ ] Apply card-amber selectively to primary content surfaces across the app
+- [ ] Verify authenticated interview flow, profile dialog, card styling, mobile layout, typechecks, and browser errors
