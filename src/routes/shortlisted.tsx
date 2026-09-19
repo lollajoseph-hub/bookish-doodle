@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { RejectCandidateDialog } from "@/components/reject-dialog";
 import { CandidateCard, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
+import { InterviewRequestDialog } from "@/components/interview-request-dialog";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
 import { displayName, signedPhotoUrl, type MatchStatus } from "@/lib/matches";
@@ -60,6 +61,7 @@ function ShortlistedPage() {
   const [filter, setFilter] = useState<string>("all");
   const [rejectFor, setRejectFor] = useState<MatchRow | null>(null);
   const [profileFor, setProfileFor] = useState<MatchRow | null>(null);
+  const [interviewFor, setInterviewFor] = useState<MatchRow | null>(null);
 
   const load = useCallback(async () => {
     setErr(null);
@@ -107,7 +109,7 @@ function ShortlistedPage() {
   const visible = (matches ?? []).filter((m) => filter === "all" || m.client_request_id === filter);
 
   async function callRpc(
-    fn: "client_shortlist_candidate" | "client_request_interview" | "request_to_hire",
+    fn: "client_shortlist_candidate" | "request_to_hire",
     matchId: string,
     success: string
   ) {
@@ -181,7 +183,7 @@ function ShortlistedPage() {
               }
               onViewProfile={() => setProfileFor(m)}
               onShortlist={() => callRpc("client_shortlist_candidate", m.id, "Removed from shortlist")}
-              onRequestInterview={() => callRpc("client_request_interview", m.id, "Interview requested")}
+              onRequestInterview={() => setInterviewFor(m)}
               onRequestHire={() => callRpc("request_to_hire", m.id, "Hire request sent to ScaleSource")}
               onReject={() => setRejectFor(m)}
             />
@@ -205,6 +207,16 @@ function ShortlistedPage() {
         candidateId={profileFor?.candidate_id ?? null}
         matchStatus={profileFor?.status ?? null}
         onClose={() => setProfileFor(null)}
+      />
+
+      <InterviewRequestDialog
+        matchId={interviewFor?.id ?? null}
+        candidateName={interviewFor ? displayName(interviewFor.candidate_pool_profile?.full_name, interviewFor.status) : null}
+        onClose={() => setInterviewFor(null)}
+        onRequested={() => {
+          setInterviewFor(null);
+          void load();
+        }}
       />
     </div>
   );

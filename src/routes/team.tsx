@@ -105,7 +105,7 @@ function TeamPage() {
           {rows.map((m) => {
             const name = m.profiles?.full_name ?? m.profiles?.email ?? "Team member";
             return (
-              <Card key={m.profile_id} className="rounded-2xl">
+              <Card key={m.profile_id} className="card-amber rounded-2xl">
                 <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="grid h-10 w-10 flex-none place-items-center rounded-full bg-primary/10 font-semibold text-primary">

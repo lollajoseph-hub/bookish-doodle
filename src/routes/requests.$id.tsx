@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { RejectCandidateDialog } from "@/components/reject-dialog";
 import { CandidateCard, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
+import { InterviewRequestDialog } from "@/components/interview-request-dialog";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { ENGAGEMENT_TYPES, DAYS_OF_WEEK } from "@/lib/catalog";
@@ -77,6 +78,7 @@ function RequestDetail() {
   const [actingId, setActingId] = useState<string | null>(null);
   const [rejectFor, setRejectFor] = useState<MatchRow | null>(null);
   const [profileFor, setProfileFor] = useState<MatchRow | null>(null);
+  const [interviewFor, setInterviewFor] = useState<MatchRow | null>(null);
 
   const load = useCallback(async () => {
     const [reqRes, matchRes] = await Promise.all([
@@ -111,7 +113,7 @@ function RequestDetail() {
   }, [load]);
 
   async function callRpc(
-    fn: "client_shortlist_candidate" | "client_request_interview" | "request_to_hire",
+    fn: "client_shortlist_candidate" | "request_to_hire",
     matchId: string,
     success: string
   ) {
@@ -143,7 +145,7 @@ function RequestDetail() {
         </div>
       )}
 
-      <Card className="rounded-2xl">
+      <Card className="card-amber rounded-2xl">
         <CardContent className="p-5">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-semibold tracking-tight">{request?.job_roles?.name ?? "Hiring request"}</h1>
@@ -207,7 +209,7 @@ function RequestDetail() {
                   m.status === "shortlisted" ? "Removed from shortlist" : "Added to shortlist"
                 )
               }
-              onRequestInterview={() => callRpc("client_request_interview", m.id, "Interview requested")}
+              onRequestInterview={() => setInterviewFor(m)}
               onRequestHire={() => callRpc("request_to_hire", m.id, "Hire request sent to ScaleSource")}
               onReject={() => setRejectFor(m)}
             />
@@ -231,6 +233,16 @@ function RequestDetail() {
         candidateId={profileFor?.candidate_id ?? null}
         matchStatus={profileFor?.status ?? null}
         onClose={() => setProfileFor(null)}
+      />
+
+      <InterviewRequestDialog
+        matchId={interviewFor?.id ?? null}
+        candidateName={interviewFor ? displayName(interviewFor.candidate_pool_profile?.full_name, interviewFor.status) : null}
+        onClose={() => setInterviewFor(null)}
+        onRequested={() => {
+          setInterviewFor(null);
+          void load();
+        }}
       />
     </div>
   );

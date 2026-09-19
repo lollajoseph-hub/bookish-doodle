@@ -167,7 +167,7 @@ function NewRequest() {
       company: { name: membership?.client_name ?? "", industry: "" },
     });
     return (
-      <Card className="overflow-hidden rounded-2xl">
+      <Card className="card-amber overflow-hidden rounded-2xl">
         <CardContent className="flex flex-col items-center gap-5 px-6 py-10 text-center sm:px-10">
           <SuccessFlourish />
           <div>
@@ -196,7 +196,7 @@ function NewRequest() {
         <p className="text-sm text-muted-foreground">Tell us about the role you need filled.</p>
       </div>
 
-      <Card className="rounded-2xl">
+      <Card className="card-amber rounded-2xl">
         <CardContent className="flex items-center gap-3 py-4">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
             <Building2 className="h-5 w-5" />
