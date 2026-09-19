@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { statusTone, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
