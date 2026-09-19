@@ -100,7 +100,30 @@ function InterviewReviewPage() {
                     <MatchStatusBadge status={m.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex flex-wrap justify-end gap-2">
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      {m.status === "interview_requested" && (
+                        <>
+                          {m.interview_proposed_at ? (
+                            <>
+                              <span className="text-xs text-muted-foreground">
+                                Client proposed{" "}
+                                {new Date(m.interview_proposed_at).toLocaleString()}
+                              </span>
+                              <Button
+                                size="sm"
+                                disabled={confirm.isPending}
+                                onClick={() => confirm.mutate(m.id)}
+                              >
+                                Confirm this time
+                              </Button>
+                            </>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">
+                              Waiting on client to propose a time
+                            </span>
+                          )}
+                        </>
+                      )}
                       {next && (
                         <Button
                           size="sm"
