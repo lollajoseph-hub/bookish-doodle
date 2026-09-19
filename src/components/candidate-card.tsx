@@ -14,6 +14,7 @@ import {
 import {
   MATCH_STATUS_LABELS,
   displayName,
+  firstNameOnlyAnalysis,
   formatDate,
   formatDateTime,
   rejectionReasonLabel,
@@ -109,6 +110,7 @@ export function CandidateCard({
   // Per-match rule: the full name is revealed only when THIS match is hired.
   const name = displayName(p?.full_name, status);
   const initial = name.slice(0, 1).toUpperCase();
+  const approvedSummary = firstNameOnlyAnalysis(p?.approved_summary, p?.full_name);
 
   const primaryRole = toStringList(p?.primary_role)[0] ?? null;
   const scheduled = formatDateTime(match.interview_scheduled_at);
@@ -163,8 +165,8 @@ export function CandidateCard({
           </div>
         </div>
 
-        {p?.approved_summary && (
-          <p className="line-clamp-4 text-sm text-muted-foreground">{p.approved_summary}</p>
+        {approvedSummary && (
+          <p className="line-clamp-4 text-sm text-muted-foreground">{approvedSummary}</p>
         )}
 
         {availability && <p className="text-xs text-muted-foreground">{availability}</p>}

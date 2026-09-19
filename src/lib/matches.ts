@@ -92,6 +92,24 @@ export function displayName(fullName: string | null | undefined, status: string 
   return name.split(/\s+/)[0] ?? name;
 }
 
+/**
+ * Generated analysis may predate the first-name-only client display rule.
+ * Replace stored full-name mentions at render time so existing content cannot reveal a surname.
+ */
+export function firstNameOnlyAnalysis(
+  text: string | null | undefined,
+  fullName: string | null | undefined,
+) {
+  if (!text) return "";
+  const nameParts = (fullName ?? "").trim().split(/\s+/).filter(Boolean);
+  if (nameParts.length < 2) return text;
+
+  const firstName = nameParts[0] ?? "Candidate";
+  const escapedParts = nameParts.map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const fullNamePattern = new RegExp(`\\b${escapedParts.join("\\s+")}\\b`, "gi");
+  return text.replace(fullNamePattern, firstName);
+}
+
 export function formatDateTime(v: string | null | undefined) {
   if (!v) return null;
   const d = new Date(v);

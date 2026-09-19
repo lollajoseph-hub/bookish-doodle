@@ -11,7 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowDown, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
-import { displayName, formatDate, signedPhotoUrl, signedVideoUrl, toStringList } from "@/lib/matches";
+import {
+  displayName,
+  firstNameOnlyAnalysis,
+  formatDate,
+  signedPhotoUrl,
+  signedVideoUrl,
+  toStringList,
+} from "@/lib/matches";
 
 export interface FullPoolProfile {
   candidate_id: string;
@@ -152,7 +159,10 @@ export function CandidateProfileDialog({
   }, [candidateId, loading, profile, visibleWorkCount]);
 
   const name = displayName(profile?.full_name, matchStatus);
-  const highlights = toStringList(profile?.highlights);
+  const approvedSummary = firstNameOnlyAnalysis(profile?.approved_summary, profile?.full_name);
+  const highlights = toStringList(profile?.highlights).map((highlight) =>
+    firstNameOnlyAnalysis(highlight, profile?.full_name),
+  );
   const skills = toStringList(profile?.skills);
   const roles = [...toStringList(profile?.primary_role), ...toStringList(profile?.secondary_roles)];
   const work = toEntries(profile?.work_history);
@@ -292,10 +302,10 @@ export function CandidateProfileDialog({
                 </Section>
               )}
 
-              {(profile.approved_summary || highlights.length > 0) && (
+              {(approvedSummary || highlights.length > 0) && (
                 <Section title="AI Analysis">
-                  {profile.approved_summary && (
-                    <p className="whitespace-pre-line text-sm text-muted-foreground">{profile.approved_summary}</p>
+                  {approvedSummary && (
+                    <p className="whitespace-pre-line text-sm text-muted-foreground">{approvedSummary}</p>
                   )}
                   {highlights.length > 0 && (
                     <div className="space-y-2">

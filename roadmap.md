@@ -9,3 +9,4 @@
 - [x] Verify card styling, mobile layout, typechecks, and public browser errors
 - [ ] Verify authenticated interview submission and populated profile dialog — blocked: no injected preview session and the QA login helper is disabled
 - [x] Add and verify request-page “Show more candidates” matching flow
+- [x] Sanitize AI Analysis names to first-name-only everywhere and verify the rendered dialog
