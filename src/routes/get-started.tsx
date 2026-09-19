@@ -268,6 +268,7 @@ function GetStartedPage() {
               )}
             <div key={stage} className={direction === "forward" ? "wizard-forward-enter" : "wizard-back-enter"}>
             {stage === 0 && (
+              <>
                 <CardHeader>
                   <CardTitle>Your company</CardTitle>
                   <CardDescription>Who are we hiring for?</CardDescription>
@@ -287,6 +288,7 @@ function GetStartedPage() {
                     />
                   </Field>
                 </CardContent>
+              </>
             )}
 
             {stage === 1 && (
