@@ -16,9 +16,12 @@ import {
   updateRequestStatus,
 } from "@/lib/crm-queries";
 import { fetchCandidates } from "@/lib/queries";
+import { supabase } from "@/lib/supabase";
 import type { MatchStatus, RejectionReason } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
