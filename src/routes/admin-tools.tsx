@@ -356,11 +356,9 @@ function AdminToolsPage() {
                                 )}
                                 Reshuffle
                               </Button>
-                              {!canReshuffle && (
-                                <span className="text-xs text-muted-foreground">
-                                  {rejectionCount}/4 rejected — needs 4 to reshuffle
-                                </span>
-                              )}
+                              <span className="text-xs text-muted-foreground">
+                                {canReshuffle ? "Ready to reshuffle" : `${rejectionCount}/4 rejected — needs 4 to reshuffle`}
+                              </span>
                             </div>
                           </div>
                         );
