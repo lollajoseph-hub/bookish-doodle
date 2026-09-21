@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -71,23 +78,18 @@ export function RejectCandidateDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Reason</Label>
-            <div className="grid gap-2">
-              {REJECTION_REASONS.map((r) => (
-                <button
-                  key={r.value}
-                  type="button"
-                  onClick={() => setReason(r.value)}
-                  aria-pressed={reason === r.value}
-                  className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
-                    reason === r.value
-                      ? "border-primary bg-primary/10 font-medium text-primary"
-                      : "border-input hover:bg-accent"
-                  }`}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
+            <Select value={reason ?? undefined} onValueChange={(v) => setReason(v as RejectionReason)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a reason" />
+              </SelectTrigger>
+              <SelectContent>
+                {REJECTION_REASONS.map((r) => (
+                  <SelectItem key={r.value} value={r.value}>
+                    {r.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-1.5">
