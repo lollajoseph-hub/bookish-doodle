@@ -35,11 +35,13 @@ const ACTIVE_STATUSES: MatchStatus[] = [
   "interview_requested",
   "interview_confirmed",
   "interview_completed",
+  "hire_requested",
   "offer_extended",
 ];
 
 const ORDER: MatchStatus[] = [
   "interview_completed",
+  "hire_requested",
   "offer_extended",
   "interview_confirmed",
   "interview_requested",
