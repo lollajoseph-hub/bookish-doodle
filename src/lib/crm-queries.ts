@@ -376,6 +376,14 @@ export async function confirmInterview(matchId: string, notes?: string): Promise
   if (error) throw error;
 }
 
+export async function completeInterview(matchId: string, notes: string): Promise<void> {
+  const { error } = await supabase.rpc("complete_interview", {
+    p_match_id: matchId,
+    p_notes: notes,
+  });
+  if (error) throw error;
+}
+
 export async function updateMatchStatus(
   id: string,
   status: MatchStatus,
