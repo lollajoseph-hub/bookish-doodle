@@ -228,6 +228,8 @@ export function CandidateCard({
     .join(" · ");
 
   const canAct = status === "recommended" || status === "shortlisted";
+  /** Rejection stays available after the interview, once the client has read the notes. */
+  const canReject = canAct || status === "interview_completed";
 
   return (
     <Card className={`card-amber relative rounded-2xl ${isRejected ? "opacity-60" : ""}`}>
@@ -337,6 +339,24 @@ export function CandidateCard({
             {match.interview_notes && (
               <p className="whitespace-pre-line text-sm text-muted-foreground">{match.interview_notes}</p>
             )}
+          </div>
+        )}
+
+        {status === "hire_requested" && (
+          <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+            <p className="flex items-center gap-2 text-sm font-medium text-primary">
+              <CheckCircle2 className="h-4 w-4 flex-none" />
+              Hire requested — waiting on ScaleSource to send the contract.
+            </p>
+          </div>
+        )}
+
+        {status === "offer_extended" && (
+          <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+            <p className="flex items-center gap-2 text-sm font-medium text-primary">
+              <Mail className="h-4 w-4 flex-none" />
+              Contract sent — you&apos;ll be notified once the placement is confirmed.
+            </p>
           </div>
         )}
 
