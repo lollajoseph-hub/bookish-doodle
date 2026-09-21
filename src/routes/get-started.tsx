@@ -203,6 +203,7 @@ function GetStartedPage() {
   const [result, setResult] = useState<{ invited: boolean } | null>(null);
 
   const [company, setCompany] = useState<CompanyForm>({ name: "", industry: "" });
+  const [industryIsOther, setIndustryIsOther] = useState(false);
   const [contact, setContact] = useState<ContactForm>({
     first_name: "",
     last_name: "",
@@ -376,11 +377,38 @@ function GetStartedPage() {
                     />
                   </Field>
                   <Field label="Industry">
-                    <Input
-                      value={company.industry}
-                      onChange={(e) => setCompany({ ...company, industry: e.target.value })}
-                      placeholder="Optional"
-                    />
+                    <Select
+                      value={industryIsOther ? "Other" : company.industry}
+                      onValueChange={(v) => {
+                        if (v === "Other") {
+                          setIndustryIsOther(true);
+                          setCompany({ ...company, industry: "" });
+                        } else {
+                          setIndustryIsOther(false);
+                          setCompany({ ...company, industry: v });
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select an industry (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {INDUSTRIES.map((i) => (
+                          <SelectItem key={i} value={i}>
+                            {i}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {industryIsOther && (
+                      <Input
+                        className="mt-2"
+                        value={company.industry}
+                        onChange={(e) => setCompany({ ...company, industry: e.target.value })}
+                        placeholder="Tell us your industry"
+                      />
+                    )}
                   </Field>
                 </CardContent>
               </>
