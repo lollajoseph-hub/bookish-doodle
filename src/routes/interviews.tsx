@@ -100,7 +100,7 @@ function InterviewsPage() {
 
   async function requestHire(matchId: string) {
     setActingId(matchId);
-    const { error } = await supabase.rpc("request_to_hire", { p_match_id: matchId });
+    const { error } = await supabase.rpc("client_request_hire", { p_match_id: matchId });
     setActingId(null);
     if (error) toast.error(error.message);
     else {
