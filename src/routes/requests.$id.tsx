@@ -57,6 +57,9 @@ interface RequestHeader {
 const REQUEST_SELECT =
   "id,status,engagement_type,hours_needed,days_of_week_needed,hires_needed,timezone_requirement,years_experience_min,desired_start_date,notes,created_at,job_roles(name)";
 
+/** Disabled: candidates are only reshuffled from Admin Tools after a request is rejected 4x. */
+const SHOW_MORE_CANDIDATES_ENABLED = false;
+
 /** Active matches first, decided ones (hired / not a fit) last. */
 const STATUS_ORDER: MatchStatus[] = [
   "interview_completed",
@@ -243,25 +246,28 @@ function RequestDetail() {
                     }
                     onRequestInterview={() => setInterviewFor(m)}
                     onRequestHire={() => callRpc("request_to_hire", m.id, "Hire request sent to ScaleSource")}
-                    onRejected={() => void load()}
+              onRejected={() => void load()}
+                    onInterviewTimeAccepted={() => void load()}
                   />
                 ))}
               </div>
 
-              <div className="flex flex-col items-center gap-2 pt-2">
-                {noMoreCandidates ? (
-                  <p className="text-sm text-muted-foreground">No more candidates available right now.</p>
-                ) : (
-                  <Button variant="outline" disabled={loadingMore} onClick={showMoreCandidates}>
-                    {loadingMore ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <UsersRound className="mr-2 h-4 w-4" />
-                    )}
-                    {loadingMore ? "Finding candidates…" : "Show more candidates"}
-                  </Button>
-                )}
-              </div>
+              {SHOW_MORE_CANDIDATES_ENABLED && (
+                <div className="flex flex-col items-center gap-2 pt-2">
+                  {noMoreCandidates ? (
+                    <p className="text-sm text-muted-foreground">No more candidates available right now.</p>
+                  ) : (
+                    <Button variant="outline" disabled={loadingMore} onClick={showMoreCandidates}>
+                      {loadingMore ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <UsersRound className="mr-2 h-4 w-4" />
+                      )}
+                      {loadingMore ? "Finding candidates…" : "Show more candidates"}
+                    </Button>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>
