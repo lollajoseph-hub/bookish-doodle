@@ -1,12 +1,28 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CalendarCheck } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { MatchStatusBadge } from "@/components/match-status";
-import { confirmInterview, fetchMatchesByStatus, updateMatchStatus } from "@/lib/crm-queries";
+import {
+  completeInterview,
+  confirmInterview,
+  fetchMatchesByStatus,
+  updateMatchStatus,
+} from "@/lib/crm-queries";
 import type { MatchStatus } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -62,6 +78,21 @@ function InterviewReviewPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const [completeFor, setCompleteFor] = useState<{ id: string; name: string } | null>(null);
+  const [interviewNotes, setInterviewNotes] = useState("");
+
+  const complete = useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes: string }) => completeInterview(id, notes),
+    onSuccess: () => {
+      toast.success("Interview marked complete — notes sent to the client");
+      setCompleteFor(null);
+      setInterviewNotes("");
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
 
   return (
     <AppShell title="Interview review" description="Candidates in the interview stages">
@@ -128,7 +159,14 @@ function InterviewReviewPage() {
                         <Button
                           size="sm"
                           disabled={advance.isPending}
-                          onClick={() => advance.mutate({ id: m.id, status: next })}
+                          onClick={() => {
+                            if (next === "interview_completed") {
+                              setInterviewNotes("");
+                              setCompleteFor({ id: m.id, name: m.candidateName ?? "Candidate" });
+                              return;
+                            }
+                            advance.mutate({ id: m.id, status: next });
+                          }}
                         >
                           {next === "offer_extended" ? "Extend offer" : "Move to next stage"}
                         </Button>
@@ -154,6 +192,57 @@ function InterviewReviewPage() {
           <CalendarCheck className="h-4 w-4" /> No candidates are in an interview stage right now.
         </p>
       )}
+
+      <Dialog
+        open={!!completeFor}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCompleteFor(null);
+            setInterviewNotes("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Complete interview</DialogTitle>
+            <DialogDescription>
+              Add interview notes for {completeFor?.name}. The client needs these to decide.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="interview-notes">
+              Interview notes <span className="text-amber">*</span>
+            </Label>
+            <Textarea
+              id="interview-notes"
+              rows={6}
+              value={interviewNotes}
+              onChange={(e) => setInterviewNotes(e.target.value)}
+              placeholder="How did the interview go? Strengths, concerns, recommendation…"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCompleteFor(null);
+                setInterviewNotes("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={!interviewNotes.trim() || complete.isPending}
+              onClick={() => {
+                if (!completeFor || !interviewNotes.trim()) return;
+                complete.mutate({ id: completeFor.id, notes: interviewNotes.trim() });
+              }}
+            >
+              Mark interview complete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
