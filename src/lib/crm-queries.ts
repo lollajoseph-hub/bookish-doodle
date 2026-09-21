@@ -35,6 +35,7 @@ export const MATCH_STATUSES: MatchStatus[] = [
   "interview_requested",
   "interview_confirmed",
   "interview_completed",
+  "hire_requested",
   "offer_extended",
   "hired",
   "rejected",
@@ -441,6 +442,7 @@ async function applyCandidateStatusForMatch(matchId: string, status: MatchStatus
 }
 
 export interface CreatePlacementInput {
+  matchId: string;
   candidateId: string;
   clientRequestId: string;
   seatTitle?: string | null;
@@ -450,45 +452,27 @@ export interface CreatePlacementInput {
   notes?: string | null;
 }
 
-/** Creates the commercial placement record and moves the candidate to "placed". */
-export async function createPlacement(input: CreatePlacementInput): Promise<string> {
-  const { data: request, error: requestError } = await supabase
-    .from("client_requests")
-    .select("client_id, role_id, title")
-    .eq("id", input.clientRequestId)
-    .maybeSingle();
-  if (requestError) throw requestError;
-  if (!request) throw new Error("Client request not found");
-
-  let seatTitle = input.seatTitle?.trim() || request.title || null;
-  if (!seatTitle && request.role_id) {
-    const { data: role } = await supabase
-      .from("job_roles")
-      .select("name")
-      .eq("id", request.role_id)
-      .maybeSingle();
-    seatTitle = role?.name ?? null;
-  }
-
-  const { data, error } = await supabase
-    .from("placements")
-    .insert({
-      candidate_id: input.candidateId,
-      client_id: request.client_id,
-      client_request_id: input.clientRequestId,
-      role_id: request.role_id,
-      seat_title: seatTitle,
-      billing_start_date: input.billingStartDate || null,
-      monthly_rate: input.monthlyRate ?? null,
-      guarantee_window_expires: input.guaranteeWindowExpires || null,
-      notes: input.notes?.trim() || null,
-    })
-    .select("id")
-    .single();
+/** Staff-only: sends the offer contract (hire_requested -> offer_extended). */
+export async function staffExtendOffer(matchId: string): Promise<void> {
+  const { error } = await supabase.rpc("staff_extend_offer", { p_match_id: matchId });
   if (error) throw error;
+}
 
-  await supabase.from("candidates").update({ status: "placed" }).eq("id", input.candidateId);
-  return data.id;
+/**
+ * Creates the placement record, marks the match hired and the candidate placed —
+ * all server-side and atomic. Requires the match to be in "offer_extended".
+ */
+export async function createPlacement(input: CreatePlacementInput): Promise<string> {
+  const { data, error } = await supabase.rpc("create_placement_and_mark_hired", {
+    p_match_id: input.matchId,
+    p_seat_title: input.seatTitle?.trim() || null,
+    p_billing_start_date: input.billingStartDate || null,
+    p_monthly_rate: input.monthlyRate ?? null,
+    p_guarantee_window_expires: input.guaranteeWindowExpires || null,
+    p_notes: input.notes?.trim() || null,
+  });
+  if (error) throw error;
+  return (data as string | null) ?? "";
 }
 
 export async function fetchAllMatches(): Promise<CandidateMatchRow[]> {

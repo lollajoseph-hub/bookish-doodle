@@ -8,6 +8,7 @@ const STYLES: Record<MatchStatus, string> = {
   interview_requested: "bg-amber/20 text-amber-foreground border-amber/50",
   interview_confirmed: "bg-amber/30 text-amber-foreground border-amber",
   interview_completed: "bg-primary/15 text-primary-dark border-primary/30",
+  hire_requested: "bg-amber/20 text-amber-foreground border-amber/60",
   offer_extended: "bg-amber/25 text-amber-foreground border-amber",
   hired: "bg-emerald-100 text-emerald-800 border-emerald-300",
   rejected: "bg-muted text-muted-foreground border-border",

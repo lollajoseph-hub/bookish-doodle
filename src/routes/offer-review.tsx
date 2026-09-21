@@ -82,8 +82,12 @@ function OfferReviewPage() {
     <AppShell title="Offer review" description="Offers awaiting a decision, and hires awaiting placement">
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
-          Awaiting decision
+          Offer out — create placement
         </h2>
+        <p className="text-sm text-muted-foreground">
+          The contract has been sent. Adding the commercial terms creates the placement and marks the
+          candidate hired.
+        </p>
         {isLoading && <p className="text-sm text-muted-foreground">Loading offers…</p>}
         <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
           <Table>
@@ -115,12 +119,8 @@ function OfferReviewPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex flex-wrap justify-end gap-2">
-                      <Button
-                        size="sm"
-                        disabled={decide.isPending}
-                        onClick={() => decide.mutate({ id: m.id, status: "hired" })}
-                      >
-                        Mark hired
+                      <Button size="sm" onClick={() => setPlacementFor(m)}>
+                        Create placement
                       </Button>
                       <Button
                         size="sm"
@@ -144,12 +144,15 @@ function OfferReviewPage() {
         )}
       </section>
 
+      {/* Legacy: pre-existing "hired" matches with no placement row. Under the current
+          pipeline this list stays empty, since creating the placement is what marks a
+          match hired. Kept so older data is still visible. */}
       <section className="mt-10 space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
-          Hired, awaiting placement
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Legacy — hired, awaiting placement
         </h2>
         <p className="text-sm text-muted-foreground">
-          The offer was accepted — add the commercial terms to create the placement record.
+          Older hires recorded before placements were created automatically.
         </p>
         <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
           <Table>
@@ -196,6 +199,7 @@ function OfferReviewPage() {
         onCreated={() => {
           queryClient.invalidateQueries({ queryKey: ["placements"] });
           queryClient.invalidateQueries({ queryKey: ["candidates"] });
+          queryClient.invalidateQueries({ queryKey: ["matches"] });
         }}
       />
     </AppShell>
@@ -221,6 +225,7 @@ function PlacementDialog({
     mutationFn: async () => {
       if (!match?.client_request_id) throw new Error("This match has no client request");
       return createPlacement({
+        matchId: match.id,
         candidateId: match.candidate_id,
         clientRequestId: match.client_request_id,
         seatTitle: seatTitle || match.requestTitle || match.roleName,

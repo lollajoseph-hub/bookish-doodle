@@ -200,6 +200,7 @@ export type MatchStatus =
   | "interview_requested"
   | "interview_confirmed"
   | "interview_completed"
+  | "hire_requested"
   | "offer_extended"
   | "hired"
   | "rejected";

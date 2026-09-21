@@ -9,6 +9,7 @@ import {
   completeInterview,
   confirmInterview,
   fetchMatchesByStatus,
+  staffExtendOffer,
   updateMatchStatus,
 } from "@/lib/crm-queries";
 import type { MatchStatus } from "@/lib/database.types";
@@ -32,11 +33,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const STAGES: MatchStatus[] = ["interview_requested", "interview_confirmed", "interview_completed"];
+const STAGES: MatchStatus[] = [
+  "interview_requested",
+  "interview_confirmed",
+  "interview_completed",
+  "hire_requested",
+];
 
 const NEXT_STAGE: Partial<Record<MatchStatus, MatchStatus>> = {
   interview_confirmed: "interview_completed",
-  interview_completed: "offer_extended",
 };
 
 export const Route = createFileRoute("/interview-review")({
@@ -74,6 +79,15 @@ function InterviewReviewPage() {
     mutationFn: (id: string) => confirmInterview(id),
     onSuccess: () => {
       toast.success("Interview confirmed");
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const extendOffer = useMutation({
+    mutationFn: (id: string) => staffExtendOffer(id),
+    onSuccess: () => {
+      toast.success("Contract sent — offer extended");
       queryClient.invalidateQueries({ queryKey: ["matches"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -155,6 +169,15 @@ function InterviewReviewPage() {
                           )}
                         </>
                       )}
+                      {m.status === "hire_requested" && (
+                        <Button
+                          size="sm"
+                          disabled={extendOffer.isPending}
+                          onClick={() => extendOffer.mutate(m.id)}
+                        >
+                          Send contract
+                        </Button>
+                      )}
                       {next && (
                         <Button
                           size="sm"
@@ -168,7 +191,7 @@ function InterviewReviewPage() {
                             advance.mutate({ id: m.id, status: next });
                           }}
                         >
-                          {next === "offer_extended" ? "Extend offer" : "Move to next stage"}
+                          Move to next stage
                         </Button>
                       )}
                       <Button
