@@ -152,13 +152,25 @@ function ReportsPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         <ReportCard title="Candidates by status" rows={tally(candidates.map((c) => c.status))} />
         <ReportCard title="Requests by status" rows={tally(requests.map((r) => r.status))} />
         <ReportCard title="Pipeline stage" rows={tally(matches.map((m) => m.status))} />
         <ReportCard
-          title="Rejection reasons"
-          rows={tally(matches.filter((m) => m.status === "rejected").map((m) => m.rejection_reason))}
+          title="Rejection reasons — by client"
+          rows={tally(
+            matches
+              .filter((m) => m.status === "rejected" && m.rejected_by === "client")
+              .map((m) => m.rejection_reason),
+          )}
+        />
+        <ReportCard
+          title="Rejection reasons — by staff"
+          rows={tally(
+            matches
+              .filter((m) => m.status === "rejected" && m.rejected_by === "staff")
+              .map((m) => m.rejection_reason),
+          )}
         />
       </div>
     </AppShell>

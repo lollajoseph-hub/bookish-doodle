@@ -268,6 +268,7 @@ export interface CandidateMatchRow {
   status: MatchStatus;
   rejection_reason: RejectionReason | null;
   rejection_reason_note: string | null;
+  rejected_by: "client" | "staff" | null;
   rejected_at: string | null;
   meet_url: string | null;
   interview_at: string | null;
