@@ -680,7 +680,7 @@ function IntroVideoCard({
     if (!showEmpty) return null;
     return (
       <SectionCard title="Introduction video">
-        <p className="text-sm text-muted-foreground">No intro video yet</p>
+        <p className="text-sm text-muted-foreground">No introductory video yet</p>
       </SectionCard>
     );
   }
@@ -701,7 +701,7 @@ function IntroVideoCard({
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm text-primary transition-colors hover:border-amber hover:bg-amber/5"
         >
-          <Video className="h-4 w-4" /> Open intro video
+          <Video className="h-4 w-4" /> Open introductory video
           <ExternalLink className="h-3.5 w-3.5" />
         </a>
       )}
