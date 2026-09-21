@@ -221,6 +221,7 @@ function PlacementDialog({
     mutationFn: async () => {
       if (!match?.client_request_id) throw new Error("This match has no client request");
       return createPlacement({
+        matchId: match.id,
         candidateId: match.candidate_id,
         clientRequestId: match.client_request_id,
         seatTitle: seatTitle || match.requestTitle || match.roleName,

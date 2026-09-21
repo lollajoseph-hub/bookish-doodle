@@ -32,11 +32,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const STAGES: MatchStatus[] = ["interview_requested", "interview_confirmed", "interview_completed"];
+const STAGES: MatchStatus[] = [
+  "interview_requested",
+  "interview_confirmed",
+  "interview_completed",
+  "hire_requested",
+];
 
 const NEXT_STAGE: Partial<Record<MatchStatus, MatchStatus>> = {
   interview_confirmed: "interview_completed",
-  interview_completed: "offer_extended",
 };
 
 export const Route = createFileRoute("/interview-review")({
