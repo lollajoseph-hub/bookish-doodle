@@ -320,6 +320,66 @@ export function CandidateCard({
           </div>
         )}
 
+        {rejecting && (
+          <div className="space-y-3 rounded-lg border border-border bg-muted/40 p-3">
+            <p className="text-sm font-medium">
+              Not a fit — tell us why so we can find better matches.
+            </p>
+            <div className="space-y-1.5">
+              <Label>Reason</Label>
+              <Select
+                value={rejectReason ?? undefined}
+                onValueChange={(v) => setRejectReason(v as RejectionReason)}
+              >
+                <SelectTrigger className="w-full bg-background">
+                  <SelectValue placeholder="Select a reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  {REJECTION_REASONS.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>
+                      {r.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor={`reject-note-${match.id}`}>Additional notes (optional)</Label>
+              <Textarea
+                id={`reject-note-${match.id}`}
+                value={rejectNote}
+                onChange={(e) => setRejectNote(e.target.value)}
+                rows={3}
+                placeholder="Anything else we should know?"
+                className="bg-background"
+              />
+            </div>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={rejectBusy}
+                onClick={() => {
+                  setRejecting(false);
+                  setRejectReason(null);
+                  setRejectNote("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={!rejectReason || rejectBusy}
+                onClick={submitRejection}
+              >
+                {rejectBusy && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                Submit
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-wrap items-center gap-2 pt-1">
           {onViewProfile && (
             <Button variant="secondary" size="sm" onClick={onViewProfile}>
