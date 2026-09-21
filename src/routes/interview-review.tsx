@@ -159,7 +159,14 @@ function InterviewReviewPage() {
                         <Button
                           size="sm"
                           disabled={advance.isPending}
-                          onClick={() => advance.mutate({ id: m.id, status: next })}
+                          onClick={() => {
+                            if (next === "interview_completed") {
+                              setInterviewNotes("");
+                              setCompleteFor({ id: m.id, name: m.candidateName ?? "Candidate" });
+                              return;
+                            }
+                            advance.mutate({ id: m.id, status: next });
+                          }}
                         >
                           {next === "offer_extended" ? "Extend offer" : "Move to next stage"}
                         </Button>
