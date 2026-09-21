@@ -93,6 +93,7 @@ export function statusTone(s: MatchStatus | string) {
       return "bg-primary text-primary-foreground";
     case "interview_confirmed":
     case "interview_completed":
+    case "hire_requested":
     case "offer_extended":
       return "bg-primary-soft text-primary";
     default:
