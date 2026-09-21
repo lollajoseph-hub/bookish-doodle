@@ -114,6 +114,8 @@ export function MatchStatusIcon({ status }: { status: MatchStatus | string }) {
       return <CalendarClock className={iconClass} />;
     case "interview_completed":
       return <CalendarCheck className={iconClass} />;
+    case "hire_requested":
+      return <CheckCircle2 className={iconClass} />;
     case "offer_extended":
       return <Mail className={iconClass} />;
     case "hired":
