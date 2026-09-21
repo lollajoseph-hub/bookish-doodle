@@ -192,6 +192,57 @@ function InterviewReviewPage() {
           <CalendarCheck className="h-4 w-4" /> No candidates are in an interview stage right now.
         </p>
       )}
+
+      <Dialog
+        open={!!completeFor}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCompleteFor(null);
+            setInterviewNotes("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Complete interview</DialogTitle>
+            <DialogDescription>
+              Add interview notes for {completeFor?.name}. The client needs these to decide.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="interview-notes">
+              Interview notes <span className="text-amber">*</span>
+            </Label>
+            <Textarea
+              id="interview-notes"
+              rows={6}
+              value={interviewNotes}
+              onChange={(e) => setInterviewNotes(e.target.value)}
+              placeholder="How did the interview go? Strengths, concerns, recommendation…"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCompleteFor(null);
+                setInterviewNotes("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={!interviewNotes.trim() || complete.isPending}
+              onClick={() => {
+                if (!completeFor || !interviewNotes.trim()) return;
+                complete.mutate({ id: completeFor.id, notes: interviewNotes.trim() });
+              }}
+            >
+              Mark interview complete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
