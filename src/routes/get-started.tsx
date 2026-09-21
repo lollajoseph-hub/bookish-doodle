@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -10,6 +10,7 @@ import {
   Eye,
   EyeOff,
   ListChecks,
+  Loader2,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -201,6 +202,14 @@ function GetStartedPage() {
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ invited: boolean } | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (result && !result.invited) {
+      const t = setTimeout(() => navigate({ to: "/login" }), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [result, navigate]);
 
   const [company, setCompany] = useState<CompanyForm>({ name: "", industry: "" });
   const [industryIsOther, setIndustryIsOther] = useState(false);
@@ -326,7 +335,7 @@ function GetStartedPage() {
               <p className="max-w-md text-muted-foreground">
                 {result.invited
                   ? "One last step — set a password for your new account."
-                  : "Your request has been added — log in to view it."}
+                  : "Your request has been added — taking you to sign in…"}
               </p>
               </div>
               <div className="w-full rounded-lg bg-primary-soft/60 p-5">
@@ -335,9 +344,10 @@ function GetStartedPage() {
               {result.invited ? (
                 <SetPasswordForm />
               ) : (
-                <Button asChild className="login-submit-button">
-                  <Link to="/login">Go to sign in</Link>
-                </Button>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Redirecting you to sign in…
+                </div>
               )}
             </CardContent>
           </Card>
