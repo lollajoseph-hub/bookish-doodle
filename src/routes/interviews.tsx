@@ -53,6 +53,7 @@ function InterviewsPage() {
   const [photos, setPhotos] = useState<Record<string, string | null>>({});
   const [err, setErr] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [profileFor, setProfileFor] = useState<MatchRow | null>(null);
 
   const load = useCallback(async () => {
