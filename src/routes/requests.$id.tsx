@@ -269,18 +269,6 @@ function RequestDetail() {
         </div>
       </div>
 
-      <RejectCandidateDialog
-        matchId={rejectFor?.id ?? null}
-        candidateName={
-          rejectFor ? displayName(rejectFor.candidate_pool_profile?.full_name, rejectFor.status) : null
-        }
-        onClose={() => setRejectFor(null)}
-        onRejected={() => {
-          setRejectFor(null);
-          void load();
-        }}
-      />
-
       <CandidateProfileDialog
         candidateId={profileFor?.candidate_id ?? null}
         matchStatus={profileFor?.status ?? null}
