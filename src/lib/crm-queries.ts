@@ -389,15 +389,21 @@ export async function updateMatchStatus(
   status: MatchStatus,
   extra?: { rejection_reason?: RejectionReason | null; rejection_reason_note?: string | null },
 ): Promise<void> {
-  const patch: Record<string, unknown> = { status };
   if (status === "rejected") {
-    patch.rejected_at = new Date().toISOString();
-    patch.rejected_by = "staff";
-    patch.rejection_reason = extra?.rejection_reason ?? "other";
-    patch.rejection_reason_note = extra?.rejection_reason_note || null;
+    // Staff-side rejections go through the RPC so server-side logic
+    // (rejected_at, rejection_reason, candidate availability) stays authoritative.
+    const { error } = await supabase.rpc("reject_candidate_match", {
+      p_match_id: id,
+      p_reason: extra?.rejection_reason ?? "other",
+      p_note: extra?.rejection_reason_note || null,
+      p_rejected_by: "staff",
+    });
+    if (error) throw error;
+  } else {
+    const patch: Record<string, unknown> = { status };
+    const { error } = await supabase.from("candidate_matches").update(patch).eq("id", id);
+    if (error) throw error;
   }
-  const { error } = await supabase.from("candidate_matches").update(patch).eq("id", id);
-  if (error) throw error;
 
   await applyCandidateStatusForMatch(id, status);
 }
