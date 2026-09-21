@@ -144,7 +144,7 @@ export function CandidateCard({
   onShortlist,
   onRequestInterview,
   onRequestHire,
-  onReject,
+  onRejected,
   onViewProfile,
   footer,
 }: {
