@@ -261,7 +261,7 @@ export function CandidateProfileDialog({
               </section>
 
               {video && (
-                <Section title="Intro video">
+                <Section title="Introductory Video">
                   <video src={video} controls className="w-full rounded-xl bg-foreground" preload="metadata" />
                 </Section>
               )}
