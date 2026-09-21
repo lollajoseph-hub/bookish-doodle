@@ -149,7 +149,10 @@ function DashboardPage() {
       interviewed: byStatus("interviewed"),
       hiredCandidates: byStatus("hired"),
       placed: byStatus("placed"),
-      rejected: matches.filter((m) => m.status === "rejected").length,
+      rejectedByClient: matches.filter((m) => m.status === "rejected" && m.rejected_by === "client")
+        .length,
+      rejectedByStaff: matches.filter((m) => m.status === "rejected" && m.rejected_by === "staff")
+        .length,
       mine: candidates.filter((c) => c.recruiter_id === profile?.id).length,
       unassigned: candidates.filter((c) => !c.recruiter_id).length,
       openRequests: requests.filter((r) => r.status === "open").length,
@@ -187,7 +190,10 @@ function DashboardPage() {
       interviewed: byStatus("interviewed"),
       hiredCandidates: byStatus("hired"),
       placed: byStatus("placed"),
-      rejected: myMatchesList.filter((m) => m.status === "rejected").length,
+      rejectedByClient: myMatchesList.filter((m) => m.status === "rejected" && m.rejected_by === "client")
+        .length,
+      rejectedByStaff: myMatchesList.filter((m) => m.status === "rejected" && m.rejected_by === "staff")
+        .length,
       upcomingInterviews: byMatch("interview_requested", "interview_confirmed"),
       pendingOffers: byMatch("offer_extended"),
       matched: myMatchesList.length,
@@ -291,7 +297,18 @@ function DashboardPage() {
                 loading={loadingCore}
               />
               <StatCard label="Placed" value={stats.placed} icon={Sparkles} tone="success" loading={loadingCore} />
-              <StatCard label="Rejected" value={stats.rejected} icon={UserMinus} loading={loadingCore} />
+              <StatCard
+                label="Rejected by client"
+                value={stats.rejectedByClient}
+                icon={UserMinus}
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Rejected by staff"
+                value={stats.rejectedByStaff}
+                icon={UserMinus}
+                loading={loadingCore}
+              />
               <StatCard label="Assigned to me" value={stats.mine} icon={UserCheck} loading={loadingCore} />
               <StatCard
                 label="Unassigned"
@@ -346,7 +363,18 @@ function DashboardPage() {
                 loading={loadingCore}
               />
               <StatCard label="Placed" value={myStats.placed} icon={Sparkles} tone="success" loading={loadingCore} />
-              <StatCard label="Rejected" value={myStats.rejected} icon={UserMinus} loading={loadingCore} />
+              <StatCard
+                label="Rejected by client"
+                value={myStats.rejectedByClient}
+                icon={UserMinus}
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Rejected by staff"
+                value={myStats.rejectedByStaff}
+                icon={UserMinus}
+                loading={loadingCore}
+              />
               <StatCard
                 label="Total candidates"
                 value={stats.total}

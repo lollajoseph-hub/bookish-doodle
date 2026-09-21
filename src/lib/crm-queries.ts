@@ -384,6 +384,7 @@ export async function updateMatchStatus(
   const patch: Record<string, unknown> = { status };
   if (status === "rejected") {
     patch.rejected_at = new Date().toISOString();
+    patch.rejected_by = "staff";
     patch.rejection_reason = extra?.rejection_reason ?? "other";
     patch.rejection_reason_note = extra?.rejection_reason_note || null;
   }
