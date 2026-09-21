@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Shared form-section header used by every multi-section form in the app:
- * amber glowing divider between sections, small purple uppercase heading,
+ * amber divider between sections, small purple uppercase heading,
  * optional muted description.
  */
 export function FormSection({
