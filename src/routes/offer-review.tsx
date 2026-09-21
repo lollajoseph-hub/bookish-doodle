@@ -144,12 +144,15 @@ function OfferReviewPage() {
         )}
       </section>
 
+      {/* Legacy: pre-existing "hired" matches with no placement row. Under the current
+          pipeline this list stays empty, since creating the placement is what marks a
+          match hired. Kept so older data is still visible. */}
       <section className="mt-10 space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
-          Hired, awaiting placement
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Legacy — hired, awaiting placement
         </h2>
         <p className="text-sm text-muted-foreground">
-          The offer was accepted — add the commercial terms to create the placement record.
+          Older hires recorded before placements were created automatically.
         </p>
         <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
           <Table>
@@ -196,6 +199,7 @@ function OfferReviewPage() {
         onCreated={() => {
           queryClient.invalidateQueries({ queryKey: ["placements"] });
           queryClient.invalidateQueries({ queryKey: ["candidates"] });
+          queryClient.invalidateQueries({ queryKey: ["matches"] });
         }}
       />
     </AppShell>
