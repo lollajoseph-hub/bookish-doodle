@@ -1,6 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { FileText, Image, Video, IdCard, Paperclip, Trash2, Upload, Loader2 } from "lucide-react";
+import {
+  FileText,
+  Image,
+  Video,
+  IdCard,
+  Paperclip,
+  Trash2,
+  Upload,
+  Loader2,
+  ExternalLink,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   deleteCandidateFile,
@@ -13,6 +25,7 @@ import type { CandidateFileRow, CandidateFileType } from "@/lib/database.types";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PdfPagePreview } from "@/components/PdfPagePreview";
 import {
   Select,
   SelectContent,
@@ -45,6 +58,11 @@ function prettySize(bytes: number | null) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function isPdf(file: CandidateFileRow) {
+  const name = file.file_name || file.storage_path || "";
+  return name.toLowerCase().endsWith(".pdf");
+}
+
 export function CandidateFilesCard({
   candidateId,
   canEdit,
@@ -56,6 +74,9 @@ export function CandidateFilesCard({
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [fileType, setFileType] = useState<CandidateFileType>("resume");
+  const [previewFileId, setPreviewFileId] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const { data: files = [], isLoading } = useQuery({
     queryKey: ["candidate-files", candidateId],
@@ -104,6 +125,26 @@ export function CandidateFilesCard({
     }
   };
 
+  const togglePreview = async (file: CandidateFileRow) => {
+    if (previewFileId === file.id) {
+      setPreviewFileId(null);
+      setPreviewUrl(null);
+      return;
+    }
+    setPreviewFileId(file.id);
+    setPreviewUrl(null);
+    setPreviewLoading(true);
+    try {
+      const url = await getCandidateFileUrl(file);
+      setPreviewUrl(url);
+    } catch (e) {
+      toast.error((e as Error).message || "Could not load preview");
+      setPreviewFileId(null);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
   return (
     <section className="card-amber rounded-2xl border bg-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -148,39 +189,77 @@ export function CandidateFilesCard({
         {isLoading && <p className="text-sm text-muted-foreground">Loading files…</p>}
         {files.map((f) => {
           const Icon = iconFor(f.file_type);
+          const pdf = isPdf(f);
+          const isPreviewing = previewFileId === f.id;
           return (
-            <div
-              key={f.id}
-              className="flex items-center justify-between gap-2 rounded-xl border p-3 transition-colors hover:border-amber"
-            >
-              <button
-                onClick={() => openFile(f)}
-                className="flex min-w-0 items-center gap-3 text-left"
-              >
-                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary-soft">
-                  <Icon className="h-4 w-4 text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-medium">{f.file_name || f.storage_path}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {labelize(f.file_type)} {prettySize(f.size_bytes)}
+            <div key={f.id} className="rounded-xl border transition-colors hover:border-amber">
+              <div className="flex items-center justify-between gap-2 p-3">
+                <button
+                  onClick={() => (pdf ? togglePreview(f) : openFile(f))}
+                  className="flex min-w-0 items-center gap-3 text-left"
+                >
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary-soft">
+                    <Icon className="h-4 w-4 text-primary" />
                   </div>
-                </div>
-              </button>
-              <div className="flex shrink-0 items-center gap-1">
-                <Badge variant="secondary">{labelize(f.file_type)}</Badge>
-                {canEdit && (
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium">{f.file_name || f.storage_path}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {labelize(f.file_type)} {prettySize(f.size_bytes)}
+                    </div>
+                  </div>
+                </button>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Badge variant="secondary">{labelize(f.file_type)}</Badge>
+                  {pdf && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      aria-label={isPreviewing ? "Hide preview" : "Preview file"}
+                      onClick={() => togglePreview(f)}
+                    >
+                      {isPreviewing ? (
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      ) : (
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7"
-                    aria-label="Delete file"
-                    onClick={() => remove.mutate(f)}
+                    aria-label="Open in new tab"
+                    onClick={() => openFile(f)}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <ExternalLink className="h-3.5 w-3.5" />
                   </Button>
-                )}
+                  {canEdit && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      aria-label="Delete file"
+                      onClick={() => remove.mutate(f)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
               </div>
+              {isPreviewing && (
+                <div className="border-t p-3">
+                  {previewLoading && (
+                    <p className="text-sm text-muted-foreground">Loading preview…</p>
+                  )}
+                  {!previewLoading && previewUrl && (
+                    <PdfPagePreview
+                      url={previewUrl}
+                      className="max-h-[70vh] overflow-y-auto rounded-lg border bg-muted/30"
+                    />
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
