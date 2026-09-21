@@ -64,6 +64,7 @@ export interface MatchRow {
   status: MatchStatus;
   client_request_id: string;
   interview_proposed_at: string | null;
+  interview_proposed_by: string | null;
   interview_scheduled_at: string | null;
   meet_url: string | null;
   interview_notes: string | null;
@@ -77,7 +78,7 @@ export interface MatchRow {
 }
 
 export const MATCH_SELECT =
-  "id,status,client_request_id,interview_proposed_at,interview_scheduled_at,meet_url,interview_notes,rejection_reason,rejection_reason_note,rejected_at,match_score,match_reason,candidate_id," +
+  "id,status,client_request_id,interview_proposed_at,interview_proposed_by,interview_scheduled_at,meet_url,interview_notes,rejection_reason,rejection_reason_note,rejected_at,match_score,match_reason,candidate_id," +
   "candidate_pool_profile(candidate_id,full_name,headline,availability,country,timezone,weekly_hours_available,preferred_shift,years_experience,earliest_start_date,approved_summary,highlights,skills,primary_role,secondary_roles,profile_photo_path)";
 
 export function statusTone(s: MatchStatus | string) {
@@ -145,6 +146,7 @@ export function CandidateCard({
   onRequestInterview,
   onRequestHire,
   onRejected,
+  onInterviewTimeAccepted,
   onViewProfile,
   footer,
 }: {
@@ -158,6 +160,8 @@ export function CandidateCard({
   onRequestHire?: () => void;
   /** Called after a successful inline rejection so the parent can refresh. */
   onRejected?: () => void;
+  /** Called after accepting a ScaleSource counter-proposed time so the parent can refresh. */
+  onInterviewTimeAccepted?: () => void;
   onViewProfile?: () => void;
   footer?: React.ReactNode;
 }) {
@@ -165,6 +169,19 @@ export function CandidateCard({
   const [rejectReason, setRejectReason] = useState<RejectionReason | null>(null);
   const [rejectNote, setRejectNote] = useState("");
   const [rejectBusy, setRejectBusy] = useState(false);
+  const [acceptingTime, setAcceptingTime] = useState(false);
+
+  async function acceptInterviewTime() {
+    setAcceptingTime(true);
+    const { error } = await supabase.rpc("client_confirm_interview_time", { p_match_id: match.id });
+    setAcceptingTime(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Interview confirmed");
+    onInterviewTimeAccepted?.();
+  }
 
   async function submitRejection() {
     if (!rejectReason) return;
@@ -270,14 +287,26 @@ export function CandidateCard({
         </div>
         {contextLabel && <div className="text-xs text-muted-foreground">{contextLabel}</div>}
 
-        {status === "interview_requested" && (
-          <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary">
-            <Clock className="h-4 w-4 flex-none" />
-            {match.interview_proposed_at
-              ? `You proposed ${formatDateTime(match.interview_proposed_at)} — waiting for ScaleSource to confirm.`
-              : "Interview requested — waiting for ScaleSource to confirm."}
-          </div>
-        )}
+        {status === "interview_requested" &&
+          (match.interview_proposed_by === "staff" ? (
+            <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary">
+              <p className="flex items-center gap-2 font-medium">
+                <Clock className="h-4 w-4 flex-none" />
+                ScaleSource proposed a new time: {formatDateTime(match.interview_proposed_at)}
+              </p>
+              <Button size="sm" disabled={acceptingTime} onClick={acceptInterviewTime}>
+                {acceptingTime && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                Accept this time
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary">
+              <Clock className="h-4 w-4 flex-none" />
+              {match.interview_proposed_at
+                ? `You proposed ${formatDateTime(match.interview_proposed_at)} — waiting for ScaleSource to confirm.`
+                : "Interview requested — waiting for ScaleSource to confirm."}
+            </div>
+          ))}
 
         {status === "interview_confirmed" && (
           <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">

@@ -53,6 +53,7 @@ function InterviewsPage() {
   const [photos, setPhotos] = useState<Record<string, string | null>>({});
   const [err, setErr] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [profileFor, setProfileFor] = useState<MatchRow | null>(null);
 
   const load = useCallback(async () => {
@@ -104,6 +105,17 @@ function InterviewsPage() {
     if (error) toast.error(error.message);
     else {
       toast.success("Hire request sent to ScaleSource");
+      void load();
+    }
+  }
+
+  async function acceptInterviewTime(matchId: string) {
+    setAcceptingId(matchId);
+    const { error } = await supabase.rpc("client_confirm_interview_time", { p_match_id: matchId });
+    setAcceptingId(null);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Interview confirmed");
       void load();
     }
   }
@@ -198,14 +210,26 @@ function InterviewsPage() {
                     </div>
                   </div>
 
-                  {m.status === "interview_requested" && (
-                    <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary">
-                      <Clock className="h-4 w-4 flex-none" />
-                      {proposed
-                        ? `You proposed ${proposed} — waiting for ScaleSource to confirm.`
-                        : "Interview requested — waiting for ScaleSource to confirm."}
-                    </div>
-                  )}
+                  {m.status === "interview_requested" &&
+                    (m.interview_proposed_by === "staff" ? (
+                      <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary">
+                        <p className="flex items-center gap-2 font-medium">
+                          <Clock className="h-4 w-4 flex-none" />
+                          ScaleSource proposed a new time: {formatDateTime(m.interview_proposed_at)}
+                        </p>
+                        <Button size="sm" disabled={acceptingId === m.id} onClick={() => acceptInterviewTime(m.id)}>
+                          {acceptingId === m.id && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                          Accept this time
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary">
+                        <Clock className="h-4 w-4 flex-none" />
+                        {proposed
+                          ? `You proposed ${proposed} — waiting for ScaleSource to confirm.`
+                          : "Interview requested — waiting for ScaleSource to confirm."}
+                      </div>
+                    ))}
 
                   {(m.status === "interview_confirmed" || m.status === "interview_completed") && (
                     <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">

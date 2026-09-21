@@ -184,6 +184,7 @@ function ShortlistedPage() {
               onRequestInterview={() => setInterviewFor(m)}
               onRequestHire={() => callRpc("request_to_hire", m.id, "Hire request sent to ScaleSource")}
               onRejected={() => void load()}
+              onInterviewTimeAccepted={() => void load()}
             />
           ))}
         </div>
