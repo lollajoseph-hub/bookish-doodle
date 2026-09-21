@@ -34,6 +34,39 @@ export const DAYS_OF_WEEK = [
   { value: "Sun", label: "Sunday" },
 ] as const;
 
+export const INDUSTRIES = [
+  "Accounting & Finance",
+  "Advertising & Marketing",
+  "Agriculture",
+  "Automotive",
+  "Construction",
+  "Consulting",
+  "Consumer Goods",
+  "E-commerce & Retail",
+  "Education",
+  "Energy & Utilities",
+  "Entertainment & Media",
+  "Financial Services",
+  "Government & Public Sector",
+  "Healthcare",
+  "Hospitality & Tourism",
+  "Human Resources & Staffing",
+  "Information Technology",
+  "Insurance",
+  "Legal",
+  "Logistics & Supply Chain",
+  "Manufacturing",
+  "Non-Profit",
+  "Pharmaceuticals & Biotech",
+  "Professional Services",
+  "Real Estate",
+  "Software / SaaS",
+  "Telecommunications",
+  "Transportation",
+  "Wholesale Trade",
+] as const;
+
+
 export interface Catalog {
   roles: JobRole[];
   skills: Skill[];
