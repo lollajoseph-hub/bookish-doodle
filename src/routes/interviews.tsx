@@ -253,6 +253,15 @@ function InterviewsPage() {
                     </div>
                   )}
 
+                  {m.status === "hire_requested" && (
+                    <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+                      <p className="text-sm font-medium text-primary">
+                        Hire requested — waiting on ScaleSource to send the contract.
+                      </p>
+                    </div>
+                  )}
+
+
                   {m.status === "interview_completed" && (
                     <Button
                       className="w-full sm:w-auto"
