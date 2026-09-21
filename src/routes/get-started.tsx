@@ -39,6 +39,7 @@ import { buildRequestRecap, RequestRecap } from "@/components/request-recap";
 import { SuccessFlourish } from "@/components/success-flourish";
 
 export const Route = createFileRoute("/get-started")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Get started — Candidate Pool" },
