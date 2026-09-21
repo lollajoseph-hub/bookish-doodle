@@ -38,9 +38,15 @@ const INTERVIEW_STATUSES: MatchStatus[] = [
   "interview_requested",
   "interview_confirmed",
   "interview_completed",
+  "hire_requested",
 ];
 
-const ORDER: MatchStatus[] = ["interview_confirmed", "interview_requested", "interview_completed"];
+const ORDER: MatchStatus[] = [
+  "interview_confirmed",
+  "interview_requested",
+  "interview_completed",
+  "hire_requested",
+];
 
 interface RequestMeta {
   id: string;

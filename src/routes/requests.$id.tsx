@@ -63,6 +63,7 @@ const SHOW_MORE_CANDIDATES_ENABLED = false;
 /** Active matches first, decided ones (hired / not a fit) last. */
 const STATUS_ORDER: MatchStatus[] = [
   "interview_completed",
+  "hire_requested",
   "interview_confirmed",
   "interview_requested",
   "shortlisted",
