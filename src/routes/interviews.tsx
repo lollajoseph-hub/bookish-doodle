@@ -38,9 +38,15 @@ const INTERVIEW_STATUSES: MatchStatus[] = [
   "interview_requested",
   "interview_confirmed",
   "interview_completed",
+  "hire_requested",
 ];
 
-const ORDER: MatchStatus[] = ["interview_confirmed", "interview_requested", "interview_completed"];
+const ORDER: MatchStatus[] = [
+  "interview_confirmed",
+  "interview_requested",
+  "interview_completed",
+  "hire_requested",
+];
 
 interface RequestMeta {
   id: string;
@@ -100,7 +106,7 @@ function InterviewsPage() {
 
   async function requestHire(matchId: string) {
     setActingId(matchId);
-    const { error } = await supabase.rpc("request_to_hire", { p_match_id: matchId });
+    const { error } = await supabase.rpc("client_request_hire", { p_match_id: matchId });
     setActingId(null);
     if (error) toast.error(error.message);
     else {
@@ -246,6 +252,15 @@ function InterviewsPage() {
                       )}
                     </div>
                   )}
+
+                  {m.status === "hire_requested" && (
+                    <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+                      <p className="text-sm font-medium text-primary">
+                        Hire requested — waiting on ScaleSource to send the contract.
+                      </p>
+                    </div>
+                  )}
+
 
                   {m.status === "interview_completed" && (
                     <Button

@@ -35,11 +35,13 @@ const ACTIVE_STATUSES: MatchStatus[] = [
   "interview_requested",
   "interview_confirmed",
   "interview_completed",
+  "hire_requested",
   "offer_extended",
 ];
 
 const ORDER: MatchStatus[] = [
   "interview_completed",
+  "hire_requested",
   "offer_extended",
   "interview_confirmed",
   "interview_requested",
@@ -107,7 +109,7 @@ function ShortlistedPage() {
   const visible = (matches ?? []).filter((m) => filter === "all" || m.client_request_id === filter);
 
   async function callRpc(
-    fn: "client_shortlist_candidate" | "request_to_hire",
+    fn: "client_shortlist_candidate" | "client_request_hire",
     matchId: string,
     success: string
   ) {
@@ -182,7 +184,7 @@ function ShortlistedPage() {
               onViewProfile={() => setProfileFor(m)}
               onShortlist={() => callRpc("client_shortlist_candidate", m.id, "Removed from shortlist")}
               onRequestInterview={() => setInterviewFor(m)}
-              onRequestHire={() => callRpc("request_to_hire", m.id, "Hire request sent to ScaleSource")}
+              onRequestHire={() => callRpc("client_request_hire", m.id, "Hire request sent to ScaleSource")}
               onRejected={() => void load()}
               onInterviewTimeAccepted={() => void load()}
             />

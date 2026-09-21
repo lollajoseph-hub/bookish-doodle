@@ -63,6 +63,7 @@ const SHOW_MORE_CANDIDATES_ENABLED = false;
 /** Active matches first, decided ones (hired / not a fit) last. */
 const STATUS_ORDER: MatchStatus[] = [
   "interview_completed",
+  "hire_requested",
   "interview_confirmed",
   "interview_requested",
   "shortlisted",
@@ -118,7 +119,7 @@ function RequestDetail() {
   }, [load]);
 
   async function callRpc(
-    fn: "client_shortlist_candidate" | "request_to_hire",
+    fn: "client_shortlist_candidate" | "client_request_hire",
     matchId: string,
     success: string
   ) {
@@ -245,7 +246,7 @@ function RequestDetail() {
                       )
                     }
                     onRequestInterview={() => setInterviewFor(m)}
-                    onRequestHire={() => callRpc("request_to_hire", m.id, "Hire request sent to ScaleSource")}
+                    onRequestHire={() => callRpc("client_request_hire", m.id, "Hire request sent to ScaleSource")}
               onRejected={() => void load()}
                     onInterviewTimeAccepted={() => void load()}
                   />

@@ -30,6 +30,7 @@ export type MatchStatus =
   | "interview_requested"
   | "interview_confirmed"
   | "interview_completed"
+  | "hire_requested"
   | "offer_extended"
   | "hired"
   | "rejected";
@@ -40,7 +41,8 @@ export const MATCH_STATUS_LABELS: Record<MatchStatus, string> = {
   interview_requested: "Interview requested",
   interview_confirmed: "Interview confirmed",
   interview_completed: "Interview completed",
-  offer_extended: "Offer extended",
+  hire_requested: "Hire requested",
+  offer_extended: "Contract sent",
   hired: "Hired",
   rejected: "Not a fit",
 };

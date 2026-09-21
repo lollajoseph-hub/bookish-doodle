@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { MultiSelect } from "@/components/multi-select";
+import { TimezoneSelect } from "@/components/timezone-select";
 import { DAYS_OF_WEEK, ENGAGEMENT_TYPES, type Catalog } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ export interface RequestForm {
   engagement_type: string;
   hours_needed: string;
   days_of_week_needed: string[];
+  timezone_requirement: string;
   must_have_skill_names: string[];
   language_skill_ids: string[];
   nice_to_have_skill_ids: string[];
@@ -40,6 +42,7 @@ export const emptyRequestForm: RequestForm = {
   engagement_type: "",
   hours_needed: "",
   days_of_week_needed: [],
+  timezone_requirement: "",
   must_have_skill_names: [],
   language_skill_ids: [],
   nice_to_have_skill_ids: [],
@@ -326,6 +329,9 @@ export function RequestScheduleFields(props: RequestFieldsProps) {
       <Field label="Days of the week needed" required>
         <MultiSelect options={DAYS_OF_WEEK.map((d) => ({ value: d.value, label: d.label }))} value={f.days_of_week_needed} onChange={(v) => set("days_of_week_needed", v)} placeholder="Select days" searchPlaceholder="Search days…" />
       </Field>
+      <Field label="Timezone" hint="The timezone your team works in — we match candidates who can overlap with it.">
+        <TimezoneSelect value={f.timezone_requirement} onChange={(v) => set("timezone_requirement", v)} placeholder="Select timezone…" />
+      </Field>
       <Field label="Desired start date">
         <Popover>
           <PopoverTrigger asChild>
@@ -415,6 +421,7 @@ export function requestPayload(f: RequestForm) {
     engagement_type: f.engagement_type,
     hours_needed: f.hours_needed.trim(),
     days_of_week_needed: f.days_of_week_needed,
+    timezone_requirement: f.timezone_requirement || null,
     hires_needed: Number(f.hires_needed) || 1,
     years_experience_min: f.years_experience_min ? Number(f.years_experience_min) : null,
     desired_start_date: f.desired_start_date || null,

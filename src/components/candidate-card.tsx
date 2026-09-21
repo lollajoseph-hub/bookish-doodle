@@ -93,6 +93,7 @@ export function statusTone(s: MatchStatus | string) {
       return "bg-primary text-primary-foreground";
     case "interview_confirmed":
     case "interview_completed":
+    case "hire_requested":
     case "offer_extended":
       return "bg-primary-soft text-primary";
     default:
@@ -113,6 +114,8 @@ export function MatchStatusIcon({ status }: { status: MatchStatus | string }) {
       return <CalendarClock className={iconClass} />;
     case "interview_completed":
       return <CalendarCheck className={iconClass} />;
+    case "hire_requested":
+      return <CheckCircle2 className={iconClass} />;
     case "offer_extended":
       return <Mail className={iconClass} />;
     case "hired":
@@ -225,6 +228,8 @@ export function CandidateCard({
     .join(" · ");
 
   const canAct = status === "recommended" || status === "shortlisted";
+  /** Rejection stays available after the interview, once the client has read the notes. */
+  const canReject = canAct || status === "interview_completed";
 
   return (
     <Card className={`card-amber relative rounded-2xl ${isRejected ? "opacity-60" : ""}`}>
@@ -337,6 +342,24 @@ export function CandidateCard({
           </div>
         )}
 
+        {status === "hire_requested" && (
+          <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+            <p className="flex items-center gap-2 text-sm font-medium text-primary">
+              <CheckCircle2 className="h-4 w-4 flex-none" />
+              Hire requested — waiting on ScaleSource to send the contract.
+            </p>
+          </div>
+        )}
+
+        {status === "offer_extended" && (
+          <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+            <p className="flex items-center gap-2 text-sm font-medium text-primary">
+              <Mail className="h-4 w-4 flex-none" />
+              Contract sent — you&apos;ll be notified once the placement is confirmed.
+            </p>
+          </div>
+        )}
+
         {isRejected && (
           <div className="rounded-lg bg-muted px-3 py-2 text-sm">
             <p className="font-medium">Not a fit — {rejectionReasonLabel(match.rejection_reason)}</p>
@@ -441,7 +464,7 @@ export function CandidateCard({
             </Button>
           )}
 
-          {canAct && onRejected && !rejecting && (
+          {canReject && onRejected && !rejecting && (
             <Button
               variant="ghost"
               size="sm"
