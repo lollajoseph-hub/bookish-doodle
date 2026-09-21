@@ -30,6 +30,8 @@ import {
 } from "lucide-react";
 import {
   MATCH_STATUS_LABELS,
+  REJECTION_REASONS,
+  type RejectionReason,
   displayName,
   formatDate,
   formatDateTime,
