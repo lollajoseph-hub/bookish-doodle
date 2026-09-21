@@ -79,6 +79,21 @@ function InterviewReviewPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const [completeFor, setCompleteFor] = useState<{ id: string; name: string } | null>(null);
+  const [interviewNotes, setInterviewNotes] = useState("");
+
+  const complete = useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes: string }) => completeInterview(id, notes),
+    onSuccess: () => {
+      toast.success("Interview marked complete — notes sent to the client");
+      setCompleteFor(null);
+      setInterviewNotes("");
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
   return (
     <AppShell title="Interview review" description="Candidates in the interview stages">
       {isLoading && <p className="text-sm text-muted-foreground">Loading interviews…</p>}
