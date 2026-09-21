@@ -352,12 +352,12 @@ export function CandidateCard({
             </Button>
           )}
 
-          {canAct && onReject && (
+          {canAct && onRejected && !rejecting && (
             <Button
               variant="ghost"
               size="sm"
               disabled={busy}
-              onClick={onReject}
+              onClick={() => setRejecting(true)}
               className="text-destructive hover:bg-destructive/10 hover:text-destructive"
             >
               <ThumbsDown className="mr-1.5 h-4 w-4" />
