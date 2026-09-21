@@ -245,7 +245,7 @@ function RequestDetail() {
                     }
                     onRequestInterview={() => setInterviewFor(m)}
                     onRequestHire={() => callRpc("request_to_hire", m.id, "Hire request sent to ScaleSource")}
-                    onReject={() => setRejectFor(m)}
+                    onRejected={() => void load()}
                   />
                 ))}
               </div>
