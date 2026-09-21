@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Shared form-section header used by every multi-section form in the app:
- * amber glowing divider between sections, small purple uppercase heading,
+ * amber divider between sections, small purple uppercase heading,
  * optional muted description.
  */
 export function FormSection({
@@ -20,7 +20,7 @@ export function FormSection({
     <section className={cn("space-y-4", !first && "mt-6")}>
       {!first && (
         <div className="mb-6" aria-hidden>
-          <div className="h-px bg-amber/70 shadow-[0_0_6px_0_rgb(245_158_11_/_0.55),0_0_14px_2px_rgb(245_158_11_/_0.25)]" />
+          <div className="h-px bg-amber/70" />
         </div>
       )}
       <div>
