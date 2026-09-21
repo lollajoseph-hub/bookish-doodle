@@ -4,7 +4,6 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RejectCandidateDialog } from "@/components/reject-dialog";
 import { CandidateCard, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { InterviewRequestDialog } from "@/components/interview-request-dialog";
@@ -59,7 +58,6 @@ function ShortlistedPage() {
   const [err, setErr] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
-  const [rejectFor, setRejectFor] = useState<MatchRow | null>(null);
   const [profileFor, setProfileFor] = useState<MatchRow | null>(null);
   const [interviewFor, setInterviewFor] = useState<MatchRow | null>(null);
 
