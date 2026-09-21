@@ -9,6 +9,7 @@ import {
   completeInterview,
   confirmInterview,
   fetchMatchesByStatus,
+  staffExtendOffer,
   updateMatchStatus,
 } from "@/lib/crm-queries";
 import type { MatchStatus } from "@/lib/database.types";
@@ -78,6 +79,15 @@ function InterviewReviewPage() {
     mutationFn: (id: string) => confirmInterview(id),
     onSuccess: () => {
       toast.success("Interview confirmed");
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const extendOffer = useMutation({
+    mutationFn: (id: string) => staffExtendOffer(id),
+    onSuccess: () => {
+      toast.success("Contract sent — offer extended");
       queryClient.invalidateQueries({ queryKey: ["matches"] });
     },
     onError: (e: Error) => toast.error(e.message),
