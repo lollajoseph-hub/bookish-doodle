@@ -137,10 +137,14 @@ function ReportsPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
         <ReportCard title="Candidates by status" rows={tally(candidates.map((c) => c.status))} />
         <ReportCard title="Requests by status" rows={tally(requests.map((r) => r.status))} />
         <ReportCard title="Matches by stage" rows={tally(matches.map((m) => m.status))} />
+        <ReportCard
+          title="Rejection reasons"
+          rows={tally(matches.filter((m) => m.status === "rejected").map((m) => m.rejection_reason))}
+        />
       </div>
     </AppShell>
   );
