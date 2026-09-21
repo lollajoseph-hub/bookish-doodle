@@ -464,7 +464,7 @@ export function CandidateCard({
             </Button>
           )}
 
-          {canAct && onRejected && !rejecting && (
+          {canReject && onRejected && !rejecting && (
             <Button
               variant="ghost"
               size="sm"
