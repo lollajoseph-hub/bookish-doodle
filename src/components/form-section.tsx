@@ -20,7 +20,7 @@ export function FormSection({
     <section className={cn("space-y-4", !first && "mt-6")}>
       {!first && (
         <div className="mb-6" aria-hidden>
-          <div className="h-px bg-amber/70 shadow-[0_0_6px_0_rgb(245_158_11_/_0.55),0_0_14px_2px_rgb(245_158_11_/_0.25)]" />
+          <div className="h-px bg-amber/70" />
         </div>
       )}
       <div>
