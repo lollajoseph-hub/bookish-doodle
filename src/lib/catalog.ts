@@ -66,6 +66,30 @@ export const INDUSTRIES = [
   "Wholesale Trade",
 ] as const;
 
+export const POSITIONS = [
+  "Owner",
+  "Founder / Co-Founder",
+  "CEO",
+  "President",
+  "COO",
+  "CFO",
+  "General Manager",
+  "Operations Manager",
+  "Office Manager",
+  "Practice Manager",
+  "Business Manager",
+  "Administrative Manager",
+  "HR Director",
+  "HR Manager",
+  "Recruiting Manager",
+  "Talent Acquisition Manager",
+  "Marketing Director",
+  "Marketing Manager",
+  "Sales Director",
+  "Sales Manager",
+  "Executive Assistant",
+] as const;
+
 
 export interface Catalog {
   roles: JobRole[];
