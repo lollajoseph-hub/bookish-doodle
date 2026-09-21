@@ -4,7 +4,6 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RejectCandidateDialog } from "@/components/reject-dialog";
 import { CandidateCard, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { InterviewRequestDialog } from "@/components/interview-request-dialog";
@@ -59,7 +58,6 @@ function ShortlistedPage() {
   const [err, setErr] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
-  const [rejectFor, setRejectFor] = useState<MatchRow | null>(null);
   const [profileFor, setProfileFor] = useState<MatchRow | null>(null);
   const [interviewFor, setInterviewFor] = useState<MatchRow | null>(null);
 
@@ -185,23 +183,11 @@ function ShortlistedPage() {
               onShortlist={() => callRpc("client_shortlist_candidate", m.id, "Removed from shortlist")}
               onRequestInterview={() => setInterviewFor(m)}
               onRequestHire={() => callRpc("request_to_hire", m.id, "Hire request sent to ScaleSource")}
-              onReject={() => setRejectFor(m)}
+              onRejected={() => void load()}
             />
           ))}
         </div>
       )}
-
-      <RejectCandidateDialog
-        matchId={rejectFor?.id ?? null}
-        candidateName={
-          rejectFor ? displayName(rejectFor.candidate_pool_profile?.full_name, rejectFor.status) : null
-        }
-        onClose={() => setRejectFor(null)}
-        onRejected={() => {
-          setRejectFor(null);
-          void load();
-        }}
-      />
 
       <CandidateProfileDialog
         candidateId={profileFor?.candidate_id ?? null}

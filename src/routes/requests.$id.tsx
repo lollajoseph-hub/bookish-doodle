@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { RejectCandidateDialog } from "@/components/reject-dialog";
 import { CandidateCard, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { InterviewRequestDialog } from "@/components/interview-request-dialog";
@@ -77,7 +76,6 @@ function RequestDetail() {
   const [photos, setPhotos] = useState<Record<string, string | null>>({});
   const [err, setErr] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
-  const [rejectFor, setRejectFor] = useState<MatchRow | null>(null);
   const [profileFor, setProfileFor] = useState<MatchRow | null>(null);
   const [interviewFor, setInterviewFor] = useState<MatchRow | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -245,7 +243,7 @@ function RequestDetail() {
                     }
                     onRequestInterview={() => setInterviewFor(m)}
                     onRequestHire={() => callRpc("request_to_hire", m.id, "Hire request sent to ScaleSource")}
-                    onReject={() => setRejectFor(m)}
+                    onRejected={() => void load()}
                   />
                 ))}
               </div>
@@ -268,18 +266,6 @@ function RequestDetail() {
           )}
         </div>
       </div>
-
-      <RejectCandidateDialog
-        matchId={rejectFor?.id ?? null}
-        candidateName={
-          rejectFor ? displayName(rejectFor.candidate_pool_profile?.full_name, rejectFor.status) : null
-        }
-        onClose={() => setRejectFor(null)}
-        onRejected={() => {
-          setRejectFor(null);
-          void load();
-        }}
-      />
 
       <CandidateProfileDialog
         candidateId={profileFor?.candidate_id ?? null}
