@@ -1,12 +1,28 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CalendarCheck } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { MatchStatusBadge } from "@/components/match-status";
-import { confirmInterview, fetchMatchesByStatus, updateMatchStatus } from "@/lib/crm-queries";
+import {
+  completeInterview,
+  confirmInterview,
+  fetchMatchesByStatus,
+  updateMatchStatus,
+} from "@/lib/crm-queries";
 import type { MatchStatus } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
