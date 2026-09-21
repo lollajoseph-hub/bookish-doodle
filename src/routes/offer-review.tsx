@@ -82,8 +82,12 @@ function OfferReviewPage() {
     <AppShell title="Offer review" description="Offers awaiting a decision, and hires awaiting placement">
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
-          Awaiting decision
+          Offer out — create placement
         </h2>
+        <p className="text-sm text-muted-foreground">
+          The contract has been sent. Adding the commercial terms creates the placement and marks the
+          candidate hired.
+        </p>
         {isLoading && <p className="text-sm text-muted-foreground">Loading offers…</p>}
         <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
           <Table>
@@ -115,12 +119,8 @@ function OfferReviewPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex flex-wrap justify-end gap-2">
-                      <Button
-                        size="sm"
-                        disabled={decide.isPending}
-                        onClick={() => decide.mutate({ id: m.id, status: "hired" })}
-                      >
-                        Mark hired
+                      <Button size="sm" onClick={() => setPlacementFor(m)}>
+                        Create placement
                       </Button>
                       <Button
                         size="sm"
