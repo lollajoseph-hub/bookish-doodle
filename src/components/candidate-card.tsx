@@ -156,10 +156,36 @@ export function CandidateCard({
   onShortlist?: () => void;
   onRequestInterview?: () => void;
   onRequestHire?: () => void;
-  onReject?: () => void;
+  /** Called after a successful inline rejection so the parent can refresh. */
+  onRejected?: () => void;
   onViewProfile?: () => void;
   footer?: React.ReactNode;
 }) {
+  const [rejecting, setRejecting] = useState(false);
+  const [rejectReason, setRejectReason] = useState<RejectionReason | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
+  const [rejectBusy, setRejectBusy] = useState(false);
+
+  async function submitRejection() {
+    if (!rejectReason) return;
+    setRejectBusy(true);
+    const { error } = await supabase.rpc("reject_candidate_match", {
+      p_match_id: match.id,
+      p_reason: rejectReason,
+      p_note: rejectNote.trim() ? rejectNote.trim() : null,
+    });
+    setRejectBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Feedback sent — thanks");
+    setRejecting(false);
+    setRejectReason(null);
+    setRejectNote("");
+    onRejected?.();
+  }
+
   const p = match.candidate_pool_profile;
   const status = match.status;
   const isRejected = status === "rejected";
