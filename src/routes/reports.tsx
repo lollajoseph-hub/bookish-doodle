@@ -3,7 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { fetchCandidates } from "@/lib/queries";
-import { fetchAllMatches, fetchClientRequests, fetchPlacements, labelize } from "@/lib/crm-queries";
+import {
+  fetchAllMatches,
+  fetchClientRequests,
+  fetchClients,
+  fetchPlacements,
+  labelize,
+} from "@/lib/crm-queries";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
@@ -97,6 +103,11 @@ function ReportsPage() {
     queryFn: fetchPlacements,
     enabled: isAdmin,
   });
+  const { data: clients = [] } = useQuery({
+    queryKey: ["clients"],
+    queryFn: fetchClients,
+    enabled: isAdmin,
+  });
 
   if (!isAdmin) {
     return (
@@ -118,7 +129,7 @@ function ReportsPage() {
 
   return (
     <AppShell title="Reports" description="Pipeline summary you can print or export">
-      <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <div className="card-amber rounded-2xl border bg-card p-4">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">Placements this month</div>
           <div className="mt-1 text-2xl font-semibold">{placedThisMonth}</div>
@@ -135,12 +146,16 @@ function ReportsPage() {
           <div className="text-xs uppercase tracking-wide text-muted-foreground">Total requests</div>
           <div className="mt-1 text-2xl font-semibold">{requests.length}</div>
         </div>
+        <div className="card-amber rounded-2xl border bg-card p-4">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">Total clients</div>
+          <div className="mt-1 text-2xl font-semibold">{clients.length}</div>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
         <ReportCard title="Candidates by status" rows={tally(candidates.map((c) => c.status))} />
         <ReportCard title="Requests by status" rows={tally(requests.map((r) => r.status))} />
-        <ReportCard title="Matches by stage" rows={tally(matches.map((m) => m.status))} />
+        <ReportCard title="Pipeline stage" rows={tally(matches.map((m) => m.status))} />
         <ReportCard
           title="Rejection reasons"
           rows={tally(matches.filter((m) => m.status === "rejected").map((m) => m.rejection_reason))}
