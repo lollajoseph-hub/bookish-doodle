@@ -378,8 +378,6 @@
   transition: box-shadow 200ms ease, transform 200ms ease;
 
   &:hover {
-    box-shadow: 0 0 0 3px color-mix(in srgb, #f59e0b 25%, transparent),
-      0 4px 20px color-mix(in srgb, #f59e0b 20%, transparent);
     transform: translateY(-2px);
   }
 }
