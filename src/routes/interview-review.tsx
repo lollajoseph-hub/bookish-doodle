@@ -169,6 +169,15 @@ function InterviewReviewPage() {
                           )}
                         </>
                       )}
+                      {m.status === "hire_requested" && (
+                        <Button
+                          size="sm"
+                          disabled={extendOffer.isPending}
+                          onClick={() => extendOffer.mutate(m.id)}
+                        >
+                          Send contract
+                        </Button>
+                      )}
                       {next && (
                         <Button
                           size="sm"
@@ -182,7 +191,7 @@ function InterviewReviewPage() {
                             advance.mutate({ id: m.id, status: next });
                           }}
                         >
-                          {next === "offer_extended" ? "Extend offer" : "Move to next stage"}
+                          Move to next stage
                         </Button>
                       )}
                       <Button
