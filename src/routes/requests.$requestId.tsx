@@ -16,9 +16,12 @@ import {
   updateRequestStatus,
 } from "@/lib/crm-queries";
 import { fetchCandidates } from "@/lib/queries";
+import { supabase } from "@/lib/supabase";
 import type { MatchStatus, RejectionReason } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
@@ -62,6 +65,8 @@ function RequestDetailPage() {
   const [reason, setReason] = useState("");
   const [rejectFor, setRejectFor] = useState<string | null>(null);
   const [confirmFor, setConfirmFor] = useState<{ id: string; proposedAt: string | null } | null>(null);
+  const [proposeDate, setProposeDate] = useState<Date | undefined>(undefined);
+  const [proposeTime, setProposeTime] = useState("");
   const [rejectReason, setRejectReason] = useState<RejectionReason>("skill_mismatch");
   const [rejectNote, setRejectNote] = useState("");
 
@@ -102,6 +107,30 @@ function RequestDetailPage() {
     onSuccess: () => {
       toast.success("Interview confirmed");
       setConfirmFor(null);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const propose = useMutation({
+    mutationFn: async () => {
+      if (!confirmFor || !proposeDate || !proposeTime) {
+        throw new Error("Pick a date and time to propose");
+      }
+      const [hours, minutes] = proposeTime.split(":").map(Number);
+      const proposedAt = new Date(proposeDate);
+      proposedAt.setHours(hours, minutes, 0, 0);
+      const { error } = await supabase.rpc("admin_propose_interview_time", {
+        p_match_id: confirmFor.id,
+        p_proposed_at: proposedAt.toISOString(),
+      });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("New time proposed — waiting for the client to confirm");
+      setConfirmFor(null);
+      setProposeDate(undefined);
+      setProposeTime("");
       invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -369,35 +398,92 @@ function RequestDetailPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!confirmFor} onOpenChange={(o) => !o && setConfirmFor(null)}>
-        <DialogContent>
+      <Dialog
+        open={!!confirmFor}
+        onOpenChange={(o) => {
+          if (!o) {
+            setConfirmFor(null);
+            setProposeDate(undefined);
+            setProposeTime("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Confirm interview</DialogTitle>
-            <DialogDescription>Accept the time proposed by the client.</DialogDescription>
+            <DialogDescription>
+              Accept the client's proposed time, or propose a different one.
+            </DialogDescription>
           </DialogHeader>
-          {confirmFor?.proposedAt ? (
-            <p className="rounded-xl bg-primary-soft/60 p-3 text-sm">
-              Client proposed{" "}
-              <span className="font-medium">
-                {new Date(confirmFor.proposedAt).toLocaleString()}
-              </span>
-              . Confirming locks this in as the scheduled interview time.
-            </p>
-          ) : (
-            <p className="rounded-xl bg-primary-soft/60 p-3 text-sm">
-              The client hasn't proposed a time for this interview yet — confirmation will fail
-              until they do.
-            </p>
-          )}
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Accept as proposed
+              </p>
+              {confirmFor?.proposedAt ? (
+                <p className="rounded-xl bg-primary-soft/60 p-3 text-sm">
+                  Client proposed{" "}
+                  <span className="font-medium">
+                    {new Date(confirmFor.proposedAt).toLocaleString()}
+                  </span>
+                  . Confirming locks this in as the scheduled interview time.
+                </p>
+              ) : (
+                <p className="rounded-xl bg-primary-soft/60 p-3 text-sm">
+                  The client hasn't proposed a time for this interview yet — confirmation will
+                  fail until they do.
+                </p>
+              )}
+              <Button
+                onClick={() => confirmFor && confirm.mutate(confirmFor.id)}
+                disabled={confirm.isPending || !confirmFor?.proposedAt}
+              >
+                {confirm.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Confirm
+              </Button>
+            </div>
+
+            <div className="space-y-3 border-t border-amber/60 pt-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Propose a different time instead
+              </p>
+              <div className="flex flex-wrap items-start gap-4">
+                <Calendar
+                  mode="single"
+                  selected={proposeDate}
+                  onSelect={setProposeDate}
+                  className="pointer-events-auto rounded-xl border p-3"
+                />
+                <div className="space-y-2">
+                  <Label htmlFor="propose-time">Time</Label>
+                  <Input
+                    id="propose-time"
+                    type="time"
+                    value={proposeTime}
+                    onChange={(e) => setProposeTime(e.target.value)}
+                    className="w-32"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => propose.mutate()}
+                    disabled={propose.isPending || !proposeDate || !proposeTime}
+                  >
+                    {propose.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Propose time
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setConfirmFor(null)}>
-              Cancel
-            </Button>
             <Button
-              onClick={() => confirmFor && confirm.mutate(confirmFor.id)}
-              disabled={confirm.isPending || !confirmFor?.proposedAt}
+              variant="ghost"
+              onClick={() => {
+                setConfirmFor(null);
+                setProposeDate(undefined);
+                setProposeTime("");
+              }}
             >
-              {confirm.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Confirm
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
