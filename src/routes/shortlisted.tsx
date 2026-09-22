@@ -183,6 +183,7 @@ function ShortlistedPage() {
               match={m}
               photoUrl={photos[m.id] ?? null}
               busy={actingId === m.id}
+              locked={actingId !== null && actingId !== m.id}
               contextLabel={
                 <Link to="/requests/$id" params={{ id: m.client_request_id }} className="hover:text-foreground">
                   For: {requests[m.client_request_id] ?? "Hiring request"}

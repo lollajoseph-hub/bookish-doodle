@@ -144,6 +144,7 @@ export function CandidateCard({
   match,
   photoUrl,
   busy,
+  locked,
   contextLabel,
   onShortlist,
   onRequestInterview,
@@ -156,6 +157,8 @@ export function CandidateCard({
   match: MatchRow;
   photoUrl: string | null;
   busy: boolean;
+  /** True while ANY other card's action is in flight — locks this card's buttons too. */
+  locked?: boolean;
   /** e.g. the request this match belongs to, on cross-request views. */
   contextLabel?: React.ReactNode;
   onShortlist?: () => void;
@@ -444,7 +447,7 @@ export function CandidateCard({
             <Button
               variant={status === "shortlisted" ? "default" : "outline"}
               size="sm"
-              disabled={busy}
+              disabled={busy || locked}
               onClick={onShortlist}
               className={status === "shortlisted" ? "bg-amber-500 text-white hover:bg-amber-600" : ""}
             >
@@ -458,7 +461,7 @@ export function CandidateCard({
           )}
 
           {canAct && onRequestInterview && (
-            <Button size="sm" disabled={busy} onClick={onRequestInterview}>
+            <Button size="sm" disabled={busy || locked} onClick={onRequestInterview}>
               <Video className="mr-1.5 h-4 w-4" />
               Request interview
             </Button>
@@ -468,7 +471,7 @@ export function CandidateCard({
             <Button
               variant="ghost"
               size="sm"
-              disabled={busy}
+              disabled={busy || locked}
               onClick={() => setRejecting(true)}
               className="text-destructive hover:bg-destructive/10 hover:text-destructive"
             >
@@ -481,7 +484,7 @@ export function CandidateCard({
         </div>
 
         {status === "interview_completed" && onRequestHire && (
-          <Button className="w-full" disabled={busy} onClick={onRequestHire}>
+          <Button className="w-full" disabled={busy || locked} onClick={onRequestHire}>
             {busy && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
             Request to hire
           </Button>
