@@ -85,6 +85,8 @@ function RequestDetail() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [noMoreCandidates, setNoMoreCandidates] = useState(false);
   const loadTokenRef = useRef(0);
+  /** Stable display order of match ids, captured on first load per request id. */
+  const orderRef = useRef<{ requestId: string; order: string[] } | null>(null);
 
   const load = useCallback(async () => {
     const token = ++loadTokenRef.current;
@@ -103,11 +105,26 @@ function RequestDetail() {
       return null;
     }
 
-    const list = ((matchRes.data ?? []) as unknown as MatchRow[]).slice().sort((a, b) => {
-      const rank = STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status);
-      if (rank !== 0) return rank;
-      return (b.match_score ?? 0) - (a.match_score ?? 0);
-    });
+    const raw = (matchRes.data ?? []) as unknown as MatchRow[];
+
+    let list: MatchRow[];
+    if (!orderRef.current || orderRef.current.requestId !== id) {
+      // First load for this request: sort by status/score and capture that order.
+      list = raw.slice().sort((a, b) => {
+        const rank = STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status);
+        if (rank !== 0) return rank;
+        return (b.match_score ?? 0) - (a.match_score ?? 0);
+      });
+      orderRef.current = { requestId: id, order: list.map((m) => m.id) };
+    } else {
+      // Subsequent loads: keep every card in its captured slot so the grid never reshuffles.
+      const stored = orderRef.current.order;
+      const fresh = raw.filter((m) => !stored.includes(m.id));
+      stored.push(...fresh.map((m) => m.id));
+      const byId = new Map(raw.map((m) => [m.id, m]));
+      list = stored.map((mid) => byId.get(mid)).filter((m): m is MatchRow => !!m);
+    }
+
     if (loadTokenRef.current !== token) return null;
     setMatches(list);
 
