@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,8 +62,10 @@ function ShortlistedPage() {
   const [filter, setFilter] = useState<string>("all");
   const [profileFor, setProfileFor] = useState<MatchRow | null>(null);
   const [interviewFor, setInterviewFor] = useState<MatchRow | null>(null);
+  const loadTokenRef = useRef(0);
 
   const load = useCallback(async () => {
+    const token = ++loadTokenRef.current;
     setErr(null);
     const [matchRes, reqRes] = await Promise.all([
       supabase.from("candidate_matches").select(MATCH_SELECT).in("status", ACTIVE_STATUSES),
@@ -79,6 +81,7 @@ function ShortlistedPage() {
     }
 
     if (matchRes.error) {
+      if (loadTokenRef.current !== token) return;
       setErr(matchRes.error.message);
       setMatches([]);
       return;
@@ -89,11 +92,13 @@ function ShortlistedPage() {
       if (rank !== 0) return rank;
       return (b.match_score ?? 0) - (a.match_score ?? 0);
     });
+    if (loadTokenRef.current !== token) return;
     setMatches(list);
 
     const entries = await Promise.all(
       list.map(async (m) => [m.id, await signedPhotoUrl(m.candidate_pool_profile?.profile_photo_path)] as const)
     );
+    if (loadTokenRef.current !== token) return;
     setPhotos(Object.fromEntries(entries));
   }, []);
 
@@ -115,12 +120,14 @@ function ShortlistedPage() {
   ) {
     setActingId(matchId);
     const { error } = await supabase.rpc(fn, { p_match_id: matchId });
-    setActingId(null);
-    if (error) toast.error(error.message);
-    else {
-      toast.success(success);
-      void load();
+    if (error) {
+      setActingId(null);
+      toast.error(error.message);
+      return;
     }
+    toast.success(success);
+    await load();
+    setActingId(null);
   }
 
   return (

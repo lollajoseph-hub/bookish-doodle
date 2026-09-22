@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
@@ -84,8 +84,10 @@ function RequestDetail() {
   const [interviewFor, setInterviewFor] = useState<MatchRow | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [noMoreCandidates, setNoMoreCandidates] = useState(false);
+  const loadTokenRef = useRef(0);
 
   const load = useCallback(async () => {
+    const token = ++loadTokenRef.current;
     const [reqRes, matchRes] = await Promise.all([
       supabase.from("client_requests").select(REQUEST_SELECT).eq("id", id).maybeSingle(),
       supabase.from("candidate_matches").select(MATCH_SELECT).eq("client_request_id", id),
@@ -95,6 +97,7 @@ function RequestDetail() {
     else setRequest((reqRes.data as unknown as RequestHeader) ?? null);
 
     if (matchRes.error) {
+      if (loadTokenRef.current !== token) return null;
       setErr(matchRes.error.message);
       setMatches([]);
       return null;
@@ -105,11 +108,13 @@ function RequestDetail() {
       if (rank !== 0) return rank;
       return (b.match_score ?? 0) - (a.match_score ?? 0);
     });
+    if (loadTokenRef.current !== token) return null;
     setMatches(list);
 
     const entries = await Promise.all(
       list.map(async (m) => [m.id, await signedPhotoUrl(m.candidate_pool_profile?.profile_photo_path)] as const)
     );
+    if (loadTokenRef.current !== token) return null;
     setPhotos(Object.fromEntries(entries));
     return list;
   }, [id]);
@@ -125,12 +130,14 @@ function RequestDetail() {
   ) {
     setActingId(matchId);
     const { error } = await supabase.rpc(fn, { p_match_id: matchId });
-    setActingId(null);
-    if (error) toast.error(error.message);
-    else {
-      toast.success(success);
-      void load();
+    if (error) {
+      setActingId(null);
+      toast.error(error.message);
+      return;
     }
+    toast.success(success);
+    await load();
+    setActingId(null);
   }
 
   async function showMoreCandidates() {
