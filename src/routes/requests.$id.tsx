@@ -244,6 +244,7 @@ function RequestDetail() {
                     match={m}
                     photoUrl={photos[m.id] ?? null}
                     busy={actingId === m.id}
+                    locked={actingId !== null && actingId !== m.id}
                     onViewProfile={() => setProfileFor(m)}
                     onShortlist={() =>
                       callRpc(
