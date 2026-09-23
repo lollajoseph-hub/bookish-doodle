@@ -145,6 +145,7 @@ export function CandidateCard({
   photoUrl,
   busy,
   locked,
+  curated,
   contextLabel,
   onShortlist,
   onRequestInterview,
@@ -159,6 +160,8 @@ export function CandidateCard({
   busy: boolean;
   /** True while ANY other card's action is in flight — locks this card's buttons too. */
   locked?: boolean;
+  /** Staff-curated request: this candidate was hand-picked, not algorithmically matched. */
+  curated?: boolean;
   /** e.g. the request this match belongs to, on cross-request views. */
   contextLabel?: React.ReactNode;
   onShortlist?: () => void;
