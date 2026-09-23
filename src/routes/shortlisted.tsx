@@ -57,6 +57,7 @@ interface RequestMeta {
 function ShortlistedPage() {
   const [matches, setMatches] = useState<MatchRow[] | null>(null);
   const [requests, setRequests] = useState<Record<string, string>>({});
+  const [curatedRequests, setCuratedRequests] = useState<Set<string>>(new Set());
   const [photos, setPhotos] = useState<Record<string, string | null>>({});
   const [err, setErr] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
@@ -205,6 +206,7 @@ function ShortlistedPage() {
               photoUrl={photos[m.id] ?? null}
               busy={actingId === m.id}
               locked={actingId !== null && actingId !== m.id}
+              curated={curatedRequests.has(m.client_request_id)}
               contextLabel={
                 <Link to="/requests/$id" params={{ id: m.client_request_id }} className="hover:text-foreground">
                   For: {requests[m.client_request_id] ?? "Hiring request"}
