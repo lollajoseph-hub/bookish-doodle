@@ -1,3 +1,4 @@
+import { LANGUAGE_CATEGORY } from "@/lib/queries";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -320,14 +321,6 @@ function RequestDetailPage() {
                 </p>
                 <p className="text-muted-foreground">Start: {r.desired_start_date || "—"}</p>
                 {r.notes && <p className="rounded-xl bg-primary-soft/60 p-3 text-foreground">{r.notes}</p>}
-                <div className="rounded-xl bg-primary-soft/60 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-primary-dark">
-                    Must-have skills (from client)
-                  </p>
-                  <p className="mt-1 whitespace-pre-wrap text-foreground">
-                    {r.must_have_skills_text?.trim() || "—"}
-                  </p>
-                </div>
               </div>
               <Link
                 to="/clients/$clientId"
@@ -342,22 +335,25 @@ function RequestDetailPage() {
               <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
                 Skills wanted
               </h2>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {data.requiredSkills.length ? (
-                  data.requiredSkills.map((s) => (
-                    <Badge
-                      key={s.skill_id}
-                      variant="outline"
-                      className={s.is_required ? "border-amber bg-amber/15" : ""}
-                    >
-                      {s.name}
-                      {s.is_required ? " *" : ""}
-                    </Badge>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">None listed.</p>
-                )}
-              </div>
+              {[
+                { label: "Must-have skills", items: data.requiredSkills.filter((s) => s.is_required && s.category !== LANGUAGE_CATEGORY) },
+                { label: "Required languages", items: data.requiredSkills.filter((s) => s.is_required && s.category === LANGUAGE_CATEGORY) },
+              ].map((g) => (
+                <div key={g.label} className="mt-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{g.label}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {g.items.length ? (
+                      g.items.map((s) => (
+                        <Badge key={s.skill_id} variant="outline">
+                          {s.name}
+                        </Badge>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">None listed</p>
+                    )}
+                  </div>
+                </div>
+              ))}
             </section>
           </div>
         </div>

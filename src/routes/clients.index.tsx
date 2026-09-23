@@ -7,6 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { fetchClients, parseSkillNames } from "@/lib/crm-queries";
 import { fetchCandidates, fetchJobRoles, fetchSkills, LANGUAGE_CATEGORY } from "@/lib/queries";
 import { MultiSelect } from "@/components/multi-select";
+import { TimezoneSelect } from "@/components/timezone-select";
 import { FormSection } from "@/components/form-section";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -135,9 +136,7 @@ function ClientsPage() {
   const [days, setDays] = useState<string[]>([]);
   const [mustSkills, setMustSkills] = useState("");
   const [langIds, setLangIds] = useState<string[]>([]);
-  const [niceIds, setNiceIds] = useState<string[]>([]);
   const { data: allSkills = [] } = useQuery({ queryKey: ["skills"], queryFn: fetchSkills });
-  const skillOptions = useMemo(() => allSkills.map((s) => ({ id: s.id, label: s.name })), [allSkills]);
   const languageOptions = useMemo(
     () => allSkills.filter((s) => s.category === LANGUAGE_CATEGORY).map((s) => ({ id: s.id, label: s.name })),
     [allSkills],
@@ -185,6 +184,7 @@ function ClientsPage() {
       } else {
         if (!hours.trim()) throw new Error("Hours needed is required");
         if (!langIds.length) throw new Error("Select at least one required language");
+        if (parseSkillNames(mustSkills).length === 0) throw new Error("Add at least one must-have skill");
         if (!days.length) throw new Error("Select at least one day needed");
       }
       const request = isCustom
@@ -209,7 +209,6 @@ function ClientsPage() {
             days_of_week_needed: days,
             must_have_skill_names: parseSkillNames(mustSkills),
             language_skill_ids: langIds,
-            nice_to_have_skill_ids: niceIds,
             hires_needed: Number(hiresNeeded) || 1,
           };
 
@@ -276,7 +275,6 @@ function ClientsPage() {
       setDays([]);
       setMustSkills("");
       setLangIds([]);
-      setNiceIds([]);
       setHiresNeeded("1");
       setCandidateIds([]);
       setCandSearch("");
@@ -552,7 +550,7 @@ function ClientsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="req-tz">Timezone requirement</Label>
-                    <Input id="req-tz" placeholder="US Eastern" value={tz} onChange={(e) => setTz(e.target.value)} />
+                    <TimezoneSelect id="req-tz" value={tz} onChange={setTz} placeholder="Select timezone…" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="req-minyears">Min years experience</Label>
@@ -599,17 +597,7 @@ function ClientsPage() {
                     />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
-                    <Label>Nice-to-have skills</Label>
-                    <MultiSelect
-                      options={skillOptions}
-                      selected={niceIds}
-                      onChange={setNiceIds}
-                      placeholder="Select skills"
-                      searchPlaceholder="Search skills…"
-                    />
-                  </div>
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="req-skills">Must-have skills</Label>
+                    <Label htmlFor="req-skills">Must-have skills *</Label>
                     <Textarea
                       id="req-skills"
                       placeholder="Skills the client says are non-negotiable, e.g. Spanish, QuickBooks"

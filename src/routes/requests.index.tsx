@@ -14,6 +14,7 @@ import {
 } from "@/lib/crm-queries";
 import { fetchJobRoles, fetchSkills, LANGUAGE_CATEGORY } from "@/lib/queries";
 import { MultiSelect } from "@/components/multi-select";
+import { TimezoneSelect } from "@/components/timezone-select";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -132,9 +133,7 @@ function RequestsPage() {
   const [days, setDays] = useState<string[]>([]);
   const [mustSkills, setMustSkills] = useState("");
   const [langIds, setLangIds] = useState<string[]>([]);
-  const [niceIds, setNiceIds] = useState<string[]>([]);
   const { data: allSkills = [] } = useQuery({ queryKey: ["skills"], queryFn: fetchSkills });
-  const skillOptions = useMemo(() => allSkills.map((s) => ({ id: s.id, label: s.name })), [allSkills]);
   const languageOptions = useMemo(
     () => allSkills.filter((s) => s.category === LANGUAGE_CATEGORY).map((s) => ({ id: s.id, label: s.name })),
     [allSkills],
@@ -166,6 +165,7 @@ function RequestsPage() {
       if (!roleId) throw new Error("Pick a role");
       if (!hours.trim()) throw new Error("Hours needed is required");
       if (!langIds.length) throw new Error("Select at least one required language");
+      if (parseSkillNames(mustSkills).length === 0) throw new Error("Add at least one must-have skill");
       if (!days.length) throw new Error("Select at least one day needed");
       const hires = Number(hiresNeeded) || 1;
       return createClientRequest({
@@ -181,10 +181,8 @@ function RequestsPage() {
         desired_start_date: startDate || null,
         days_of_week_needed: days,
         notes,
-        must_have_skills_text: mustSkills,
         must_have_skill_names: parseSkillNames(mustSkills),
         language_skill_ids: langIds,
-        nice_to_have_skill_ids: niceIds,
         created_by: profile?.id ?? null,
       });
     },
@@ -194,7 +192,6 @@ function RequestsPage() {
       setNotes("");
       setMustSkills("");
       setLangIds([]);
-      setNiceIds([]);
       setDays([]);
       queryClient.invalidateQueries({ queryKey: ["client-requests"] });
     },
@@ -384,7 +381,7 @@ function RequestsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="tz">Timezone requirement</Label>
-                <Input id="tz" placeholder="US Eastern" value={tz} onChange={(e) => setTz(e.target.value)} />
+                <TimezoneSelect id="tz" value={tz} onChange={setTz} placeholder="Select timezone…" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="minyears">Min years experience</Label>
@@ -433,17 +430,7 @@ function RequestsPage() {
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label>Nice-to-have skills</Label>
-                <MultiSelect
-                  options={skillOptions}
-                  selected={niceIds}
-                  onChange={setNiceIds}
-                  placeholder="Select skills"
-                  searchPlaceholder="Search skills…"
-                />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="must-skills">Must-have skills</Label>
+                <Label htmlFor="must-skills">Must-have skills *</Label>
                 <Textarea
                   id="must-skills"
                   placeholder="Skills the client says are non-negotiable, e.g. Spanish, QuickBooks, Monday-Friday availability"

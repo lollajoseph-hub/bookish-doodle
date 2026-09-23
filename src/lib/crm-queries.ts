@@ -247,7 +247,7 @@ export interface ClientRequestDetail {
   request: ClientRequestRow;
   clientName: string | null;
   roleName: string | null;
-  requiredSkills: { skill_id: string; name: string; is_required: boolean | null }[];
+  requiredSkills: { skill_id: string; name: string; category: string | null; is_required: boolean | null }[];
   matches: MatchView[];
 }
 
@@ -260,7 +260,7 @@ export async function fetchClientRequestDetail(id: string): Promise<ClientReques
       .select("*")
       .eq("client_request_id", id)
       .order("created_at", { ascending: false }),
-    supabase.from("skills").select("id, name"),
+    supabase.from("skills").select("id, name, category"),
   ]);
   if (reqRes.error) throw reqRes.error;
   if (!reqRes.data) throw new Error("Request not found");
@@ -272,7 +272,7 @@ export async function fetchClientRequestDetail(id: string): Promise<ClientReques
     supabase.from("candidates").select("id, full_name, headline"),
   ]);
 
-  const skillName = new Map((skillsRes.data ?? []).map((s) => [s.id, s.name]));
+  const skillById = new Map((skillsRes.data ?? []).map((s) => [s.id, s]));
   const candidateById = new Map((candidatesRes.data ?? []).map((c) => [c.id, c]));
 
   return {
@@ -281,7 +281,8 @@ export async function fetchClientRequestDetail(id: string): Promise<ClientReques
     roleName: roleRes.data?.name ?? null,
     requiredSkills: (skillLinkRes.data ?? []).map((s) => ({
       skill_id: s.skill_id,
-      name: skillName.get(s.skill_id) ?? "Skill",
+      name: skillById.get(s.skill_id)?.name ?? "Skill",
+      category: skillById.get(s.skill_id)?.category ?? null,
       is_required: s.is_required,
     })),
     matches: ((matchesRes.data ?? []) as CandidateMatchRow[]).map((m) => ({
@@ -305,11 +306,9 @@ export async function createClientRequest(input: {
   desired_start_date: string | null;
   days_of_week_needed: string[];
   notes: string | null;
-  must_have_skills_text?: string | null;
   source?: "standard" | "staff_curated";
   created_by: string | null;
   language_skill_ids?: string[];
-  nice_to_have_skill_ids?: string[];
   must_have_skill_names?: string[];
 }): Promise<string> {
   const { data, error } = await supabase
@@ -327,7 +326,6 @@ export async function createClientRequest(input: {
       desired_start_date: input.desired_start_date || null,
       days_of_week_needed: input.days_of_week_needed.length ? input.days_of_week_needed : null,
       notes: input.notes || null,
-      must_have_skills_text: input.must_have_skills_text?.trim() || null,
       status: "open",
       source: input.source ?? "standard",
       created_by: input.created_by,
@@ -349,7 +347,6 @@ export async function createClientRequest(input: {
     ).filter(Boolean);
   }
   const rows = new Map<string, boolean>();
-  for (const id of input.nice_to_have_skill_ids ?? []) rows.set(id, false);
   for (const id of [...mustHaveIds, ...(input.language_skill_ids ?? [])]) rows.set(id, true);
   if (rows.size) {
     const { error: skillsError } = await supabase.from("client_request_skills").insert(
