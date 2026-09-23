@@ -185,13 +185,14 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
-    Enums: { app_role: AppRoleName };
+    Enums: { app_role: AppRoleName; client_request_source: ClientRequestSource };
     CompositeTypes: Record<string, never>;
   };
 }
 
 /* ------------------------- clients, requests, matches ------------------------ */
 
+export type ClientRequestSource = "standard" | "staff_curated";
 export type EngagementType = "full_time" | "part_time" | "project";
 export type RequestStatus = "open" | "needs_attention" | "fulfilled" | "closed";
 export type MatchStatus =
@@ -248,6 +249,7 @@ export interface ClientRequestRow {
   notes: string | null;
   must_have_skills_text: string | null;
   status: RequestStatus;
+  source: ClientRequestSource;
   rejection_count: number | null;
   created_by: string | null;
   created_at: string;

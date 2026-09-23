@@ -325,7 +325,8 @@ function AdminToolsPage() {
                     <div className="divide-y overflow-hidden rounded-lg border">
                       {selectedClientRequests.map((request) => {
                         const rejectionCount = request.rejection_count ?? 0;
-                        const canReshuffle = rejectionCount >= 4;
+                        const isCurated = request.source === "staff_curated";
+                        const canReshuffle = !isCurated && rejectionCount >= 4;
                         const isReshuffling =
                           reshuffleMutation.isPending && reshuffleMutation.variables === request.id;
 
@@ -342,6 +343,16 @@ function AdminToolsPage() {
                                 {labelize(request.status)}
                               </Badge>
                             </div>
+                            {isCurated ? (
+                              <div className="flex flex-col items-end gap-1.5">
+                                <Badge variant="outline" className="border-amber bg-amber/10 text-amber-foreground">
+                                  Staff-curated
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  Hand-picked — no reshuffle
+                                </span>
+                              </div>
+                            ) : (
                             <div className="flex flex-col items-end gap-1.5">
                               <Button
                                 size="sm"
@@ -360,6 +371,7 @@ function AdminToolsPage() {
                                 {canReshuffle ? "Ready to reshuffle" : `${rejectionCount}/4 rejected — needs 4 to reshuffle`}
                               </span>
                             </div>
+                            )}
                           </div>
                         );
                       })}

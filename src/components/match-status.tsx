@@ -36,3 +36,12 @@ export function RequestStatusBadge({ status }: { status: string }) {
     </Badge>
   );
 }
+
+export function CuratedBadge({ source }: { source?: string | null }) {
+  if (source !== "staff_curated") return null;
+  return (
+    <Badge variant="outline" className="border-amber bg-amber/10 text-amber-foreground">
+      Staff-curated
+    </Badge>
+  );
+}
