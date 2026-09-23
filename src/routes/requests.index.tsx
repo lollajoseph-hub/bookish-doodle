@@ -497,6 +497,19 @@ function RequestsPage() {
               <p className="text-xs text-muted-foreground">For labelling only — not used for scoring.</p>
             </div>
             <div className="space-y-2">
+              <Label>Engagement type *</Label>
+              <Select value={cEngagement} onValueChange={setCEngagement}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="full_time">Full time</SelectItem>
+                  <SelectItem value="part_time">Part time</SelectItem>
+                  <SelectItem value="project">Project</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="c-title">Title</Label>
               <Input
                 id="c-title"
