@@ -7,11 +7,13 @@ import { AppShell } from "@/components/app-shell";
 import { CuratedBadge, RequestStatusBadge } from "@/components/match-status";
 import {
   createClientRequest,
+  parseSkillNames,
   fetchClientRequests,
   fetchClients,
   labelize,
 } from "@/lib/crm-queries";
-import { fetchJobRoles } from "@/lib/queries";
+import { fetchJobRoles, fetchSkills, LANGUAGE_CATEGORY } from "@/lib/queries";
+import { MultiSelect } from "@/components/multi-select";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -129,6 +131,14 @@ function RequestsPage() {
   const [startDate, setStartDate] = useState("");
   const [days, setDays] = useState<string[]>([]);
   const [mustSkills, setMustSkills] = useState("");
+  const [langIds, setLangIds] = useState<string[]>([]);
+  const [niceIds, setNiceIds] = useState<string[]>([]);
+  const { data: allSkills = [] } = useQuery({ queryKey: ["skills"], queryFn: fetchSkills });
+  const skillOptions = useMemo(() => allSkills.map((s) => ({ id: s.id, label: s.name })), [allSkills]);
+  const languageOptions = useMemo(
+    () => allSkills.filter((s) => s.category === LANGUAGE_CATEGORY).map((s) => ({ id: s.id, label: s.name })),
+    [allSkills],
+  );
   const [notes, setNotes] = useState("");
   const navigate = useNavigate();
   const [customOpen, setCustomOpen] = useState(false);
@@ -155,9 +165,7 @@ function RequestsPage() {
       if (!clientId) throw new Error("Pick a client");
       if (!roleId) throw new Error("Pick a role");
       if (!hours.trim()) throw new Error("Hours needed is required");
-      if (!tz.trim()) throw new Error("Timezone requirement is required");
-      if (!minYears.trim()) throw new Error("Min years experience is required");
-      if (!startDate) throw new Error("Desired start date is required");
+      if (!langIds.length) throw new Error("Select at least one required language");
       if (!days.length) throw new Error("Select at least one day needed");
       const hires = Number(hiresNeeded) || 1;
       return createClientRequest({
@@ -168,12 +176,15 @@ function RequestsPage() {
         hires_needed: hires,
         engagement_type: engagement,
         hours_needed: hours,
-        timezone_requirement: tz,
-        years_experience_min: minYears ? Number(minYears) : null,
-        desired_start_date: startDate,
+        timezone_requirement: tz.trim() || null,
+        years_experience_min: minYears.trim() ? Number(minYears) : null,
+        desired_start_date: startDate || null,
         days_of_week_needed: days,
         notes,
         must_have_skills_text: mustSkills,
+        must_have_skill_names: parseSkillNames(mustSkills),
+        language_skill_ids: langIds,
+        nice_to_have_skill_ids: niceIds,
         created_by: profile?.id ?? null,
       });
     },
@@ -182,6 +193,8 @@ function RequestsPage() {
       setOpen(false);
       setNotes("");
       setMustSkills("");
+      setLangIds([]);
+      setNiceIds([]);
       setDays([]);
       queryClient.invalidateQueries({ queryKey: ["client-requests"] });
     },
@@ -370,11 +383,11 @@ function RequestsPage() {
                 <Input id="hours" placeholder="20 hrs/week" value={hours} onChange={(e) => setHours(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="tz">Timezone requirement *</Label>
+                <Label htmlFor="tz">Timezone requirement</Label>
                 <Input id="tz" placeholder="US Eastern" value={tz} onChange={(e) => setTz(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="minyears">Min years experience *</Label>
+                <Label htmlFor="minyears">Min years experience</Label>
                 <Input
                   id="minyears"
                   type="number"
@@ -384,7 +397,7 @@ function RequestsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="start">Desired start date *</Label>
+                <Label htmlFor="start">Desired start date</Label>
                 <Input id="start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
               </div>
               <div className="space-y-2 sm:col-span-2">
@@ -410,6 +423,26 @@ function RequestsPage() {
                 </div>
               </div>
               <div className="space-y-2 sm:col-span-2">
+                <Label>Required languages *</Label>
+                <MultiSelect
+                  options={languageOptions}
+                  selected={langIds}
+                  onChange={setLangIds}
+                  placeholder="Select languages"
+                  searchPlaceholder="Search languages…"
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Nice-to-have skills</Label>
+                <MultiSelect
+                  options={skillOptions}
+                  selected={niceIds}
+                  onChange={setNiceIds}
+                  placeholder="Select skills"
+                  searchPlaceholder="Search skills…"
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="must-skills">Must-have skills</Label>
                 <Textarea
                   id="must-skills"
@@ -418,7 +451,7 @@ function RequestsPage() {
                   onChange={(e) => setMustSkills(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Free text from the client — optional, stored exactly as they wrote it.
+                  Comma or newline separated. Each skill is used for matching.
                 </p>
               </div>
             </div>

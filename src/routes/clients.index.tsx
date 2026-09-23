@@ -4,8 +4,9 @@ import { useMemo, useState } from "react";
 import { Building2, Plus, Loader2, Search, Users, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
-import { fetchClients } from "@/lib/crm-queries";
-import { fetchCandidates, fetchJobRoles } from "@/lib/queries";
+import { fetchClients, parseSkillNames } from "@/lib/crm-queries";
+import { fetchCandidates, fetchJobRoles, fetchSkills, LANGUAGE_CATEGORY } from "@/lib/queries";
+import { MultiSelect } from "@/components/multi-select";
 import { FormSection } from "@/components/form-section";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -133,6 +134,14 @@ function ClientsPage() {
   const [startDate, setStartDate] = useState("");
   const [days, setDays] = useState<string[]>([]);
   const [mustSkills, setMustSkills] = useState("");
+  const [langIds, setLangIds] = useState<string[]>([]);
+  const [niceIds, setNiceIds] = useState<string[]>([]);
+  const { data: allSkills = [] } = useQuery({ queryKey: ["skills"], queryFn: fetchSkills });
+  const skillOptions = useMemo(() => allSkills.map((s) => ({ id: s.id, label: s.name })), [allSkills]);
+  const languageOptions = useMemo(
+    () => allSkills.filter((s) => s.category === LANGUAGE_CATEGORY).map((s) => ({ id: s.id, label: s.name })),
+    [allSkills],
+  );
   const [hiresNeeded, setHiresNeeded] = useState("1");
   const [candidateIds, setCandidateIds] = useState<string[]>([]);
   const [candSearch, setCandSearch] = useState("");
@@ -175,9 +184,7 @@ function ClientsPage() {
         if (!candidateIds.length) throw new Error("Pick at least one candidate");
       } else {
         if (!hours.trim()) throw new Error("Hours needed is required");
-        if (!tz.trim()) throw new Error("Timezone requirement is required");
-        if (!minYears.trim()) throw new Error("Min years experience is required");
-        if (!startDate) throw new Error("Desired start date is required");
+        if (!langIds.length) throw new Error("Select at least one required language");
         if (!days.length) throw new Error("Select at least one day needed");
       }
       const request = isCustom
@@ -196,11 +203,14 @@ function ClientsPage() {
             notes: reqNotes.trim() || null,
             engagement_type: engagement,
             hours_needed: hours.trim(),
-            timezone_requirement: tz.trim(),
-            years_experience_min: Number(minYears),
-            desired_start_date: startDate,
+            timezone_requirement: tz.trim() || null,
+            years_experience_min: minYears.trim() ? Number(minYears) : null,
+            desired_start_date: startDate || null,
             days_of_week_needed: days,
             must_have_skills_text: mustSkills.trim() || null,
+            must_have_skill_names: parseSkillNames(mustSkills),
+            language_skill_ids: langIds,
+            nice_to_have_skill_ids: niceIds,
             hires_needed: Number(hiresNeeded) || 1,
           };
 
@@ -266,6 +276,8 @@ function ClientsPage() {
       setStartDate("");
       setDays([]);
       setMustSkills("");
+      setLangIds([]);
+      setNiceIds([]);
       setHiresNeeded("1");
       setCandidateIds([]);
       setCandSearch("");
@@ -540,15 +552,15 @@ function ClientsPage() {
                     <Input id="req-hours" placeholder="20 hrs/week" value={hours} onChange={(e) => setHours(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="req-tz">Timezone requirement *</Label>
+                    <Label htmlFor="req-tz">Timezone requirement</Label>
                     <Input id="req-tz" placeholder="US Eastern" value={tz} onChange={(e) => setTz(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="req-minyears">Min years experience *</Label>
+                    <Label htmlFor="req-minyears">Min years experience</Label>
                     <Input id="req-minyears" type="number" min={0} value={minYears} onChange={(e) => setMinYears(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="req-start">Desired start date *</Label>
+                    <Label htmlFor="req-start">Desired start date</Label>
                     <Input id="req-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                   </div>
                   <div className="space-y-2">
@@ -576,6 +588,26 @@ function ClientsPage() {
                         );
                       })}
                     </div>
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label>Required languages *</Label>
+                    <MultiSelect
+                      options={languageOptions}
+                      selected={langIds}
+                      onChange={setLangIds}
+                      placeholder="Select languages"
+                      searchPlaceholder="Search languages…"
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label>Nice-to-have skills</Label>
+                    <MultiSelect
+                      options={skillOptions}
+                      selected={niceIds}
+                      onChange={setNiceIds}
+                      placeholder="Select skills"
+                      searchPlaceholder="Search skills…"
+                    />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="req-skills">Must-have skills</Label>
