@@ -210,6 +210,12 @@ function RequestDetail() {
                     {REQUEST_STATUS_LABELS[request.status ?? ""] ?? request.status ?? "—"}
                   </Badge>
                 )}
+                {request?.source === "staff_curated" && (
+                  <Badge className="bg-primary-soft text-primary" variant="secondary">
+                    <Sparkles className="mr-1 h-3 w-3" />
+                    Hand-picked
+                  </Badge>
+                )}
               </div>
 
               {request && (
@@ -263,6 +269,7 @@ function RequestDetail() {
                     photoUrl={photos[m.id] ?? null}
                     busy={actingId === m.id}
                     locked={actingId !== null && actingId !== m.id}
+                    curated={request?.source === "staff_curated"}
                     onViewProfile={() => setProfileFor(m)}
                     onShortlist={() =>
                       callRpc(

@@ -72,15 +72,18 @@ function ShortlistedPage() {
     setErr(null);
     const [matchRes, reqRes] = await Promise.all([
       supabase.from("candidate_matches").select(MATCH_SELECT).in("status", ACTIVE_STATUSES),
-      supabase.from("client_requests").select("id,job_roles(name)"),
+      supabase.from("client_requests").select("id,job_roles(name),source"),
     ]);
 
     if (reqRes.data) {
       const map: Record<string, string> = {};
+      const curated: string[] = [];
       for (const r of reqRes.data as unknown as RequestMeta[]) {
         map[r.id] = r.job_roles?.name ?? "Hiring request";
+        if (r.source === "staff_curated") curated.push(r.id);
       }
       setRequests(map);
+      setCuratedRequests(new Set(curated));
     }
 
     if (matchRes.error) {
