@@ -207,7 +207,6 @@ function ClientsPage() {
             years_experience_min: minYears.trim() ? Number(minYears) : null,
             desired_start_date: startDate || null,
             days_of_week_needed: days,
-            must_have_skills_text: mustSkills.trim() || null,
             must_have_skill_names: parseSkillNames(mustSkills),
             language_skill_ids: langIds,
             nice_to_have_skill_ids: niceIds,
