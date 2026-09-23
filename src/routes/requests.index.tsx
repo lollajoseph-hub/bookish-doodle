@@ -134,6 +134,7 @@ function RequestsPage() {
   const [customOpen, setCustomOpen] = useState(false);
   const [cClientId, setCClientId] = useState("");
   const [cRoleId, setCRoleId] = useState("");
+  const [cEngagement, setCEngagement] = useState("full_time");
   const [cTitle, setCTitle] = useState("");
   const [cNotes, setCNotes] = useState("");
 
@@ -197,7 +198,7 @@ function RequestsPage() {
         title: cTitle,
         candidates_wanted: 1,
         hires_needed: 1,
-        engagement_type: "full_time",
+        engagement_type: cEngagement,
         hours_needed: null,
         timezone_requirement: null,
         years_experience_min: null,
@@ -213,6 +214,7 @@ function RequestsPage() {
       setCustomOpen(false);
       setCClientId("");
       setCRoleId("");
+      setCEngagement("full_time");
       setCTitle("");
       setCNotes("");
       queryClient.invalidateQueries({ queryKey: ["client-requests"] });
