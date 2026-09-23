@@ -35,10 +35,6 @@ export function buildRequestRecap({
     .map((id) => catalog.languageSkills.find((skill) => skill.id === id)?.name)
     .filter((name): name is string => Boolean(name))
     .join(", ");
-  const niceToHave = request.nice_to_have_skill_ids
-    .map((id) => catalog.nonLanguageSkills.find((skill) => skill.id === id)?.name)
-    .filter((name): name is string => Boolean(name))
-    .join(", ");
 
   const groups: RecapItem[][] = [
     [
@@ -64,7 +60,6 @@ export function buildRequestRecap({
     [
       { label: "Must-have skills", value: request.must_have_skill_names.join(", ") },
       { label: "Languages", value: languages },
-      { label: "Nice-to-have", value: niceToHave },
       {
         label: "Experience",
         value: request.years_experience_min
