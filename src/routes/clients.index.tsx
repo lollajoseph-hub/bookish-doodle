@@ -4,8 +4,9 @@ import { useMemo, useState } from "react";
 import { Building2, Plus, Loader2, Search, Users, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
-import { fetchClients } from "@/lib/crm-queries";
-import { fetchCandidates, fetchJobRoles } from "@/lib/queries";
+import { fetchClients, parseSkillNames } from "@/lib/crm-queries";
+import { fetchCandidates, fetchJobRoles, fetchSkills, LANGUAGE_CATEGORY } from "@/lib/queries";
+import { MultiSelect } from "@/components/multi-select";
 import { FormSection } from "@/components/form-section";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -202,11 +203,14 @@ function ClientsPage() {
             notes: reqNotes.trim() || null,
             engagement_type: engagement,
             hours_needed: hours.trim(),
-            timezone_requirement: tz.trim(),
-            years_experience_min: Number(minYears),
-            desired_start_date: startDate,
+            timezone_requirement: tz.trim() || null,
+            years_experience_min: minYears.trim() ? Number(minYears) : null,
+            desired_start_date: startDate || null,
             days_of_week_needed: days,
             must_have_skills_text: mustSkills.trim() || null,
+            must_have_skill_names: parseSkillNames(mustSkills),
+            language_skill_ids: langIds,
+            nice_to_have_skill_ids: niceIds,
             hires_needed: Number(hiresNeeded) || 1,
           };
 
@@ -584,6 +588,26 @@ function ClientsPage() {
                         );
                       })}
                     </div>
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label>Required languages *</Label>
+                    <MultiSelect
+                      options={languageOptions}
+                      selected={langIds}
+                      onChange={setLangIds}
+                      placeholder="Select languages"
+                      searchPlaceholder="Search languages…"
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label>Nice-to-have skills</Label>
+                    <MultiSelect
+                      options={skillOptions}
+                      selected={niceIds}
+                      onChange={setNiceIds}
+                      placeholder="Select skills"
+                      searchPlaceholder="Search skills…"
+                    />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="req-skills">Must-have skills</Label>

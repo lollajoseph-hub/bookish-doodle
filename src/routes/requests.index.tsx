@@ -7,11 +7,13 @@ import { AppShell } from "@/components/app-shell";
 import { CuratedBadge, RequestStatusBadge } from "@/components/match-status";
 import {
   createClientRequest,
+  parseSkillNames,
   fetchClientRequests,
   fetchClients,
   labelize,
 } from "@/lib/crm-queries";
-import { fetchJobRoles } from "@/lib/queries";
+import { fetchJobRoles, fetchSkills, LANGUAGE_CATEGORY } from "@/lib/queries";
+import { MultiSelect } from "@/components/multi-select";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -174,12 +176,15 @@ function RequestsPage() {
         hires_needed: hires,
         engagement_type: engagement,
         hours_needed: hours,
-        timezone_requirement: tz,
-        years_experience_min: minYears ? Number(minYears) : null,
-        desired_start_date: startDate,
+        timezone_requirement: tz.trim() || null,
+        years_experience_min: minYears.trim() ? Number(minYears) : null,
+        desired_start_date: startDate || null,
         days_of_week_needed: days,
         notes,
         must_have_skills_text: mustSkills,
+        must_have_skill_names: parseSkillNames(mustSkills),
+        language_skill_ids: langIds,
+        nice_to_have_skill_ids: niceIds,
         created_by: profile?.id ?? null,
       });
     },
@@ -418,6 +423,26 @@ function RequestsPage() {
                 </div>
               </div>
               <div className="space-y-2 sm:col-span-2">
+                <Label>Required languages *</Label>
+                <MultiSelect
+                  options={languageOptions}
+                  selected={langIds}
+                  onChange={setLangIds}
+                  placeholder="Select languages"
+                  searchPlaceholder="Search languages…"
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Nice-to-have skills</Label>
+                <MultiSelect
+                  options={skillOptions}
+                  selected={niceIds}
+                  onChange={setNiceIds}
+                  placeholder="Select skills"
+                  searchPlaceholder="Search skills…"
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="must-skills">Must-have skills</Label>
                 <Textarea
                   id="must-skills"
@@ -426,7 +451,7 @@ function RequestsPage() {
                   onChange={(e) => setMustSkills(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Free text from the client — optional, stored exactly as they wrote it.
+                  Comma or newline separated. Each skill is used for matching.
                 </p>
               </div>
             </div>
