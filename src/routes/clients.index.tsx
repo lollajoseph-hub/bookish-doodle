@@ -33,6 +33,39 @@ import {
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+// Same list as the Candidate Pool app's get-started wizard, kept in sync.
+const INDUSTRY_OPTIONS = [
+  "Agriculture",
+  "Automotive",
+  "Construction",
+  "Consulting",
+  "Education",
+  "Energy",
+  "Entertainment",
+  "Financial Services",
+  "Food & Beverage",
+  "Government",
+  "Healthcare",
+  "Hospitality",
+  "Insurance",
+  "Legal",
+  "Logistics & Transportation",
+  "Manufacturing",
+  "Marketing & Advertising",
+  "Media & Publishing",
+  "Non-Profit",
+  "Pharmaceuticals",
+  "Professional Services",
+  "Real Estate",
+  "Retail",
+  "Software & Technology",
+  "Sports & Recreation",
+  "Telecommunications",
+  "Travel & Tourism",
+  "Utilities",
+  "Wellness & Fitness",
+];
+
 export const Route = createFileRoute("/clients/")({
   ssr: false,
   head: () => ({
@@ -54,6 +87,7 @@ function ClientsPage() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [industry, setIndustry] = useState("");
+  const [isOtherIndustry, setIsOtherIndustry] = useState(false);
   const [parentId, setParentId] = useState("none");
   const [isFranchise, setIsFranchise] = useState(false);
   const [contactFirst, setContactFirst] = useState("");
