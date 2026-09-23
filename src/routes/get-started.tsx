@@ -342,9 +342,11 @@ function GetStartedPage() {
                   : "Your request has been added — taking you to sign in…"}
               </p>
               </div>
-              <div className="w-full rounded-lg bg-primary-soft/60 p-5">
-                <RequestRecap items={allItems} expanded />
-              </div>
+              {!result.invited && (
+                <div className="w-full rounded-lg bg-primary-soft/60 p-5">
+                  <RequestRecap items={allItems} expanded />
+                </div>
+              )}
               {result.invited ? (
                 <SetPasswordForm />
               ) : (
