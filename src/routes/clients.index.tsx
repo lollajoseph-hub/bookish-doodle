@@ -275,7 +275,6 @@ function ClientsPage() {
       setDays([]);
       setMustSkills("");
       setLangIds([]);
-      setNiceIds([]);
       setHiresNeeded("1");
       setCandidateIds([]);
       setCandSearch("");
