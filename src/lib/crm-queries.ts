@@ -308,6 +308,9 @@ export async function createClientRequest(input: {
   must_have_skills_text?: string | null;
   source?: "standard" | "staff_curated";
   created_by: string | null;
+  language_skill_ids?: string[];
+  nice_to_have_skill_ids?: string[];
+  must_have_skill_names?: string[];
 }): Promise<string> {
   const { data, error } = await supabase
     .from("client_requests")
@@ -332,7 +335,38 @@ export async function createClientRequest(input: {
     .select("id")
     .single();
   if (error) throw error;
-  return data.id as string;
+  const requestId = data.id as string;
+
+  const names = (input.must_have_skill_names ?? []).map((n) => n.trim()).filter(Boolean);
+  let mustHaveIds: string[] = [];
+  if (names.length) {
+    const { data: resolved, error: rpcError } = await supabase.rpc("resolve_or_create_skills", {
+      p_names: names,
+    });
+    if (rpcError) throw rpcError;
+    mustHaveIds = ((resolved ?? []) as unknown[]).map((r) =>
+      typeof r === "string" ? r : ((r as { id?: string; skill_id?: string }).id ?? (r as { skill_id?: string }).skill_id ?? ""),
+    ).filter(Boolean);
+  }
+  const rows = new Map<string, boolean>();
+  for (const id of input.nice_to_have_skill_ids ?? []) rows.set(id, false);
+  for (const id of [...mustHaveIds, ...(input.language_skill_ids ?? [])]) rows.set(id, true);
+  if (rows.size) {
+    const { error: skillsError } = await supabase.from("client_request_skills").insert(
+      [...rows].map(([skill_id, is_required]) => ({ request_id: requestId, skill_id, is_required })),
+    );
+    if (skillsError) throw skillsError;
+  }
+  return requestId;
+}
+
+/** Split free-text must-have skills (comma/newline separated) into names. */
+export function parseSkillNames(text: string): string[] {
+  const seen = new Set<string>();
+  return text
+    .split(/[,\n]/)
+    .map((s) => s.trim())
+    .filter((s) => s && !seen.has(s.toLowerCase()) && (seen.add(s.toLowerCase()), true));
 }
 
 export async function updateRequestStatus(id: string, status: string): Promise<void> {

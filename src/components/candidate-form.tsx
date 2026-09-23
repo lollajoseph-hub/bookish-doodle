@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   createCandidate,
@@ -20,16 +20,6 @@ import { Label } from "@/components/ui/label";
 import { FormSection } from "@/components/form-section";
 import { TimezoneSelect } from "@/components/timezone-select";
 import { MultiSelect } from "@/components/multi-select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -169,13 +159,6 @@ export function CandidateForm({
 
   const set = <K extends keyof CandidateFormInput>(k: K, v: CandidateFormInput[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
-
-  function toggleRole(id: string) {
-    set(
-      "roleIds",
-      form.roleIds.includes(id) ? form.roleIds.filter((r) => r !== id) : [...form.roleIds, id],
-    );
-  }
 
   function addLanguage(raw: string) {
     const name = raw.trim();
