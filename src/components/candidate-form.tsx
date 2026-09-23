@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormSection } from "@/components/form-section";
 import { TimezoneSelect } from "@/components/timezone-select";
+import { MultiSelect } from "@/components/multi-select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
@@ -279,68 +280,14 @@ export function CandidateForm({
           </div>
           <div className="space-y-2">
             <Label>Roles</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  role="combobox"
-                  className="h-9 w-full justify-between rounded-md border-input bg-transparent px-3 py-2 text-left font-normal text-foreground shadow-sm"
-                >
-                  <span className="truncate">
-                    {form.roleIds.length
-                      ? form.roleIds
-                          .map((id) => roles.find((r) => r.id === id)?.name)
-                          .filter(Boolean)
-                          .join(", ")
-                      : "Select roles"}
-                  </span>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[280px] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Search roles…" />
-                  <CommandList>
-                    <CommandEmpty>No roles yet — add one on the Roles page.</CommandEmpty>
-                    <CommandGroup>
-                      {roles.map((r) => {
-                        const on = form.roleIds.includes(r.id);
-                        return (
-                          <CommandItem key={r.id} onSelect={() => toggleRole(r.id)}>
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                on ? "opacity-100 text-primary" : "opacity-0",
-                              )}
-                            />
-                            {r.name}
-                          </CommandItem>
-                        );
-                      })}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-            {form.roleIds.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {form.roleIds.map((id) => {
-                  const role = roles.find((r) => r.id === id);
-                  if (!role) return null;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => toggleRole(id)}
-                      className="rounded-full border-amber bg-amber-soft px-3 py-0.5 text-xs font-medium text-amber-foreground transition-colors hover:bg-amber/80"
-                    >
-                      {role.name} ✕
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <MultiSelect
+              options={roles.map((r) => ({ id: r.id, label: r.name }))}
+              selected={form.roleIds}
+              onChange={(ids) => setForm((f) => ({ ...f, roleIds: ids }))}
+              placeholder="Select roles"
+              searchPlaceholder="Search roles…"
+              emptyText="No roles yet — add one on the Roles page."
+            />
           </div>
         </div>
       </FormSection>
