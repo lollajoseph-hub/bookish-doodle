@@ -134,6 +134,7 @@ function RequestsPage() {
   const [customOpen, setCustomOpen] = useState(false);
   const [cClientId, setCClientId] = useState("");
   const [cRoleId, setCRoleId] = useState("");
+  const [cEngagement, setCEngagement] = useState("full_time");
   const [cTitle, setCTitle] = useState("");
   const [cNotes, setCNotes] = useState("");
 
@@ -197,7 +198,7 @@ function RequestsPage() {
         title: cTitle,
         candidates_wanted: 1,
         hires_needed: 1,
-        engagement_type: "full_time",
+        engagement_type: cEngagement,
         hours_needed: null,
         timezone_requirement: null,
         years_experience_min: null,
@@ -213,6 +214,7 @@ function RequestsPage() {
       setCustomOpen(false);
       setCClientId("");
       setCRoleId("");
+      setCEngagement("full_time");
       setCTitle("");
       setCNotes("");
       queryClient.invalidateQueries({ queryKey: ["client-requests"] });
@@ -493,6 +495,19 @@ function RequestsPage() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">For labelling only — not used for scoring.</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Engagement type *</Label>
+              <Select value={cEngagement} onValueChange={setCEngagement}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="full_time">Full time</SelectItem>
+                  <SelectItem value="part_time">Part time</SelectItem>
+                  <SelectItem value="project">Project</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="c-title">Title</Label>
