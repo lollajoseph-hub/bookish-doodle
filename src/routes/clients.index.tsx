@@ -221,6 +221,7 @@ function ClientsPage() {
       }
       setName("");
       setIndustry("");
+      setIsOtherIndustry(false);
       setParentId("none");
       setIsFranchise(false);
       setContactFirst("");
@@ -329,8 +330,39 @@ function ClientsPage() {
               <Input id="client-name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="client-industry">Industry</Label>
-              <Input id="client-industry" value={industry} onChange={(e) => setIndustry(e.target.value)} />
+              <Label>Industry</Label>
+              <Select
+                value={isOtherIndustry ? "other" : industry}
+                onValueChange={(v) => {
+                  if (v === "other") {
+                    setIsOtherIndustry(true);
+                    setIndustry("");
+                  } else {
+                    setIsOtherIndustry(false);
+                    setIndustry(v);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  {INDUSTRY_OPTIONS.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {opt}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              {isOtherIndustry && (
+                <Input
+                  id="client-industry"
+                  placeholder="Type the industry…"
+                  value={industry}
+                  onChange={(e) => setIndustry(e.target.value)}
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label>Parent company</Label>
