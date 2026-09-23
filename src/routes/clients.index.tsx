@@ -133,6 +133,14 @@ function ClientsPage() {
   const [startDate, setStartDate] = useState("");
   const [days, setDays] = useState<string[]>([]);
   const [mustSkills, setMustSkills] = useState("");
+  const [langIds, setLangIds] = useState<string[]>([]);
+  const [niceIds, setNiceIds] = useState<string[]>([]);
+  const { data: allSkills = [] } = useQuery({ queryKey: ["skills"], queryFn: fetchSkills });
+  const skillOptions = useMemo(() => allSkills.map((s) => ({ id: s.id, label: s.name })), [allSkills]);
+  const languageOptions = useMemo(
+    () => allSkills.filter((s) => s.category === LANGUAGE_CATEGORY).map((s) => ({ id: s.id, label: s.name })),
+    [allSkills],
+  );
   const [hiresNeeded, setHiresNeeded] = useState("1");
   const [candidateIds, setCandidateIds] = useState<string[]>([]);
   const [candSearch, setCandSearch] = useState("");
@@ -175,9 +183,7 @@ function ClientsPage() {
         if (!candidateIds.length) throw new Error("Pick at least one candidate");
       } else {
         if (!hours.trim()) throw new Error("Hours needed is required");
-        if (!tz.trim()) throw new Error("Timezone requirement is required");
-        if (!minYears.trim()) throw new Error("Min years experience is required");
-        if (!startDate) throw new Error("Desired start date is required");
+        if (!langIds.length) throw new Error("Select at least one required language");
         if (!days.length) throw new Error("Select at least one day needed");
       }
       const request = isCustom
@@ -266,6 +272,8 @@ function ClientsPage() {
       setStartDate("");
       setDays([]);
       setMustSkills("");
+      setLangIds([]);
+      setNiceIds([]);
       setHiresNeeded("1");
       setCandidateIds([]);
       setCandSearch("");
@@ -540,15 +548,15 @@ function ClientsPage() {
                     <Input id="req-hours" placeholder="20 hrs/week" value={hours} onChange={(e) => setHours(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="req-tz">Timezone requirement *</Label>
+                    <Label htmlFor="req-tz">Timezone requirement</Label>
                     <Input id="req-tz" placeholder="US Eastern" value={tz} onChange={(e) => setTz(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="req-minyears">Min years experience *</Label>
+                    <Label htmlFor="req-minyears">Min years experience</Label>
                     <Input id="req-minyears" type="number" min={0} value={minYears} onChange={(e) => setMinYears(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="req-start">Desired start date *</Label>
+                    <Label htmlFor="req-start">Desired start date</Label>
                     <Input id="req-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                   </div>
                   <div className="space-y-2">
