@@ -66,6 +66,31 @@ const INDUSTRY_OPTIONS = [
   "Wellness & Fitness",
 ];
 
+// Same list as the Candidate Pool app's get-started wizard, kept in sync.
+const POSITION_OPTIONS = [
+  "Owner",
+  "Founder/Co-Founder",
+  "CEO",
+  "President",
+  "COO",
+  "CFO",
+  "General Manager",
+  "Operations Manager",
+  "Office Manager",
+  "Practice Manager",
+  "Business Manager",
+  "Administrative Manager",
+  "HR Director",
+  "HR Manager",
+  "Recruiting Manager",
+  "Talent Acquisition Manager",
+  "Marketing Director",
+  "Marketing Manager",
+  "Sales Director",
+  "Sales Manager",
+  "Executive Assistant",
+];
+
 export const Route = createFileRoute("/clients/")({
   ssr: false,
   head: () => ({
@@ -94,6 +119,7 @@ function ClientsPage() {
   const [contactLast, setContactLast] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPosition, setContactPosition] = useState("");
+  const [isOtherPosition, setIsOtherPosition] = useState(false);
   const navigate = useNavigate();
   // First request (created together with the client)
   const [reqSource, setReqSource] = useState<"standard" | "staff_curated">("standard");
@@ -228,6 +254,7 @@ function ClientsPage() {
       setContactLast("");
       setContactEmail("");
       setContactPosition("");
+      setIsOtherPosition(false);
       setReqSource("standard");
       setRoleId("");
       setEngagement("full_time");
@@ -415,12 +442,39 @@ function ClientsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="contact-position">Position</Label>
-                <Input
-                  id="contact-position"
-                  value={contactPosition}
-                  onChange={(e) => setContactPosition(e.target.value)}
-                />
+                <Label>Position</Label>
+                <Select
+                  value={isOtherPosition ? "other" : contactPosition}
+                  onValueChange={(v) => {
+                    if (v === "other") {
+                      setIsOtherPosition(true);
+                      setContactPosition("");
+                    } else {
+                      setIsOtherPosition(false);
+                      setContactPosition(v);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select position" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {POSITION_OPTIONS.map((opt) => (
+                      <SelectItem key={opt} value={opt}>
+                        {opt}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                {isOtherPosition && (
+                  <Input
+                    id="contact-position"
+                    placeholder="Type the position…"
+                    value={contactPosition}
+                    onChange={(e) => setContactPosition(e.target.value)}
+                  />
+                )}
               </div>
             </div>
             <div className="flex items-center justify-between rounded-xl border p-3">
