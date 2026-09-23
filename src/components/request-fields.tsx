@@ -30,7 +30,6 @@ export interface RequestForm {
   timezone_requirement: string;
   must_have_skill_names: string[];
   language_skill_ids: string[];
-  nice_to_have_skill_ids: string[];
   hires_needed: string;
   years_experience_min: string;
   desired_start_date: string;
@@ -45,7 +44,6 @@ export const emptyRequestForm: RequestForm = {
   timezone_requirement: "",
   must_have_skill_names: [],
   language_skill_ids: [],
-  nice_to_have_skill_ids: [],
   hires_needed: "1",
   years_experience_min: "",
   desired_start_date: "",
@@ -278,13 +276,8 @@ function ChoiceCards({
 function useRequestFieldProps({ value: f, onChange, catalog }: RequestFieldsProps) {
   const set = <K extends keyof RequestForm>(k: K, v: RequestForm[K]) =>
     onChange({ ...f, [k]: v });
-  const skillOptions = catalog.nonLanguageSkills.map((s) => ({
-    value: s.id,
-    label: s.name,
-    group: s.category,
-  }));
   const languageOptions = catalog.languageSkills.map((s) => ({ value: s.id, label: s.name }));
-  return { f, set, skillOptions, languageOptions, catalog };
+  return { f, set, languageOptions, catalog };
 }
 
 export function RequestRoleFields(props: RequestFieldsProps) {
@@ -374,7 +367,7 @@ function parseFormDate(value: string) {
 }
 
 export function RequestRequirementsFields(props: RequestFieldsProps) {
-  const { f, set, skillOptions, languageOptions, catalog } = useRequestFieldProps(props);
+  const { f, set, languageOptions, catalog } = useRequestFieldProps(props);
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div className="md:col-span-2"><Field label="Must-have skills" required hint="Type a skill and press Enter to add it — e.g. Excel, QuickBooks, cold calling.">
@@ -382,9 +375,6 @@ export function RequestRequirementsFields(props: RequestFieldsProps) {
       </Field></div>
       <div className="md:col-span-2"><Field label="Required languages" required>
         <MultiSelect options={languageOptions} value={f.language_skill_ids} onChange={(v) => set("language_skill_ids", v)} placeholder={catalog.loading ? "Loading languages…" : "Select required languages"} searchPlaceholder="Search languages…" />
-      </Field></div>
-      <div className="md:col-span-2"><Field label="Nice-to-have skills">
-        <MultiSelect options={skillOptions} value={f.nice_to_have_skill_ids} onChange={(v) => set("nice_to_have_skill_ids", v)} placeholder="Optional" searchPlaceholder="Search skills…" />
       </Field></div>
       <Field label="Minimum years of experience">
         <Input type="number" min="0" step="1" value={f.years_experience_min} onChange={(e) => set("years_experience_min", e.target.value)} placeholder="Optional" />

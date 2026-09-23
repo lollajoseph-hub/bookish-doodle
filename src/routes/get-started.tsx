@@ -273,7 +273,6 @@ function GetStartedPage() {
           ...requestPayload(request),
           must_have_skill_names: request.must_have_skill_names,
           required_skill_ids: request.language_skill_ids,
-          nice_to_have_skill_ids: request.nice_to_have_skill_ids,
         },
       },
     });
