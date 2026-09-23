@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, ChevronUp, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
-import { RequestStatusBadge } from "@/components/match-status";
+import { CuratedBadge, RequestStatusBadge } from "@/components/match-status";
 import {
   createClientRequest,
   fetchClientRequests,
@@ -130,6 +130,12 @@ function RequestsPage() {
   const [days, setDays] = useState<string[]>([]);
   const [mustSkills, setMustSkills] = useState("");
   const [notes, setNotes] = useState("");
+  const navigate = useNavigate();
+  const [customOpen, setCustomOpen] = useState(false);
+  const [cClientId, setCClientId] = useState("");
+  const [cRoleId, setCRoleId] = useState("");
+  const [cTitle, setCTitle] = useState("");
+  const [cNotes, setCNotes] = useState("");
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ["client-requests"],
@@ -181,13 +187,52 @@ function RequestsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const createCustom = useMutation({
+    mutationFn: async () => {
+      if (!cClientId) throw new Error("Pick a client");
+      if (!cRoleId) throw new Error("Pick a role");
+      return createClientRequest({
+        client_id: cClientId,
+        role_id: cRoleId,
+        title: cTitle,
+        candidates_wanted: 1,
+        hires_needed: 1,
+        engagement_type: "full_time",
+        hours_needed: null,
+        timezone_requirement: null,
+        years_experience_min: null,
+        desired_start_date: null,
+        days_of_week_needed: [],
+        notes: cNotes,
+        source: "staff_curated",
+        created_by: profile?.id ?? null,
+      });
+    },
+    onSuccess: (id) => {
+      toast.success("Custom request created — add candidates below");
+      setCustomOpen(false);
+      setCClientId("");
+      setCRoleId("");
+      setCTitle("");
+      setCNotes("");
+      queryClient.invalidateQueries({ queryKey: ["client-requests"] });
+      navigate({ to: "/requests/$requestId", params: { requestId: id } });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <AppShell title="Client requests" description="Hiring requests to source review batches for">
       <div className="mb-5 flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">Open seats waiting on candidate batches</p>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-1 h-4 w-4" /> New request
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setCustomOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" /> New custom request
+          </Button>
+          <Button onClick={() => setOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" /> New request
+          </Button>
+        </div>
       </div>
 
       <div className="mb-5 flex flex-wrap gap-2">
@@ -227,7 +272,10 @@ function RequestsPage() {
                     {r.clientName} · {r.roleName} · {labelize(r.engagement_type)}
                   </div>
                 </div>
-                <RequestStatusBadge status={r.status} />
+                <div className="flex items-center gap-1.5">
+                  <CuratedBadge source={r.source} />
+                  <RequestStatusBadge status={r.status} />
+                </div>
               </div>
 
               <div className="mt-4 space-y-1">
@@ -401,6 +449,71 @@ function RequestsPage() {
             </Button>
             <Button onClick={() => create.mutate()} disabled={create.isPending}>
               {create.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Create request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={customOpen} onOpenChange={setCustomOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>New custom request</DialogTitle>
+            <DialogDescription>
+              Hand-pick candidates for a client. Automatic matching never runs on these requests.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Client *</Label>
+              <Select value={cClientId} onValueChange={setCClientId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Role *</Label>
+              <Select value={cRoleId} onValueChange={setCRoleId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">For labelling only — not used for scoring.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="c-title">Title</Label>
+              <Input
+                id="c-title"
+                placeholder="Executive Assistant for Jane"
+                value={cTitle}
+                onChange={(e) => setCTitle(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="c-notes">Notes</Label>
+              <Textarea id="c-notes" value={cNotes} onChange={(e) => setCNotes(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCustomOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => createCustom.mutate()} disabled={createCustom.isPending}>
+              {createCustom.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Create & add candidates
             </Button>
           </DialogFooter>
         </DialogContent>

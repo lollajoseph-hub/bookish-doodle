@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ArrowLeft, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
-import { MatchStatusBadge, RequestStatusBadge } from "@/components/match-status";
+import { CuratedBadge, MatchStatusBadge, RequestStatusBadge } from "@/components/match-status";
 import {
   MATCH_STATUSES,
   REJECTION_REASONS,
@@ -292,7 +292,10 @@ function RequestDetailPage() {
               <div className="mt-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Status</span>
-                  <RequestStatusBadge status={r.status} />
+                  <div className="flex items-center gap-1.5">
+                    <CuratedBadge source={r.source} />
+                    <RequestStatusBadge status={r.status} />
+                  </div>
                 </div>
                 <Select value={r.status} onValueChange={(v: string) => requestStatus.mutate(v)}>
                   <SelectTrigger className="h-8">

@@ -306,6 +306,7 @@ export async function createClientRequest(input: {
   days_of_week_needed: string[];
   notes: string | null;
   must_have_skills_text?: string | null;
+  source?: "standard" | "staff_curated";
   created_by: string | null;
 }): Promise<string> {
   const { data, error } = await supabase
@@ -325,6 +326,7 @@ export async function createClientRequest(input: {
       notes: input.notes || null,
       must_have_skills_text: input.must_have_skills_text?.trim() || null,
       status: "open",
+      source: input.source ?? "standard",
       created_by: input.created_by,
     })
     .select("id")
