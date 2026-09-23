@@ -50,6 +50,7 @@ const ORDER: MatchStatus[] = [
 
 interface RequestMeta {
   id: string;
+  source: string | null;
   job_roles: { name: string | null } | null;
 }
 
