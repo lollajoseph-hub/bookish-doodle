@@ -145,6 +145,7 @@ export function CandidateCard({
   photoUrl,
   busy,
   locked,
+  curated,
   contextLabel,
   onShortlist,
   onRequestInterview,
@@ -159,6 +160,8 @@ export function CandidateCard({
   busy: boolean;
   /** True while ANY other card's action is in flight — locks this card's buttons too. */
   locked?: boolean;
+  /** Staff-curated request: this candidate was hand-picked, not algorithmically matched. */
+  curated?: boolean;
   /** e.g. the request this match belongs to, on cross-request views. */
   contextLabel?: React.ReactNode;
   onShortlist?: () => void;
@@ -236,14 +239,22 @@ export function CandidateCard({
 
   return (
     <Card className={`card-amber relative rounded-2xl ${isRejected ? "opacity-60" : ""}`}>
-      <span
-        className={`absolute right-4 top-4 z-10 inline-flex w-fit max-w-[calc(100%-2rem)] items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(status)}`}
-      >
-        <MatchStatusIcon status={status} />
-        {MATCH_STATUS_LABELS[status] ?? status}
-      </span>
+      <div className="absolute right-4 top-4 z-10 flex flex-col items-end gap-1.5">
+        <span
+          className={`inline-flex w-fit max-w-[calc(100%-2rem)] items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(status)}`}
+        >
+          <MatchStatusIcon status={status} />
+          {MATCH_STATUS_LABELS[status] ?? status}
+        </span>
+        {curated && (
+          <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">
+            <Sparkles className="h-3 w-3" />
+            Hand-picked for you
+          </span>
+        )}
+      </div>
       <CardContent className="space-y-3 p-5">
-        <div className="flex items-start gap-4 pt-8">
+        <div className={`flex items-start gap-4 ${curated ? "pt-14" : "pt-8"}`}>
           {photoUrl ? (
             <img src={photoUrl} alt="" className="h-24 w-24 flex-none rounded-full object-cover ring-2 ring-primary/15" />
           ) : (

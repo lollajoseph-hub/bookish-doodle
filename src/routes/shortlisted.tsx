@@ -50,12 +50,14 @@ const ORDER: MatchStatus[] = [
 
 interface RequestMeta {
   id: string;
+  source: string | null;
   job_roles: { name: string | null } | null;
 }
 
 function ShortlistedPage() {
   const [matches, setMatches] = useState<MatchRow[] | null>(null);
   const [requests, setRequests] = useState<Record<string, string>>({});
+  const [curatedRequests, setCuratedRequests] = useState<Set<string>>(new Set());
   const [photos, setPhotos] = useState<Record<string, string | null>>({});
   const [err, setErr] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
@@ -71,15 +73,18 @@ function ShortlistedPage() {
     setErr(null);
     const [matchRes, reqRes] = await Promise.all([
       supabase.from("candidate_matches").select(MATCH_SELECT).in("status", ACTIVE_STATUSES),
-      supabase.from("client_requests").select("id,job_roles(name)"),
+      supabase.from("client_requests").select("id,job_roles(name),source"),
     ]);
 
     if (reqRes.data) {
       const map: Record<string, string> = {};
+      const curated: string[] = [];
       for (const r of reqRes.data as unknown as RequestMeta[]) {
         map[r.id] = r.job_roles?.name ?? "Hiring request";
+        if (r.source === "staff_curated") curated.push(r.id);
       }
       setRequests(map);
+      setCuratedRequests(new Set(curated));
     }
 
     if (matchRes.error) {
@@ -201,6 +206,7 @@ function ShortlistedPage() {
               photoUrl={photos[m.id] ?? null}
               busy={actingId === m.id}
               locked={actingId !== null && actingId !== m.id}
+              curated={curatedRequests.has(m.client_request_id)}
               contextLabel={
                 <Link to="/requests/$id" params={{ id: m.client_request_id }} className="hover:text-foreground">
                   For: {requests[m.client_request_id] ?? "Hiring request"}
