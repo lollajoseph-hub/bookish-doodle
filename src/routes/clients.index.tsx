@@ -33,6 +33,39 @@ import {
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+// Same list as the Candidate Pool app's get-started wizard, kept in sync.
+const INDUSTRY_OPTIONS = [
+  "Agriculture",
+  "Automotive",
+  "Construction",
+  "Consulting",
+  "Education",
+  "Energy",
+  "Entertainment",
+  "Financial Services",
+  "Food & Beverage",
+  "Government",
+  "Healthcare",
+  "Hospitality",
+  "Insurance",
+  "Legal",
+  "Logistics & Transportation",
+  "Manufacturing",
+  "Marketing & Advertising",
+  "Media & Publishing",
+  "Non-Profit",
+  "Pharmaceuticals",
+  "Professional Services",
+  "Real Estate",
+  "Retail",
+  "Software & Technology",
+  "Sports & Recreation",
+  "Telecommunications",
+  "Travel & Tourism",
+  "Utilities",
+  "Wellness & Fitness",
+];
+
 export const Route = createFileRoute("/clients/")({
   ssr: false,
   head: () => ({
@@ -54,6 +87,7 @@ function ClientsPage() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [industry, setIndustry] = useState("");
+  const [isOtherIndustry, setIsOtherIndustry] = useState(false);
   const [parentId, setParentId] = useState("none");
   const [isFranchise, setIsFranchise] = useState(false);
   const [contactFirst, setContactFirst] = useState("");
@@ -187,6 +221,7 @@ function ClientsPage() {
       }
       setName("");
       setIndustry("");
+      setIsOtherIndustry(false);
       setParentId("none");
       setIsFranchise(false);
       setContactFirst("");
@@ -295,8 +330,39 @@ function ClientsPage() {
               <Input id="client-name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="client-industry">Industry</Label>
-              <Input id="client-industry" value={industry} onChange={(e) => setIndustry(e.target.value)} />
+              <Label>Industry</Label>
+              <Select
+                value={isOtherIndustry ? "other" : industry}
+                onValueChange={(v) => {
+                  if (v === "other") {
+                    setIsOtherIndustry(true);
+                    setIndustry("");
+                  } else {
+                    setIsOtherIndustry(false);
+                    setIndustry(v);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  {INDUSTRY_OPTIONS.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {opt}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              {isOtherIndustry && (
+                <Input
+                  id="client-industry"
+                  placeholder="Type the industry…"
+                  value={industry}
+                  onChange={(e) => setIndustry(e.target.value)}
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label>Parent company</Label>
