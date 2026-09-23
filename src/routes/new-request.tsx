@@ -123,18 +123,13 @@ function NewRequest() {
       return;
     }
 
-    const skillRows = [
-      ...[...((mustHaveIds as string[] | null) ?? []), ...f.language_skill_ids].map((skill_id) => ({
+    const skillRows = [...((mustHaveIds as string[] | null) ?? []), ...f.language_skill_ids].map(
+      (skill_id) => ({
         request_id: requestId,
         skill_id,
         is_required: true,
-      })),
-      ...f.nice_to_have_skill_ids.map((skill_id) => ({
-        request_id: requestId,
-        skill_id,
-        is_required: false,
-      })),
-    ];
+      }),
+    );
 
     if (skillRows.length > 0) {
       const { error: skillsError } = await supabase.from("client_request_skills").insert(skillRows);
