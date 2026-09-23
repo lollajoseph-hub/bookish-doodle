@@ -221,6 +221,13 @@ export interface ClientRow {
   parent_client_id: string | null;
   is_franchise_brand: boolean | null;
   industry: string | null;
+  /** Deferred primary-contact invite (jsonb), set when a first request matched no candidates. */
+  pending_contact: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    position?: string | null;
+  } | null;
   created_at: string;
   updated_at: string | null;
 }
