@@ -333,10 +333,12 @@ function GetStartedPage() {
             <CardContent className="flex flex-col items-center gap-5 px-6 py-10 text-center sm:px-10">
               <SuccessFlourish />
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight">Your request is submitted!</h1>
+                <h1 className="text-2xl font-semibold tracking-tight">
+                  {result.invited ? "We're creating your dashboard" : "Your request is submitted!"}
+                </h1>
               <p className="max-w-md text-muted-foreground">
                 {result.invited
-                  ? "One last step — set a password for your new account."
+                  ? "Set up your password here to get started."
                   : "Your request has been added — taking you to sign in…"}
               </p>
               </div>
