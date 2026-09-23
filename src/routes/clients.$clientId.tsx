@@ -109,6 +109,24 @@ function ClientDetailPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const sendInvite = useMutation({
+    mutationFn: async () => {
+      const { data: res, error: err } = await supabase.functions.invoke(
+        "admin-send-pending-client-invite",
+        { body: { client_id: clientId } },
+      );
+      const serverError =
+        res && typeof res === "object" && "error" in res ? (res as { error?: string }).error : null;
+      if (serverError) throw new Error(serverError);
+      if (err) throw new Error(err.message || "Could not send invite");
+    },
+    onSuccess: () => {
+      toast.success("Invite sent");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const [name, setName] = useState("");
   const [industry, setIndustry] = useState("");
   const saveClient = useMutation({
@@ -171,6 +189,28 @@ function ClientDetailPage() {
         <Link to="/clients" className="inline-flex items-center text-sm text-primary hover:underline">
           <ArrowLeft className="mr-1 h-4 w-4" /> Back to clients
         </Link>
+
+        {c.pending_contact && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber bg-amber/10 p-4">
+            <div className="flex items-start gap-3">
+              <Mail className="mt-0.5 h-5 w-5 text-primary" />
+              <div>
+                <p className="font-semibold">Invite pending</p>
+                <p className="text-sm text-muted-foreground">
+                  {[c.pending_contact.first_name, c.pending_contact.last_name].filter(Boolean).join(" ") ||
+                    "The primary contact"}
+                  {c.pending_contact.email ? ` (${c.pending_contact.email})` : ""} hasn't been invited
+                  yet because the first request had no candidates. Add a candidate to the request, then
+                  send the invite.
+                </p>
+              </div>
+            </div>
+            <Button onClick={() => sendInvite.mutate()} disabled={sendInvite.isPending}>
+              {sendInvite.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Send invite now
+            </Button>
+          </div>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">

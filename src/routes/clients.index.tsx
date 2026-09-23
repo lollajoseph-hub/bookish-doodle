@@ -1,10 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Building2, Plus, Loader2, Search, Users, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { fetchClients } from "@/lib/crm-queries";
+import { fetchCandidates, fetchJobRoles } from "@/lib/queries";
+import { FormSection } from "@/components/form-section";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +30,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export const Route = createFileRoute("/clients/")({
   ssr: false,
@@ -54,8 +60,37 @@ function ClientsPage() {
   const [contactLast, setContactLast] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPosition, setContactPosition] = useState("");
+  const navigate = useNavigate();
+  // First request (created together with the client)
+  const [reqSource, setReqSource] = useState<"standard" | "staff_curated">("standard");
+  const [roleId, setRoleId] = useState("");
+  const [engagement, setEngagement] = useState("full_time");
+  const [reqTitle, setReqTitle] = useState("");
+  const [reqNotes, setReqNotes] = useState("");
+  const [hours, setHours] = useState("");
+  const [tz, setTz] = useState("");
+  const [minYears, setMinYears] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [days, setDays] = useState<string[]>([]);
+  const [mustSkills, setMustSkills] = useState("");
+  const [hiresNeeded, setHiresNeeded] = useState("1");
+  const [candidateIds, setCandidateIds] = useState<string[]>([]);
+  const [candSearch, setCandSearch] = useState("");
 
   const { data: clients = [], isLoading } = useQuery({ queryKey: ["clients"], queryFn: fetchClients });
+  const { data: roles = [] } = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
+  const { data: candidates = [] } = useQuery({
+    queryKey: ["candidates"],
+    queryFn: fetchCandidates,
+    enabled: open && reqSource === "staff_curated",
+  });
+  const filteredCandidates = useMemo(() => {
+    const q = candSearch.trim().toLowerCase();
+    if (!q) return candidates;
+    return candidates.filter(
+      (c) => c.full_name.toLowerCase().includes(q) || (c.headline ?? "").toLowerCase().includes(q),
+    );
+  }, [candidates, candSearch]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -74,7 +109,42 @@ function ClientsPage() {
       }
       if (!contactEmail.trim()) throw new Error("Primary contact email is required");
 
-      const { data, error } = await supabase.functions.invoke("admin-create-client", {
+      if (!roleId) throw new Error("Pick a role for the first request");
+      const isCustom = reqSource === "staff_curated";
+      if (isCustom) {
+        if (!candidateIds.length) throw new Error("Pick at least one candidate");
+      } else {
+        if (!hours.trim()) throw new Error("Hours needed is required");
+        if (!tz.trim()) throw new Error("Timezone requirement is required");
+        if (!minYears.trim()) throw new Error("Min years experience is required");
+        if (!startDate) throw new Error("Desired start date is required");
+        if (!days.length) throw new Error("Select at least one day needed");
+      }
+      const request = isCustom
+        ? {
+            source: "staff_curated" as const,
+            role_id: roleId,
+            title: reqTitle.trim() || null,
+            notes: reqNotes.trim() || null,
+            engagement_type: engagement,
+            candidate_ids: candidateIds,
+          }
+        : {
+            source: "standard" as const,
+            role_id: roleId,
+            title: null,
+            notes: reqNotes.trim() || null,
+            engagement_type: engagement,
+            hours_needed: hours.trim(),
+            timezone_requirement: tz.trim(),
+            years_experience_min: Number(minYears),
+            desired_start_date: startDate,
+            days_of_week_needed: days,
+            must_have_skills_text: mustSkills.trim() || null,
+            hires_needed: Number(hiresNeeded) || 1,
+          };
+
+      const { data, error } = await supabase.functions.invoke("admin-create-client-with-request", {
         body: {
           name: name.trim(),
           industry: industry.trim() || null,
@@ -86,6 +156,7 @@ function ClientsPage() {
             email: contactEmail.trim(),
             position: contactPosition.trim() || null,
           },
+          request,
         },
       });
       const serverError =
@@ -94,10 +165,26 @@ function ClientsPage() {
           : null;
       if (serverError) throw new Error(serverError);
       if (error) throw new Error(error.message || "Could not add client");
-      return data as { client_id: string };
+      return data as {
+        ok: true;
+        client_id: string;
+        request_id: string;
+        matched_count: number;
+        invited: boolean;
+        needs_manual_match: boolean;
+      };
     },
-    onSuccess: () => {
-      toast.success("Client added — invite sent");
+    onSuccess: (res) => {
+      if (res.needs_manual_match) {
+        toast.warning(
+          "Client and request created, but no candidates matched — add one manually, then send the invite from the client's page",
+          { duration: 10000 },
+        );
+      } else if (res.invited) {
+        toast.success("Client added, request created, and invite sent");
+      } else {
+        toast.success("Client and request created");
+      }
       setName("");
       setIndustry("");
       setParentId("none");
@@ -106,8 +193,26 @@ function ClientsPage() {
       setContactLast("");
       setContactEmail("");
       setContactPosition("");
+      setReqSource("standard");
+      setRoleId("");
+      setEngagement("full_time");
+      setReqTitle("");
+      setReqNotes("");
+      setHours("");
+      setTz("");
+      setMinYears("");
+      setStartDate("");
+      setDays([]);
+      setMustSkills("");
+      setHiresNeeded("1");
+      setCandidateIds([]);
+      setCandSearch("");
       setOpen(false);
       queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["client-requests"] });
+      if (res.request_id) {
+        navigate({ to: "/requests/$requestId", params: { requestId: res.request_id } });
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -175,14 +280,16 @@ function ClientsPage() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add client</DialogTitle>
             <DialogDescription>
-              Create a company record and invite its primary contact.
+              Create the company and its first request. The primary contact is invited once the
+              request has candidates in it.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div>
+          <FormSection title="Company & primary contact" first>
             <div className="space-y-2">
               <Label htmlFor="client-name">Company name *</Label>
               <Input id="client-name" value={name} onChange={(e) => setName(e.target.value)} />
@@ -257,6 +364,167 @@ function ClientsPage() {
               </div>
               <Switch id="franchise" checked={isFranchise} onCheckedChange={setIsFranchise} />
             </div>
+          </FormSection>
+
+          <FormSection title="First request" description="Created together with the client.">
+            <div className="grid grid-cols-2 gap-1 rounded-xl border p-1">
+              {(["standard", "staff_curated"] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setReqSource(v)}
+                  className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                    reqSource === v
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {v === "standard" ? "Standard (auto-match)" : "Custom (hand-picked)"}
+                </button>
+              ))}
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Role *</Label>
+                <Select value={roleId} onValueChange={setRoleId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Engagement type *</Label>
+                <Select value={engagement} onValueChange={setEngagement}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="full_time">Full time</SelectItem>
+                    <SelectItem value="part_time">Part time</SelectItem>
+                    <SelectItem value="project">Project</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {reqSource === "standard" ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="req-hours">Hours needed *</Label>
+                    <Input id="req-hours" placeholder="20 hrs/week" value={hours} onChange={(e) => setHours(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="req-tz">Timezone requirement *</Label>
+                    <Input id="req-tz" placeholder="US Eastern" value={tz} onChange={(e) => setTz(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="req-minyears">Min years experience *</Label>
+                    <Input id="req-minyears" type="number" min={0} value={minYears} onChange={(e) => setMinYears(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="req-start">Desired start date *</Label>
+                    <Input id="req-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="req-hires">Hires needed</Label>
+                    <Input id="req-hires" type="number" min={1} value={hiresNeeded} onChange={(e) => setHiresNeeded(e.target.value)} />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label>Days needed *</Label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {DAYS.map((d) => {
+                        const on = days.includes(d);
+                        return (
+                          <button
+                            key={d}
+                            type="button"
+                            onClick={() => setDays(on ? days.filter((x) => x !== d) : [...days, d])}
+                            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                              on
+                                ? "border border-amber bg-amber-soft text-amber-foreground hover:bg-amber/80"
+                                : "border bg-card text-muted-foreground hover:border-amber/60 hover:text-foreground"
+                            }`}
+                          >
+                            {d}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="req-skills">Must-have skills</Label>
+                    <Textarea
+                      id="req-skills"
+                      placeholder="Skills the client says are non-negotiable, e.g. Spanish, QuickBooks"
+                      value={mustSkills}
+                      onChange={(e) => setMustSkills(e.target.value)}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="req-title">Title</Label>
+                    <Input id="req-title" value={reqTitle} onChange={(e) => setReqTitle(e.target.value)} />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Candidates * </Label>
+                      <span className="text-xs text-muted-foreground">{candidateIds.length} selected</span>
+                    </div>
+                    <Input
+                      placeholder="Search candidates…"
+                      value={candSearch}
+                      onChange={(e) => setCandSearch(e.target.value)}
+                    />
+                    <div className="max-h-56 space-y-1 overflow-y-auto rounded-xl border p-2">
+                      {filteredCandidates.map((c) => {
+                        const on = candidateIds.includes(c.id);
+                        return (
+                          <label
+                            key={c.id}
+                            className={`flex cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                              on ? "bg-amber/10" : "hover:bg-muted"
+                            }`}
+                          >
+                            <Checkbox
+                              className="mt-0.5"
+                              checked={on}
+                              onCheckedChange={(v) =>
+                                setCandidateIds(
+                                  v ? [...candidateIds, c.id] : candidateIds.filter((x) => x !== c.id),
+                                )
+                              }
+                            />
+                            <span>
+                              <span className="font-medium">{c.full_name}</span>
+                              {c.headline && (
+                                <span className="block text-xs text-muted-foreground">{c.headline}</span>
+                              )}
+                            </span>
+                          </label>
+                        );
+                      })}
+                      {!filteredCandidates.length && (
+                        <p className="px-2 py-1 text-xs text-muted-foreground">No candidates found.</p>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="req-notes">Notes</Label>
+                <Textarea id="req-notes" value={reqNotes} onChange={(e) => setReqNotes(e.target.value)} />
+              </div>
+            </div>
+          </FormSection>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>
