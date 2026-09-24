@@ -241,15 +241,15 @@ export function CandidateCard({
     <Card className={`card-amber relative rounded-2xl ${isRejected ? "opacity-60" : ""}`}>
       <div className="absolute right-4 top-4 z-10 flex flex-col items-end gap-1.5">
         <span
-          className={`inline-flex w-fit max-w-[calc(100%-2rem)] items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(status)}`}
+          className={`inline-flex w-fit max-w-[calc(100%-2rem)] min-w-0 items-center gap-1 truncate rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(status)}`}
         >
           <MatchStatusIcon status={status} />
-          {MATCH_STATUS_LABELS[status] ?? status}
+          <span className="truncate">{MATCH_STATUS_LABELS[status] ?? status}</span>
         </span>
         {curated && (
-          <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">
-            <Sparkles className="h-3 w-3" />
-            Hand-picked for you
+          <span className="inline-flex max-w-[calc(100%-2rem)] min-w-0 items-center gap-1 truncate rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">
+            <Sparkles className="h-3 w-3 flex-none" />
+            <span className="truncate">Hand-picked for you</span>
           </span>
         )}
       </div>
