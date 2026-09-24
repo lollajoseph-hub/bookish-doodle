@@ -134,10 +134,16 @@ function RequestsPage() {
   const [mustSkills, setMustSkills] = useState("");
   const [langIds, setLangIds] = useState<string[]>([]);
   const { data: allSkills = [] } = useQuery({ queryKey: ["skills"], queryFn: fetchSkills });
-  const languageOptions = useMemo(
-    () => allSkills.filter((s) => s.category === LANGUAGE_CATEGORY).map((s) => ({ id: s.id, label: s.name })),
-    [allSkills],
-  );
+  const languageOptions = useMemo(() => {
+    const opts = allSkills
+      .filter((s) => s.category === LANGUAGE_CATEGORY)
+      .map((s) => ({ id: s.id, label: s.name }));
+    return [...opts].sort((a, b) => {
+      if (a.label === "English") return -1;
+      if (b.label === "English") return 1;
+      return 0;
+    });
+  }, [allSkills]);
   const [notes, setNotes] = useState("");
   const navigate = useNavigate();
   const [customOpen, setCustomOpen] = useState(false);
