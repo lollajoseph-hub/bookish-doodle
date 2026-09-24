@@ -12,53 +12,40 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 
-const FALLBACK = [
-  "UTC",
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "America/Anchorage",
-  "America/Phoenix",
-  "America/Toronto",
-  "America/Mexico_City",
-  "America/Sao_Paulo",
-  "America/Buenos_Aires",
-  "Europe/London",
-  "Europe/Dublin",
-  "Europe/Paris",
-  "Europe/Berlin",
-  "Europe/Madrid",
-  "Europe/Rome",
-  "Europe/Amsterdam",
-  "Europe/Warsaw",
-  "Europe/Istanbul",
-  "Europe/Moscow",
-  "Africa/Lagos",
-  "Africa/Johannesburg",
-  "Africa/Nairobi",
-  "Africa/Cairo",
-  "Asia/Dubai",
-  "Asia/Kolkata",
-  "Asia/Karachi",
-  "Asia/Singapore",
-  "Asia/Hong_Kong",
-  "Asia/Shanghai",
-  "Asia/Tokyo",
-  "Asia/Seoul",
-  "Australia/Sydney",
-  "Australia/Perth",
-  "Pacific/Auckland",
-  "Pacific/Honolulu",
+const TIMEZONE_OPTIONS: { id: string; label: string }[] = [
+  { id: "America/New_York", label: "US/Eastern" },
+  { id: "America/Chicago", label: "US/Central" },
+  { id: "America/Denver", label: "US/Mountain" },
+  { id: "America/Los_Angeles", label: "US/Pacific" },
+  { id: "America/Anchorage", label: "US/Alaska" },
+  { id: "Pacific/Honolulu", label: "US/Hawaii" },
+  { id: "America/Toronto", label: "Canada/Eastern" },
+  { id: "America/Vancouver", label: "Canada/Pacific" },
+  { id: "America/Mexico_City", label: "America/Mexico City" },
+  { id: "America/Sao_Paulo", label: "America/Sao Paulo" },
+  { id: "Europe/London", label: "Europe/London" },
+  { id: "Europe/Dublin", label: "Europe/Dublin" },
+  { id: "Europe/Lisbon", label: "Europe/Lisbon" },
+  { id: "Europe/Madrid", label: "Europe/Madrid" },
+  { id: "Europe/Paris", label: "Europe/Paris" },
+  { id: "Europe/Berlin", label: "Europe/Berlin" },
+  { id: "Europe/Amsterdam", label: "Europe/Amsterdam" },
+  { id: "Europe/Rome", label: "Europe/Rome" },
+  { id: "Europe/Athens", label: "Europe/Athens" },
+  { id: "Africa/Lagos", label: "Africa/Lagos" },
+  { id: "Africa/Accra", label: "Africa/Accra" },
+  { id: "Africa/Nairobi", label: "Africa/Nairobi" },
+  { id: "Africa/Johannesburg", label: "Africa/Johannesburg" },
+  { id: "Africa/Cairo", label: "Africa/Cairo" },
+  { id: "Asia/Dubai", label: "Asia/Dubai" },
+  { id: "Asia/Riyadh", label: "Asia/Riyadh" },
+  { id: "Asia/Kolkata", label: "Asia/Kolkata" },
+  { id: "Asia/Manila", label: "Asia/Manila" },
+  { id: "Asia/Singapore", label: "Asia/Singapore" },
+  { id: "Asia/Shanghai", label: "Asia/Shanghai" },
+  { id: "Asia/Tokyo", label: "Asia/Tokyo" },
+  { id: "Australia/Sydney", label: "Australia/Sydney" },
 ];
-
-const ZONES: string[] =
-  typeof (Intl as unknown as { supportedValuesOf?: (k: string) => string[] })
-    .supportedValuesOf === "function"
-    ? (Intl as unknown as { supportedValuesOf: (k: string) => string[] }).supportedValuesOf(
-        "timeZone",
-      )
-    : FALLBACK;
 
 function offsetFor(zone: string): string {
   try {
@@ -75,9 +62,6 @@ function offsetFor(zone: string): string {
   }
 }
 
-function pretty(zone: string) {
-  return zone.replace(/_/g, " ");
-}
 
 export interface TimezoneSelectProps {
   value: string;
@@ -100,10 +84,10 @@ export function TimezoneSelect({
 
   const items = useMemo(
     () =>
-      ZONES.map((z) => ({
-        zone: z,
-        label: pretty(z),
-        offset: offsetFor(z),
+      TIMEZONE_OPTIONS.map((opt) => ({
+        zone: opt.id,
+        label: opt.label,
+        offset: offsetFor(opt.id),
       })),
     [],
   );
