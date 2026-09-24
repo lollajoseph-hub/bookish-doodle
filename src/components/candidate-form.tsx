@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -6,6 +6,7 @@ import {
   createCandidate,
   fetchCandidateDetail,
   fetchJobRoles,
+  fetchSkills,
   fetchStaffProfiles,
   updateCandidate,
   LANGUAGE_CATEGORY,
@@ -76,10 +77,10 @@ export function CandidateForm({
   const [form, setForm] = useState<CandidateFormInput>(() => emptyForm(profile?.id ?? null));
   const [files, setFiles] = useState<Partial<Record<CandidateFileType, File>>>({});
   const [videoMode, setVideoMode] = useState<"upload" | "link">("link");
-  const [languageDraft, setLanguageDraft] = useState("");
 
   const { data: roles = [] } = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: fetchStaffProfiles });
+  const { data: allSkills = [] } = useQuery({ queryKey: ["skills"], queryFn: fetchSkills });
   const { data: detail } = useQuery({
     queryKey: ["candidate", candidateId],
     queryFn: () => fetchCandidateDetail(candidateId!),
@@ -160,20 +161,14 @@ export function CandidateForm({
   const set = <K extends keyof CandidateFormInput>(k: K, v: CandidateFormInput[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
-  function addLanguage(raw: string) {
-    const name = raw.trim();
-    setLanguageDraft("");
-    if (!name) return;
-    if (form.languageNames.some((l) => l.toLowerCase() === name.toLowerCase())) return;
-    set("languageNames", [...form.languageNames, name]);
-  }
+  const languageOptions = useMemo(
+    () =>
+      allSkills
+        .filter((s) => s.category === LANGUAGE_CATEGORY)
+        .map((s) => ({ id: s.id, label: s.name })),
+    [allSkills],
+  );
 
-  function removeLanguage(name: string) {
-    set(
-      "languageNames",
-      form.languageNames.filter((l) => l !== name),
-    );
-  }
 
 
 
@@ -339,36 +334,20 @@ export function CandidateForm({
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="languages">Languages</Label>
-            <Input
-              id="languages"
-              placeholder="Type a language and press Enter"
-              value={languageDraft}
-              onChange={(e) => setLanguageDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === ",") {
-                  e.preventDefault();
-                  addLanguage(languageDraft);
-                } else if (e.key === "Backspace" && !languageDraft && form.languageNames.length) {
-                  removeLanguage(form.languageNames[form.languageNames.length - 1]!);
-                }
-              }}
-              onBlur={() => addLanguage(languageDraft)}
+            <Label>Languages</Label>
+            <MultiSelect
+              options={languageOptions}
+              selected={languageOptions.filter((o) => form.languageNames.includes(o.label)).map((o) => o.id)}
+              onChange={(ids) =>
+                set(
+                  "languageNames",
+                  ids.map((id) => languageOptions.find((o) => o.id === id)?.label).filter((n): n is string => !!n),
+                )
+              }
+              placeholder="Select languages"
+              searchPlaceholder="Search languages…"
+              emptyText="No languages found."
             />
-            {form.languageNames.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {form.languageNames.map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => removeLanguage(name)}
-                    className="rounded-full border-amber bg-amber-soft px-3 py-0.5 text-xs font-medium text-amber-foreground transition-colors hover:bg-amber/80"
-                  >
-                    {name} ✕
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 
