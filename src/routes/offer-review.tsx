@@ -74,6 +74,7 @@ function OfferReviewPage() {
       toast.success("Status updated");
       queryClient.invalidateQueries({ queryKey: ["matches"] });
       queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      queryClient.invalidateQueries({ queryKey: ["all-matches"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
