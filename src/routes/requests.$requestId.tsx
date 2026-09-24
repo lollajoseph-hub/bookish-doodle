@@ -80,6 +80,10 @@ function RequestDetailPage() {
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["client-request", requestId] });
     queryClient.invalidateQueries({ queryKey: ["client-requests"] });
+    queryClient.invalidateQueries({ queryKey: ["candidates"] });
+    queryClient.invalidateQueries({ queryKey: ["candidate-matches"] });
+    queryClient.invalidateQueries({ queryKey: ["matches"] });
+    queryClient.invalidateQueries({ queryKey: ["all-matches"] });
   };
 
   const add = useMutation({

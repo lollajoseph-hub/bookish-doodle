@@ -48,6 +48,7 @@ function CsQueuePage() {
     onSuccess: () => {
       toast.success("Request moved back to open");
       queryClient.invalidateQueries({ queryKey: ["client-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["client-request"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
