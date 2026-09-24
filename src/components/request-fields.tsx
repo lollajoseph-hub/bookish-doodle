@@ -276,7 +276,13 @@ function ChoiceCards({
 function useRequestFieldProps({ value: f, onChange, catalog }: RequestFieldsProps) {
   const set = <K extends keyof RequestForm>(k: K, v: RequestForm[K]) =>
     onChange({ ...f, [k]: v });
-  const languageOptions = catalog.languageSkills.map((s) => ({ value: s.id, label: s.name }));
+  const languageOptions = catalog.languageSkills
+    .map((s) => ({ value: s.id, label: s.name }))
+    .sort((a, b) => {
+      if (a.label === "English") return -1;
+      if (b.label === "English") return 1;
+      return 0;
+    });
   return { f, set, languageOptions, catalog };
 }
 
