@@ -71,6 +71,8 @@ function InterviewReviewPage() {
     onSuccess: () => {
       toast.success("Status updated");
       queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      queryClient.invalidateQueries({ queryKey: ["all-matches"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -80,6 +82,8 @@ function InterviewReviewPage() {
     onSuccess: () => {
       toast.success("Interview confirmed");
       queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      queryClient.invalidateQueries({ queryKey: ["all-matches"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -89,6 +93,8 @@ function InterviewReviewPage() {
     onSuccess: () => {
       toast.success("Contract sent — offer extended");
       queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      queryClient.invalidateQueries({ queryKey: ["all-matches"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
