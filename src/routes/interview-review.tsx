@@ -109,6 +109,8 @@ function InterviewReviewPage() {
       setCompleteFor(null);
       setInterviewNotes("");
       queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      queryClient.invalidateQueries({ queryKey: ["all-matches"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
