@@ -10,6 +10,7 @@ import { InterviewRequestDialog } from "@/components/interview-request-dialog";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
 import { displayName, signedPhotoUrl, type MatchStatus } from "@/lib/matches";
+import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 
 export const Route = createFileRoute("/shortlisted")({
   head: () => ({
@@ -127,6 +128,8 @@ function ShortlistedPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  usePollingRefresh(load, 20000);
 
   const requestIds = useMemo(
     () => Array.from(new Set((matches ?? []).map((m) => m.client_request_id))),

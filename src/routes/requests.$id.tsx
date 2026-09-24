@@ -11,6 +11,7 @@ import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { InterviewRequestDialog } from "@/components/interview-request-dialog";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, Sparkles, UsersRound } from "lucide-react";
+import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 import { ENGAGEMENT_TYPES, DAYS_OF_WEEK } from "@/lib/catalog";
 import {
   REQUEST_STATUS_LABELS,
@@ -140,6 +141,8 @@ function RequestDetail() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  usePollingRefresh(load, 20000);
 
   async function callRpc(
     fn: "client_shortlist_candidate" | "client_request_hire",
