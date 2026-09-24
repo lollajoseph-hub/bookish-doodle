@@ -161,13 +161,16 @@ export function CandidateForm({
   const set = <K extends keyof CandidateFormInput>(k: K, v: CandidateFormInput[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
-  const languageOptions = useMemo(
-    () =>
-      allSkills
-        .filter((s) => s.category === LANGUAGE_CATEGORY)
-        .map((s) => ({ id: s.id, label: s.name })),
-    [allSkills],
-  );
+  const languageOptions = useMemo(() => {
+    const opts = allSkills
+      .filter((s) => s.category === LANGUAGE_CATEGORY)
+      .map((s) => ({ id: s.id, label: s.name }));
+    return [...opts].sort((a, b) => {
+      if (a.label === "English") return -1;
+      if (b.label === "English") return 1;
+      return 0;
+    });
+  }, [allSkills]);
 
 
 
