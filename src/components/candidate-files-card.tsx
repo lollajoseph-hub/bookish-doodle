@@ -90,16 +90,15 @@ export function CandidateFilesCard({
       queryClient.invalidateQueries({ queryKey: ["candidate-files", candidateId] });
       if (fileType === "resume") {
         toast.success(
-          "Resume uploaded — AI is re-analyzing it, this page will update automatically in about 15-20 seconds."
+          "Resume uploaded — AI analysis will appear automatically once ready."
         );
-        // The AI pipeline re-processes the resume asynchronously; staggered
-        // invalidations pick up the newly-extracted data once it finishes.
-        for (const delay of [8000, 16000, 26000]) {
-          setTimeout(() => {
-            queryClient.invalidateQueries({ queryKey: ["candidate", candidateId] });
-            queryClient.invalidateQueries({ queryKey: ["candidate-ai", candidateId] });
-          }, delay);
-        }
+        // The AI pipeline processes the resume asynchronously. The AI Analysis
+        // query polls until the profile row exists, so one kick after a short
+        // delay is enough to start it.
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["candidate-ai", candidateId] });
+          queryClient.invalidateQueries({ queryKey: ["candidate", candidateId] });
+        }, 3000);
       } else {
         toast.success("File uploaded");
       }
