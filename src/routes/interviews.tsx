@@ -15,6 +15,7 @@ import {
   signedPhotoUrl,
   type MatchStatus,
 } from "@/lib/matches";
+import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 
 export const Route = createFileRoute("/interviews")({
   head: () => ({
@@ -103,6 +104,8 @@ function InterviewsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  usePollingRefresh(load, 20000);
 
   async function requestHire(matchId: string) {
     setActingId(matchId);

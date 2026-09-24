@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bell, Check, Loader2 } from "lucide-react";
+import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 import { formatDateTime } from "@/lib/matches";
 
 interface NotificationRow {
@@ -44,6 +45,8 @@ export function NotificationsBell() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  usePollingRefresh(load, 20000);
 
   const unread = (rows ?? []).filter((n) => !n.read).length;
 
