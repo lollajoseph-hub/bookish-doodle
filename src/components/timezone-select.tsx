@@ -12,57 +12,40 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 
-const FALLBACK = [
-  "UTC",
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "America/Phoenix",
-  "America/Anchorage",
-  "America/Toronto",
-  "America/Mexico_City",
-  "America/Sao_Paulo",
-  "America/Buenos_Aires",
-  "Europe/London",
-  "Europe/Dublin",
-  "Europe/Paris",
-  "Europe/Berlin",
-  "Europe/Madrid",
-  "Europe/Rome",
-  "Europe/Amsterdam",
-  "Europe/Warsaw",
-  "Europe/Istanbul",
-  "Europe/Moscow",
-  "Africa/Lagos",
-  "Africa/Johannesburg",
-  "Africa/Nairobi",
-  "Africa/Cairo",
-  "Asia/Dubai",
-  "Asia/Kolkata",
-  "Asia/Karachi",
-  "Asia/Bangkok",
-  "Asia/Singapore",
-  "Asia/Hong_Kong",
-  "Asia/Shanghai",
-  "Asia/Tokyo",
-  "Asia/Seoul",
-  "Australia/Perth",
-  "Australia/Sydney",
-  "Pacific/Auckland",
-  "Pacific/Honolulu",
+const TIMEZONE_OPTIONS: { id: string; label: string }[] = [
+  { id: "America/New_York", label: "US/Eastern" },
+  { id: "America/Chicago", label: "US/Central" },
+  { id: "America/Denver", label: "US/Mountain" },
+  { id: "America/Los_Angeles", label: "US/Pacific" },
+  { id: "America/Anchorage", label: "US/Alaska" },
+  { id: "Pacific/Honolulu", label: "US/Hawaii" },
+  { id: "America/Toronto", label: "Canada/Eastern" },
+  { id: "America/Vancouver", label: "Canada/Pacific" },
+  { id: "America/Mexico_City", label: "America/Mexico City" },
+  { id: "America/Sao_Paulo", label: "America/Sao Paulo" },
+  { id: "Europe/London", label: "Europe/London" },
+  { id: "Europe/Dublin", label: "Europe/Dublin" },
+  { id: "Europe/Lisbon", label: "Europe/Lisbon" },
+  { id: "Europe/Madrid", label: "Europe/Madrid" },
+  { id: "Europe/Paris", label: "Europe/Paris" },
+  { id: "Europe/Berlin", label: "Europe/Berlin" },
+  { id: "Europe/Amsterdam", label: "Europe/Amsterdam" },
+  { id: "Europe/Rome", label: "Europe/Rome" },
+  { id: "Europe/Athens", label: "Europe/Athens" },
+  { id: "Africa/Lagos", label: "Africa/Lagos" },
+  { id: "Africa/Accra", label: "Africa/Accra" },
+  { id: "Africa/Nairobi", label: "Africa/Nairobi" },
+  { id: "Africa/Johannesburg", label: "Africa/Johannesburg" },
+  { id: "Africa/Cairo", label: "Africa/Cairo" },
+  { id: "Asia/Dubai", label: "Asia/Dubai" },
+  { id: "Asia/Riyadh", label: "Asia/Riyadh" },
+  { id: "Asia/Kolkata", label: "Asia/Kolkata" },
+  { id: "Asia/Manila", label: "Asia/Manila" },
+  { id: "Asia/Singapore", label: "Asia/Singapore" },
+  { id: "Asia/Shanghai", label: "Asia/Shanghai" },
+  { id: "Asia/Tokyo", label: "Asia/Tokyo" },
+  { id: "Australia/Sydney", label: "Australia/Sydney" },
 ];
-
-const ZONES: string[] = (() => {
-  try {
-    const anyIntl = Intl as unknown as { supportedValuesOf?: (k: string) => string[] };
-    if (typeof anyIntl.supportedValuesOf === "function") {
-      const list = anyIntl.supportedValuesOf("timeZone");
-      if (Array.isArray(list) && list.length) return list;
-    }
-  } catch { /* ignore */ }
-  return FALLBACK;
-})();
 
 function offsetOf(zone: string): string {
   try {
@@ -99,8 +82,10 @@ export function TimezoneSelect({
   const [open, setOpen] = React.useState(false);
 
   const labelFor = React.useCallback((z: string) => {
+    const opt = TIMEZONE_OPTIONS.find((o) => o.id === z);
+    const name = opt ? opt.label : prettify(z);
     const off = offsetOf(z);
-    return off ? `${prettify(z)} (${off})` : prettify(z);
+    return off ? `${name} (${off})` : name;
   }, []);
 
   return (
@@ -132,21 +117,21 @@ export function TimezoneSelect({
           <CommandList className="max-h-72 overflow-auto">
             <CommandEmpty>No timezone found.</CommandEmpty>
             <CommandGroup>
-              {ZONES.map((z) => {
-                const label = labelFor(z);
+              {TIMEZONE_OPTIONS.map((tz) => {
+                const label = labelFor(tz.id);
                 return (
                   <CommandItem
-                    key={z}
-                    value={`${z} ${label}`}
+                    key={tz.id}
+                    value={`${tz.id} ${label}`}
                     onSelect={() => {
-                      onChange(z);
+                      onChange(tz.id);
                       setOpen(false);
                     }}
                   >
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        value === z ? "opacity-100" : "opacity-0",
+                        value === tz.id ? "opacity-100" : "opacity-0",
                       )}
                     />
                     <span className="truncate">{label}</span>
