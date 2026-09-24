@@ -154,9 +154,22 @@ function CandidateDetailPage() {
     queryKey: ["candidate-matches", candidateId],
     queryFn: () => fetchMatchesForCandidate(candidateId),
   });
+  // Poll every 4s until the AI profile row exists (async resume processing),
+  // capping at 2 minutes so a genuinely failed pipeline doesn't poll forever.
+  const aiPollRef = useRef<{ id: string; start: number } | null>(null);
   const { data: aiProfile } = useQuery({
     queryKey: ["candidate-ai", candidateId],
     queryFn: () => fetchCandidateAiProfile(candidateId),
+    refetchInterval: (query) => {
+      if (query.state.data) return false;
+      const poll =
+        aiPollRef.current?.id === candidateId ? aiPollRef.current : null;
+      if (!poll) {
+        aiPollRef.current = { id: candidateId, start: Date.now() };
+        return 4000;
+      }
+      return Date.now() - poll.start < 120_000 ? 4000 : false;
+    },
   });
   const { data: media } = useQuery({
     queryKey: ["candidate-media", candidateId],
