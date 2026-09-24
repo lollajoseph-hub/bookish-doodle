@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Users, ArrowRight, Sparkles } from "lucide-react";
 import { REQUEST_STATUS_LABELS, requestStatusTone, formatDate } from "@/lib/matches";
 import { ENGAGEMENT_TYPES } from "@/lib/catalog";
+import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 
 export const Route = createFileRoute("/requests/")({
   head: () => ({
@@ -42,16 +43,20 @@ function RequestsList() {
   const [rows, setRows] = useState<RequestRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => {
-    supabase
+  const load = useCallback(async () => {
+    const { data, error } = await supabase
       .from("client_requests")
       .select("id,status,source,engagement_type,hires_needed,created_at,job_roles(name),candidate_matches(count)")
-      .order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) setErr(error.message);
-        else setRows((data ?? []) as unknown as RequestRow[]);
-      });
+      .order("created_at", { ascending: false });
+    if (error) setErr(error.message);
+    else setRows((data ?? []) as unknown as RequestRow[]);
   }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  usePollingRefresh(load, 20000);
 
   return (
     <div className="space-y-6">
