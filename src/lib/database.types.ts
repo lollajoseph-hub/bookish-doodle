@@ -283,6 +283,11 @@ export interface CandidateMatchRow {
   interview_at: string | null;
   interview_proposed_at: string | null;
   interview_scheduled_at: string | null;
+  meeting_notes_text: string | null;
+  meeting_notes_doc_url: string | null;
+  meeting_notes_captured_at: string | null;
+  recording_url: string | null;
+  recording_captured_at: string | null;
   created_at: string;
   updated_at: string | null;
 }
