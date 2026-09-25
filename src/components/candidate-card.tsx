@@ -68,6 +68,11 @@ export interface MatchRow {
   interview_scheduled_at: string | null;
   meet_url: string | null;
   interview_notes: string | null;
+  meeting_notes_text: string | null;
+  meeting_notes_doc_url: string | null;
+  meeting_notes_captured_at: string | null;
+  recording_url: string | null;
+  recording_captured_at: string | null;
   rejection_reason: string | null;
   rejection_reason_note: string | null;
   rejected_at: string | null;
@@ -78,7 +83,7 @@ export interface MatchRow {
 }
 
 export const MATCH_SELECT =
-  "id,status,client_request_id,interview_proposed_at,interview_proposed_by,interview_scheduled_at,meet_url,interview_notes,rejection_reason,rejection_reason_note,rejected_at,match_score,match_reason,candidate_id," +
+  "id,status,client_request_id,interview_proposed_at,interview_proposed_by,interview_scheduled_at,meet_url,interview_notes,meeting_notes_text,meeting_notes_doc_url,meeting_notes_captured_at,recording_url,recording_captured_at,rejection_reason,rejection_reason_note,rejected_at,match_score,match_reason,candidate_id," +
   "candidate_pool_profile(candidate_id,full_name,headline,availability,country,timezone,weekly_hours_available,preferred_shift,years_experience,earliest_start_date,approved_summary,highlights,skills,primary_role,secondary_roles,profile_photo_path)";
 
 export function statusTone(s: MatchStatus | string) {
@@ -352,6 +357,26 @@ export function CandidateCard({
             </p>
             {match.interview_notes && (
               <p className="whitespace-pre-line text-sm text-muted-foreground">{match.interview_notes}</p>
+            )}
+            {(match.meeting_notes_text || match.recording_url) && (
+              <div className="mt-2 space-y-1.5 border-t border-primary/10 pt-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">Meeting notes &amp; recording</p>
+                {match.meeting_notes_text && (
+                  <p className="whitespace-pre-line text-sm text-muted-foreground">{match.meeting_notes_text}</p>
+                )}
+                <div className="flex flex-wrap gap-3 pt-1">
+                  {match.meeting_notes_doc_url && (
+                    <a href={match.meeting_notes_doc_url} target="_blank" rel="noreferrer" className="text-xs font-medium text-primary underline underline-offset-2">
+                      View full notes doc
+                    </a>
+                  )}
+                  {match.recording_url && (
+                    <a href={match.recording_url} target="_blank" rel="noreferrer" className="text-xs font-medium text-primary underline underline-offset-2">
+                      Watch recording
+                    </a>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         )}
