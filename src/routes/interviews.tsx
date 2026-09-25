@@ -253,6 +253,26 @@ function InterviewsPage() {
                       {m.status === "interview_completed" && m.interview_notes && (
                         <p className="whitespace-pre-line text-sm text-muted-foreground">{m.interview_notes}</p>
                       )}
+                      {m.status === "interview_completed" && (m.meeting_notes_text || m.recording_url) && (
+                        <div className="mt-2 space-y-1.5 border-t border-primary/10 pt-2">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-primary">Meeting notes &amp; recording</p>
+                          {m.meeting_notes_text && (
+                            <p className="whitespace-pre-line text-sm text-muted-foreground">{m.meeting_notes_text}</p>
+                          )}
+                          <div className="flex flex-wrap gap-3 pt-1">
+                            {m.meeting_notes_doc_url && (
+                              <a href={m.meeting_notes_doc_url} target="_blank" rel="noreferrer" className="text-xs font-medium text-primary underline underline-offset-2">
+                                View full notes doc
+                              </a>
+                            )}
+                            {m.recording_url && (
+                              <a href={m.recording_url} target="_blank" rel="noreferrer" className="text-xs font-medium text-primary underline underline-offset-2">
+                                Watch recording
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
