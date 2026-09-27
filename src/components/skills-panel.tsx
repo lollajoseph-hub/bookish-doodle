@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Merge, Pencil, Search, Trash2, Tag } from "lucide-react";
+import { Loader2, Merge, Pencil, Search, Tag } from "lucide-react";
 import { toast } from "sonner";
 import {
-  deleteSkill,
   distinctCategories,
   fetchSkillsWithUsage,
   mergeSkills,
@@ -11,6 +10,8 @@ import {
   OTHER_CATEGORY,
   type SkillWithUsage,
 } from "@/lib/skills-admin";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RoleSkillsPanel } from "@/components/role-skills-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +36,19 @@ import {
 const ALL = "__all__";
 
 export function SkillsPanel() {
+  return (
+    <Tabs defaultValue="catalog" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="catalog">Skill catalog</TabsTrigger>
+        <TabsTrigger value="roles">Role skills</TabsTrigger>
+      </TabsList>
+      <TabsContent value="catalog"><CatalogPanel /></TabsContent>
+      <TabsContent value="roles"><RoleSkillsPanel /></TabsContent>
+    </Tabs>
+  );
+}
+
+function CatalogPanel() {
   const queryClient = useQueryClient();
   const { data: skills = [], isLoading } = useQuery({
     queryKey: ["skills-admin"],
@@ -47,7 +61,6 @@ export function SkillsPanel() {
   const [editing, setEditing] = useState<SkillWithUsage | null>(null);
   const [editName, setEditName] = useState("");
   const [editCategory, setEditCategory] = useState<string>(OTHER_CATEGORY);
-  const [deleting, setDeleting] = useState<SkillWithUsage | null>(null);
   const [mergeOpen, setMergeOpen] = useState(false);
   const [mergeTarget, setMergeTarget] = useState<string>("");
 
@@ -90,19 +103,6 @@ export function SkillsPanel() {
     onSuccess: () => {
       toast.success("Skill updated");
       setEditing(null);
-      refresh();
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const remove = useMutation({
-    mutationFn: async () => {
-      if (!deleting) return;
-      await deleteSkill(deleting.id);
-    },
-    onSuccess: () => {
-      toast.success("Skill deleted");
-      setDeleting(null);
       refresh();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -220,15 +220,6 @@ export function SkillsPanel() {
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Delete ${s.name}`}
-                  className="text-destructive"
-                  onClick={() => setDeleting(s)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
               </div>
             ))}
           </div>
@@ -273,32 +264,6 @@ export function SkillsPanel() {
             </Button>
             <Button onClick={() => save.mutate()} disabled={save.isPending}>
               {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete */}
-      <Dialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete “{deleting?.name}”?</DialogTitle>
-            <DialogDescription>
-              {deleting && deleting.usageCount > 0
-                ? "This skill is still linked to candidates or requests — merge it into another skill instead."
-                : "This cannot be undone."}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setDeleting(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={remove.isPending || (deleting?.usageCount ?? 0) > 0}
-              onClick={() => remove.mutate()}
-            >
-              {remove.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Delete skill
             </Button>
           </DialogFooter>
         </DialogContent>
