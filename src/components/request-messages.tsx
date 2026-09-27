@@ -20,6 +20,13 @@ export interface ThreadMessage {
   created_at: string;
 }
 
+export interface ThreadSenderProfile {
+  full_name: string | null;
+  role: string | null;
+}
+
+export type ThreadSenderProfiles = Record<string, ThreadSenderProfile>;
+
 export interface QuickAction {
   type: StructuredType;
   label: string;
@@ -93,6 +100,7 @@ export function useThread(target: ThreadTarget | null, active = false) {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [resolved, setResolved] = useState(false);
   const [messages, setMessages] = useState<ThreadMessage[] | null>(null);
+  const [senderProfiles, setSenderProfiles] = useState<ThreadSenderProfiles>({});
   const [err, setErr] = useState<string | null>(null);
   const [lastRead, setLastRead] = useState<string | null>(null);
   const kind = target?.kind ?? null;
@@ -102,6 +110,7 @@ export function useThread(target: ThreadTarget | null, active = false) {
     setThreadId(null);
     setResolved(false);
     setMessages(null);
+    setSenderProfiles({});
     setErr(null);
     if (!user || !kind || !targetId) return;
     let cancelled = false;
@@ -156,6 +165,48 @@ export function useThread(target: ThreadTarget | null, active = false) {
     };
   }, [threadId]);
 
+  useEffect(() => {
+    if (!threadId) return;
+    let cancelled = false;
+    void supabase.rpc("get_thread_sender_profiles", { p_thread_id: threadId }).then(({ data }) => {
+      if (cancelled) return;
+      const profiles = (data ?? []) as Array<{ id: string; full_name: string | null; role: string | null }>;
+      setSenderProfiles((prev) => ({
+        ...prev,
+        ...Object.fromEntries(profiles.map(({ id, full_name, role }) => [id, { full_name, role }])),
+      }));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [threadId]);
+
+  const unknownStaffSenderIds = Array.from(
+    new Set(
+      (messages ?? [])
+        .filter((message) => message.sender_role === "staff" && message.sender_id && !senderProfiles[message.sender_id])
+        .map((message) => message.sender_id as string)
+    )
+  )
+    .sort()
+    .join("|");
+
+  useEffect(() => {
+    if (!threadId || !unknownStaffSenderIds) return;
+    let cancelled = false;
+    void supabase.rpc("get_thread_sender_profiles", { p_thread_id: threadId }).then(({ data }) => {
+      if (cancelled) return;
+      const profiles = (data ?? []) as Array<{ id: string; full_name: string | null; role: string | null }>;
+      setSenderProfiles((prev) => ({
+        ...prev,
+        ...Object.fromEntries(profiles.map(({ id, full_name, role }) => [id, { full_name, role }])),
+      }));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [threadId, unknownStaffSenderIds]);
+
   const latest = messages && messages.length > 0 ? messages[messages.length - 1] : null;
 
   useEffect(() => {
@@ -171,7 +222,7 @@ export function useThread(target: ThreadTarget | null, active = false) {
   const addMessage = (m: ThreadMessage) =>
     setMessages((prev) => ((prev ?? []).some((x) => x.id === m.id) ? prev : [...(prev ?? []), m]));
 
-  return { threadId, setThreadId, resolved, messages, err, unread, latest, addMessage, userId: user?.id ?? null };
+  return { threadId, setThreadId, resolved, messages, senderProfiles, err, unread, latest, addMessage, userId: user?.id ?? null };
 }
 
 /** Read-only unread count for a thread. Never creates a thread. */
@@ -259,7 +310,15 @@ export function actionsFor(kind: ThreadTarget["kind"], matchStatus?: string | nu
   return [];
 }
 
-export function ChatFeed({ messages, userId }: { messages: ThreadMessage[] | null; userId: string | null }) {
+export function ChatFeed({
+  messages,
+  userId,
+  senderProfiles,
+}: {
+  messages: ThreadMessage[] | null;
+  userId: string | null;
+  senderProfiles: ThreadSenderProfiles;
+}) {
   const endRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
@@ -276,10 +335,16 @@ export function ChatFeed({ messages, userId }: { messages: ThreadMessage[] | nul
           {messages.map((m) => {
             const mine = m.sender_role === "client" && (!userId || !m.sender_id || m.sender_id === userId);
             const action = m.structured_type ? ACTION_META[m.structured_type] ?? null : null;
+            const senderProfile = m.sender_role === "staff" ? senderProfiles[m.sender_id ?? ""] : null;
+            const firstName = senderProfile?.full_name?.trim().split(/\s+/)[0];
+            const roleLabel = senderProfile?.role
+              ? senderProfile.role.charAt(0).toUpperCase() + senderProfile.role.slice(1)
+              : "Staff";
+            const senderLabel = firstName ? `${firstName} (${roleLabel})` : "ScaleSource Team";
             return (
               <li key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
                 <span className="mb-1 text-xs text-muted-foreground">
-                  {mine ? "You" : m.sender_role === "client" ? "Your team" : "ScaleSource Team"} ·{" "}
+                  {mine ? "You" : m.sender_role === "client" ? "Your team" : senderLabel} ·{" "}
                   {formatDateTime(m.created_at)}
                 </span>
                 {action ? (
