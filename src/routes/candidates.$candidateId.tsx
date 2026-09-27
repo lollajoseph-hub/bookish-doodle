@@ -613,7 +613,8 @@ function CandidateDetailPage() {
                               className="mt-2"
                               onClick={() => navigate({ to: "/messages", search: { match: m.id } })}
                             >
-                              <MessageSquare className="mr-1 h-3.5 w-3.5" /> Message about this candidate
+                              <MessageSquare className="mr-1 h-3.5 w-3.5" /> Talk to us about{" "}
+                              {c.full_name.split(" ")[0]}
                             </Button>
                           )}
                         </div>
