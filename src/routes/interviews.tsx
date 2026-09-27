@@ -17,6 +17,7 @@ import {
   signedPhotoUrl,
   type MatchStatus,
 } from "@/lib/matches";
+import { createThread, findThreadId } from "@/components/request-messages";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 
 export const Route = createFileRoute("/interviews")({
@@ -73,19 +74,16 @@ function PrepNotes({ matchId }: { matchId: string }) {
     if (!open) return;
     let cancelled = false;
     void (async () => {
-      const { data, error } = await supabase.rpc("get_or_create_thread", {
-        p_client_request_id: null,
-        p_candidate_match_id: matchId,
-        p_client_id: null,
-      });
+      const { id: tid, error } = await findThreadId({ kind: "candidate", id: matchId });
       if (cancelled) return;
       if (error) {
-        toast.error(error.message);
+        toast.error(error);
         return;
       }
-      const row = (Array.isArray(data) ? data[0] : data) as { id: string } | string | null;
-      const tid = typeof row === "string" ? row : row?.id;
-      if (!tid) return;
+      if (!tid) {
+        setLoaded(true);
+        return;
+      }
       setThreadId(tid);
       const { data: pad } = await supabase
         .from("thread_scratchpad")
@@ -105,9 +103,19 @@ function PrepNotes({ matchId }: { matchId: string }) {
 
   const save = useCallback(
     async (text: string) => {
-      if (!threadId) return;
       setSaving("saving");
-      const { error } = await supabase.rpc("update_thread_scratchpad", { p_thread_id: threadId, p_content: text });
+      let tid = threadId;
+      if (!tid) {
+        try {
+          tid = await createThread({ kind: "candidate", id: matchId });
+          setThreadId(tid);
+        } catch (e) {
+          setSaving("idle");
+          toast.error((e as Error).message);
+          return;
+        }
+      }
+      const { error } = await supabase.rpc("update_thread_scratchpad", { p_thread_id: tid, p_content: text });
       if (error) {
         setSaving("idle");
         toast.error(error.message);
@@ -116,7 +124,7 @@ function PrepNotes({ matchId }: { matchId: string }) {
       dirtyRef.current = false;
       setSaving("saved");
     },
-    [threadId]
+    [threadId, matchId]
   );
 
   function onChange(text: string) {

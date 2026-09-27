@@ -182,6 +182,9 @@ function MessagesPage() {
     : search.request
       ? `request:${search.request}`
       : general?.key ?? null;
+  const started = (r: Row) => !!r.threadId && !!r.lastMessage;
+  const listedRequests = requestRows.filter((r) => started(r) || r.key === selectedKey);
+  const listedCandidates = candidateRows.filter((r) => started(r) || r.key === selectedKey);
   const all = [...(general ? [general] : []), ...requestRows, ...candidateRows];
   const selected = all.find((r) => r.key === selectedKey) ?? null;
 
@@ -201,8 +204,8 @@ function MessagesPage() {
       <div className="grid h-[calc(100vh-14rem)] min-h-[480px] grid-cols-1 overflow-hidden rounded-xl border bg-card md:grid-cols-[300px_1fr]">
         <aside className="min-h-0 overflow-y-auto border-b md:border-b-0 md:border-r">
           <Section label="General" rows={general ? [general] : []} selectedKey={selectedKey} onSelect={select} empty="" />
-          <Section label="Requests" rows={requestRows} selectedKey={selectedKey} onSelect={select} empty={requests === null ? "Loading…" : "No requests yet."} />
-          <Section label="Candidates" rows={candidateRows} selectedKey={selectedKey} onSelect={select} empty={matches === null ? "Loading…" : "No candidates yet."} />
+          <Section label="Requests" rows={listedRequests} selectedKey={selectedKey} onSelect={select} empty={requests === null ? "Loading…" : "No request conversations yet."} />
+          <Section label="Candidates" rows={listedCandidates} selectedKey={selectedKey} onSelect={select} empty={matches === null ? "Loading…" : "No candidate conversations yet."} />
         </aside>
         <section className="flex min-h-0 flex-col">
           {selected ? (
@@ -291,7 +294,7 @@ function ThreadListRow({ row, selected, onSelect }: { row: Row; selected: boolea
 }
 
 function ChatPane({ row }: { row: Row }) {
-  const { threadId, messages, err, latest, addMessage, userId } = useThread(row.target, true);
+  const { threadId, setThreadId, resolved, messages, err, latest, addMessage, userId } = useThread(row.target, true);
   return (
     <>
       <header className="border-b px-5 py-3">
@@ -303,7 +306,7 @@ function ChatPane({ row }: { row: Row }) {
       </header>
       {err && <p className="px-5 pt-3 text-xs text-destructive">{err}</p>}
       <ChatFeed messages={messages} userId={userId} />
-      <Composer threadId={threadId} actions={actionsFor(row.target.kind, row.matchStatus)} onSent={addMessage} />
+      <Composer threadId={threadId} target={row.target} ready={resolved} onThreadCreated={setThreadId} actions={actionsFor(row.target.kind, row.matchStatus)} onSent={addMessage} />
     </>
   );
 }
