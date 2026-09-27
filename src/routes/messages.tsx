@@ -27,6 +27,7 @@ import {
   fetchThreadMessages,
   getLastRead,
   getOrCreateThread,
+  findThreadId,
   markRead,
   sendThreadMessage,
   threadTargetKey,
@@ -579,9 +580,15 @@ function ThreadWorkspace({
 }) {
   const queryClient = useQueryClient();
 
-  const { data: thread, error: threadError } = useQuery({
-    queryKey: ["thread", target.kind, threadTargetKey(target)],
-    queryFn: () => (initialThread ? Promise.resolve(initialThread) : getOrCreateThread(target)),
+  const threadKey = ["thread-id", target.kind, threadTargetKey(target)];
+  const {
+    data: resolvedId,
+    error: threadError,
+    isPending: threadLoading,
+  } = useQuery({
+    queryKey: threadKey,
+    // Read-only: a thread is only created on first send.
+    queryFn: () => (initialThread ? Promise.resolve(initialThread.id) : findThreadId(target)),
     staleTime: Infinity,
   });
 
@@ -589,7 +596,7 @@ function ThreadWorkspace({
     if (threadError) toast.error((threadError as Error).message);
   }, [threadError]);
 
-  const threadId = thread?.id;
+  const threadId = resolvedId ?? undefined;
 
   const { data: messages = [] } = useQuery({
     queryKey: ["thread-messages", threadId],
@@ -641,11 +648,18 @@ function ThreadWorkspace({
 
   const [draft, setDraft] = useState("");
   const send = useMutation({
-    mutationFn: (v: { body: string; type: StructuredType | null }) =>
-      sendThreadMessage(threadId!, v.body, v.type),
-    onSuccess: (msg, v) => {
+    mutationFn: async (v: { body: string; type: StructuredType | null }) => {
+      let id = threadId;
+      if (!id) {
+        id = (await getOrCreateThread(target)).id;
+        queryClient.setQueryData(threadKey, id);
+      }
+      const msg = await sendThreadMessage(id, v.body, v.type);
+      return { msg, id };
+    },
+    onSuccess: ({ msg, id }, v) => {
       if (!v.type) setDraft("");
-      queryClient.setQueryData<ThreadMessageRow[]>(["thread-messages", threadId], (old = []) =>
+      queryClient.setQueryData<ThreadMessageRow[]>(["thread-messages", id], (old = []) =>
         old.some((m) => m.id === msg.id) ? old : [...old, msg],
       );
       queryClient.invalidateQueries({ queryKey: ["inbox"] });
@@ -655,7 +669,7 @@ function ThreadWorkspace({
 
   const submit = () => {
     const body = draft.trim();
-    if (!body || !threadId) return;
+    if (!body || threadLoading) return;
     send.mutate({ body, type: null });
   };
 
@@ -667,7 +681,7 @@ function ThreadWorkspace({
           {subtitle && <div className="text-xs text-muted-foreground">{subtitle}</div>}
         </div>
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-5 py-4">
-          {!threadId ? (
+          {threadLoading ? (
             <p className="text-sm text-muted-foreground">Opening conversation…</p>
           ) : messages.length === 0 ? (
             <p className="text-center text-sm text-muted-foreground">
@@ -689,7 +703,7 @@ function ThreadWorkspace({
                     key={type}
                     size="sm"
                     variant="outline"
-                    disabled={!threadId || send.isPending}
+                    disabled={threadLoading || send.isPending}
                     onClick={() => send.mutate({ body: a.body, type })}
                   >
                     <Icon className="mr-1 h-3.5 w-3.5" />
@@ -713,7 +727,7 @@ function ThreadWorkspace({
               }}
               className="min-h-[44px] resize-none"
             />
-            <Button onClick={submit} disabled={!threadId || !draft.trim() || send.isPending}>
+            <Button onClick={submit} disabled={threadLoading || !draft.trim() || send.isPending}>
               <Send className="mr-1 h-4 w-4" /> Send
             </Button>
           </div>
