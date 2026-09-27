@@ -356,6 +356,7 @@ export async function createClientRequest(input: {
   created_by: string | null;
   language_skill_ids?: string[];
   must_have_skill_names?: string[];
+  must_have_skill_ids?: string[];
 }): Promise<string> {
   const { data, error } = await supabase
     .from("client_requests")
@@ -382,15 +383,15 @@ export async function createClientRequest(input: {
   const requestId = data.id as string;
 
   const names = (input.must_have_skill_names ?? []).map((n) => n.trim()).filter(Boolean);
-  let mustHaveIds: string[] = [];
+  let mustHaveIds: string[] = [...(input.must_have_skill_ids ?? [])];
   if (names.length) {
     const { data: resolved, error: rpcError } = await supabase.rpc("resolve_or_create_skills", {
       p_names: names,
     });
     if (rpcError) throw rpcError;
-    mustHaveIds = ((resolved ?? []) as unknown[]).map((r) =>
+    mustHaveIds = mustHaveIds.concat(((resolved ?? []) as unknown[]).map((r) =>
       typeof r === "string" ? r : ((r as { id?: string; skill_id?: string }).id ?? (r as { skill_id?: string }).skill_id ?? ""),
-    ).filter(Boolean);
+    ).filter(Boolean));
   }
   const rows = new Map<string, boolean>();
   for (const id of [...mustHaveIds, ...(input.language_skill_ids ?? [])]) rows.set(id, true);
