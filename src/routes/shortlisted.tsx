@@ -115,12 +115,8 @@ function ShortlistedPage() {
 
     let list: MatchRow[];
     if (!orderRef.current) {
-      // First load: sort by status/score and capture that order.
-      list = raw.slice().sort((a, b) => {
-        const rank = ORDER.indexOf(a.status) - ORDER.indexOf(b.status);
-        if (rank !== 0) return rank;
-        return (b.match_score ?? 0) - (a.match_score ?? 0);
-      });
+      // First load: sort by match score and capture that order.
+      list = raw.slice().sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0));
       orderRef.current = list.map((m) => m.id);
     } else {
       // Subsequent loads: keep every card in its captured slot so the grid never reshuffles.
