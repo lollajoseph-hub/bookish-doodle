@@ -635,6 +635,7 @@ interface MatchScoreBreakdownRow {
   required_years_experience_min: number | null;
   experience_points: number | null;
   ai_rank_score: number | null;
+  ai_rank_score_breakdown: Record<string, number> | null;
   computed_total: number | null;
   stored_match_score: number | null;
 }
@@ -694,6 +695,14 @@ function ScoreBadge({ matchId, score }: { matchId: string; score: number }) {
               </li>
               <li>
                 AI resume score: <span className="font-medium">{data.ai_rank_score ?? 0}/15 pts</span>
+                {data.ai_rank_score_breakdown && (
+                  <ul className="mt-0.5 space-y-0.5 text-xs text-muted-foreground">
+                    <li>- Experience: {data.ai_rank_score_breakdown["experience_pts"] ?? 0}/5</li>
+                    <li>- Skills breadth: {data.ai_rank_score_breakdown["skills_pts"] ?? 0}/5</li>
+                    <li>- Certifications/achievements: {data.ai_rank_score_breakdown["certifications_pts"] ?? 0}/3</li>
+                    <li>- Resume completeness: {data.ai_rank_score_breakdown["completeness_pts"] ?? 0}/2</li>
+                  </ul>
+                )}
               </li>
               <li className="border-t pt-1 font-semibold">Total: {data.computed_total ?? 0} pts</li>
             </ul>
