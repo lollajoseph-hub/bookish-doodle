@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,6 +53,14 @@ const ORDER: MatchStatus[] = [
   "interview_requested",
   "interview_completed",
   "hire_requested",
+];
+
+/** Stage tabs, in display order. */
+const STAGE_TABS: { value: string; status: MatchStatus }[] = [
+  { value: "requested", status: "interview_requested" },
+  { value: "confirmed", status: "interview_confirmed" },
+  { value: "completed", status: "interview_completed" },
+  { value: "hire", status: "hire_requested" },
 ];
 
 interface RequestMeta {
@@ -445,14 +454,10 @@ function InterviewsPage() {
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Interviews</h1>
-        <p className="text-sm text-muted-foreground">
-          Every interview requested, scheduled or already held across your hiring requests.
-        </p>
-      </div>
+  const renderCard = (m: MatchRow) => {
+    return (
+      <Card key={m.id} className="card-amber rounded-2xl">
+        <CardContent className="space-y-3 p-5">
 
       {err && (
         <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
