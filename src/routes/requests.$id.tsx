@@ -1,5 +1,5 @@
 import { CandidateRating } from "@/components/candidate-rating";
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
@@ -14,7 +14,7 @@ import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { InterviewRequestDialog } from "@/components/interview-request-dialog";
 import { RequestMessages } from "@/components/request-messages";
 import { toast } from "sonner";
-import { ArrowLeft, ChevronLeft, ChevronRight, Columns3, LayoutGrid, Loader2, ScrollText, Sparkles, UsersRound } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Columns3, Copy, LayoutGrid, Loader2, ScrollText, Sparkles, UsersRound } from "lucide-react";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 import { ENGAGEMENT_TYPES, DAYS_OF_WEEK } from "@/lib/catalog";
 import {
