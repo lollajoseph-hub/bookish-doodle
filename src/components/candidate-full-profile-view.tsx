@@ -28,6 +28,7 @@ export interface FullPoolProfile {
   secondary_roles: unknown;
   profile_photo_path: string | null;
   intro_video_path: string | null;
+  intro_video_url: string | null;
 }
 
 interface Entry {
@@ -37,7 +38,7 @@ interface Entry {
   detail: string | null;
 }
 
-export const PROFILE_SELECT = "candidate_id,full_name,headline,availability,country,timezone,weekly_hours_available,preferred_shift,years_experience,earliest_start_date,approved_summary,highlights,skills,work_history,education,primary_role,secondary_roles,profile_photo_path,intro_video_path";
+export const PROFILE_SELECT = "candidate_id,full_name,headline,availability,country,timezone,weekly_hours_available,preferred_shift,years_experience,earliest_start_date,approved_summary,highlights,skills,work_history,education,primary_role,secondary_roles,profile_photo_path,intro_video_path,intro_video_url";
 
 
 function str(object: Record<string, unknown>, ...keys: string[]) {
