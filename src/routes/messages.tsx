@@ -17,6 +17,7 @@ import { MatchStatusBadge, RequestStatusBadge } from "@/components/match-status"
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
@@ -94,6 +95,12 @@ type Selection =
   | { kind: "general"; id: string }
   | { kind: "candidate"; id: string };
 
+function isUnread(thread: ThreadRow | null, lastMessage: ThreadMessageRow | null, userId: string) {
+  if (!thread || !lastMessage || !userId || lastMessage.sender_role !== "client") return false;
+  const lastRead = getLastRead(userId, thread.id);
+  return !lastRead || lastRead < lastMessage.created_at;
+}
+
 function MessagesPage() {
   const { session } = useAuth();
   const userId = session?.user.id ?? "";
@@ -105,13 +112,18 @@ function MessagesPage() {
   );
   const [search, setSearch] = useState("");
   const [readTick, setReadTick] = useState(0);
+  const [activeTab, setActiveTab] = useState<Selection["kind"]>(search_.match ? "candidate" : "general");
 
   useEffect(() => {
-    if (search_.match) setSelection({ kind: "candidate", id: search_.match });
+    if (search_.match) {
+      setSelection({ kind: "candidate", id: search_.match });
+      setActiveTab("candidate");
+    }
   }, [search_.match]);
 
   const select = (s: Selection) => {
     setSelection(s);
+    setActiveTab(s.kind);
     if (search_.match) navigate({ to: "/messages", search: {}, replace: true });
   };
 
@@ -123,6 +135,11 @@ function MessagesPage() {
   const requestItems = inbox?.requests ?? [];
   const generalItems = inbox?.generals ?? [];
   const candidateItems = inbox?.candidates ?? [];
+  const unreadCounts = {
+    general: generalItems.filter((i) => isUnread(i.thread, i.lastMessage, userId)).length,
+    candidate: candidateItems.filter((i) => isUnread(i.thread, i.lastMessage, userId)).length,
+    request: requestItems.filter((i) => isUnread(i.thread, i.lastMessage, userId)).length,
+  };
 
   // Refresh inbox whenever any message lands anywhere
   useEffect(() => {
@@ -212,16 +229,26 @@ function MessagesPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as Selection["kind"])} className="flex min-h-0 flex-1 flex-col">
+            <TabsList className="mx-2 mt-2 grid h-auto grid-cols-3 gap-0.5 p-0.5">
+              {([ ["general", "General"], ["candidate", "Candidates"], ["request", "Requests"] ] as const).map(([kind, label]) => (
+                <TabsTrigger key={kind} value={kind} className="min-w-0 gap-1 px-1 py-1.5 text-xs">
+                  <span className="truncate">{label}</span>
+                  {unreadCounts[kind] > 0 && (
+                    <span className="grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-amber px-1 text-[10px] font-semibold text-amber-foreground">
+                      {unreadCounts[kind] > 9 ? "9+" : unreadCounts[kind]}
+                    </span>
+                  )}
+                </TabsTrigger>
+              ))}
+            </TabsList>
           <div className="min-h-0 flex-1 overflow-y-auto">
             {isLoading ? (
               <p className="p-4 text-sm text-muted-foreground">Loading…</p>
             ) : (
               <>
-                {filteredGenerals.length > 0 && (
-                  <>
-                    <div className="bg-muted/60 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      General
-                    </div>
+                <TabsContent value="general" className="m-0">
+                  {filteredGenerals.length === 0 ? <p className="p-4 text-sm text-muted-foreground">No conversations.</p> :
                     {filteredGenerals.map((g) => (
                       <ThreadListRow
                         key={`g-${g.clientId}`}
@@ -235,14 +262,10 @@ function MessagesPage() {
                         readTick={readTick}
                         onClick={() => select({ kind: "general", id: g.clientId })}
                       />
-                    ))}
-                  </>
-                )}
-                {filteredCandidates.length > 0 && (
-                  <>
-                    <div className="bg-muted/60 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      Candidates
-                    </div>
+                    ))}}
+                </TabsContent>
+                <TabsContent value="candidate" className="m-0">
+                  {filteredCandidates.length === 0 ? <p className="p-4 text-sm text-muted-foreground">No conversations.</p> :
                     {filteredCandidates.map((c) => (
                       <ThreadListRow
                         key={`c-${c.matchId}`}
@@ -258,12 +281,9 @@ function MessagesPage() {
                         readTick={readTick}
                         onClick={() => select({ kind: "candidate", id: c.matchId })}
                       />
-                    ))}
-                  </>
-                )}
-                <div className="bg-muted/60 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  Requests
-                </div>
+                    ))}}
+                </TabsContent>
+                <TabsContent value="request" className="m-0">
                 {filtered.length === 0 ? (
                   <p className="p-4 text-sm text-muted-foreground">No conversations.</p>
                 ) : (
@@ -281,9 +301,11 @@ function MessagesPage() {
                     />
                   ))
                 )}
+                </TabsContent>
               </>
             )}
           </div>
+          </Tabs>
         </section>
 
         {workspace ?? (
@@ -319,11 +341,7 @@ function ThreadListRow({
   readTick: number;
   onClick: () => void;
 }) {
-  const lastRead = thread && userId ? getLastRead(userId, thread.id) : null;
-  const unread =
-    !!lastMessage &&
-    lastMessage.sender_id !== userId &&
-    (!lastRead || lastRead < lastMessage.created_at);
+  const unread = isUnread(thread, lastMessage, userId);
 
   return (
     <button
