@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CalendarCheck } from "lucide-react";
+import { CalendarCheck, StickyNote } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { MatchStatusBadge } from "@/components/match-status";
 import {
@@ -14,6 +14,11 @@ import {
   updateMatchStatus,
 } from "@/lib/crm-queries";
 import type { MatchStatus } from "@/lib/database.types";
+import {
+  fetchScratchpad,
+  getOrCreateThread,
+  updateScratchpad,
+} from "@/lib/messages-queries";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -122,6 +127,7 @@ function InterviewReviewPage() {
   const [proposeFor, setProposeFor] = useState<{ id: string; name: string } | null>(null);
   const [proposedTime, setProposedTime] = useState("");
   const [proposeNotes, setProposeNotes] = useState("");
+  const [notesOpenFor, setNotesOpenFor] = useState<string | null>(null);
 
   const complete = useMutation({
     mutationFn: ({ id, notes }: { id: string; notes: string }) => completeInterview(id, notes),
@@ -155,7 +161,8 @@ function InterviewReviewPage() {
             {matches.map((m) => {
               const next = NEXT_STAGE[m.status];
               return (
-                <TableRow key={m.id}>
+                <Fragment key={m.id}>
+                <TableRow>
                   <TableCell>
                     <Link
                       to="/candidates/$candidateId"
@@ -243,9 +250,25 @@ function InterviewReviewPage() {
                       >
                         Reject
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setNotesOpenFor(notesOpenFor === m.id ? null : m.id)}
+                      >
+                        <StickyNote className="mr-1 h-3.5 w-3.5" />
+                        Prep notes
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
+                {notesOpenFor === m.id && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="bg-muted/40">
+                      <InterviewPrepNotes matchId={m.id} />
+                    </TableCell>
+                  </TableRow>
+                )}
+                </Fragment>
               );
             })}
           </TableBody>
@@ -376,5 +399,88 @@ function InterviewReviewPage() {
         </DialogContent>
       </Dialog>
     </AppShell>
+  );
+}
+
+function InterviewPrepNotes({ matchId }: { matchId: string }) {
+  const [content, setContent] = useState("");
+  const [loaded, setLoaded] = useState(false);
+  const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const dirtyRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { data: thread, error: threadError } = useQuery({
+    queryKey: ["thread", "candidate", matchId],
+    queryFn: () => getOrCreateThread({ kind: "candidate", candidateMatchId: matchId }),
+    staleTime: Infinity,
+  });
+  const threadId = thread?.id;
+
+  useEffect(() => {
+    if (threadError) toast.error((threadError as Error).message);
+  }, [threadError]);
+
+  useEffect(() => {
+    if (!threadId) return;
+    let cancelled = false;
+    fetchScratchpad(threadId)
+      .then((row) => {
+        if (cancelled || dirtyRef.current) return;
+        setContent(row?.content ?? "");
+        setLoaded(true);
+      })
+      .catch((e: Error) => toast.error(e.message));
+    return () => {
+      cancelled = true;
+    };
+  }, [threadId]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const save = async (value: string) => {
+    if (!threadId) return;
+    setStatus("saving");
+    try {
+      await updateScratchpad(threadId, value);
+      dirtyRef.current = false;
+      setStatus("saved");
+    } catch (e) {
+      toast.error((e as Error).message);
+      setStatus("idle");
+    }
+  };
+
+  const onChange = (v: string) => {
+    setContent(v);
+    dirtyRef.current = true;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => save(v), 800);
+  };
+
+  return (
+    <div className="py-1">
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-semibold">Interview Prep Notes</h3>
+          <p className="text-xs text-muted-foreground">
+            Shared prep notes for this candidate's interview.
+          </p>
+        </div>
+        <span className="text-[11px] text-muted-foreground">
+          {status === "saving" ? "Saving…" : status === "saved" ? "Saved" : ""}
+        </span>
+      </div>
+      <Textarea
+        value={content}
+        disabled={!threadId || !loaded}
+        placeholder="Talking points, questions to ask, things to highlight…"
+        onChange={(e) => onChange(e.target.value)}
+        className="min-h-[100px] resize-none bg-card"
+      />
+    </div>
   );
 }

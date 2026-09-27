@@ -23,20 +23,17 @@ import { cn } from "@/lib/utils";
 import {
   fetchCandidateThreadContext,
   fetchInbox,
-  fetchScratchpad,
   fetchThreadMessages,
   getLastRead,
   getOrCreateThread,
   markRead,
   sendThreadMessage,
   threadTargetKey,
-  updateScratchpad,
   type GeneralInboxItem,
   type InboxItem,
   type StructuredType,
   type ThreadMessageRow,
   type ThreadRow,
-  type ThreadScratchpadRow,
   type ThreadTarget,
 } from "@/lib/messages-queries";
 
@@ -355,7 +352,6 @@ function RequestWorkspace({
       userId={userId}
       onRead={onRead}
       quickActions={[]}
-      showScratchpad
       side={
         <div className="card-amber rounded-2xl border bg-card p-5 text-sm">
           <div className="mb-3 flex items-center justify-between">
@@ -513,7 +509,6 @@ function ThreadWorkspace({
   userId,
   onRead,
   quickActions,
-  showScratchpad = false,
   side,
 }: {
   target: ThreadTarget;
@@ -523,7 +518,6 @@ function ThreadWorkspace({
   userId: string;
   onRead: () => void;
   quickActions: StructuredType[];
-  showScratchpad?: boolean;
   side: ReactNode;
 }) {
   const queryClient = useQueryClient();
@@ -670,15 +664,9 @@ function ThreadWorkspace({
         </div>
       </section>
 
-      {/* Column 3: context (+ scratchpad on request threads only) */}
+      {/* Column 3: context */}
       <section className="flex min-h-0 flex-col gap-4 lg:col-span-1">
         {side}
-        {showScratchpad &&
-          (threadId ? (
-            <Scratchpad threadId={threadId} userId={userId} />
-          ) : (
-            <div className="card-amber flex-1 rounded-2xl border bg-card p-5" />
-          ))}
       </section>
     </>
   );
@@ -741,131 +729,3 @@ function MessageBubble({ m }: { m: ThreadMessageRow }) {
   );
 }
 
-function Scratchpad({ threadId, userId }: { threadId: string; userId: string }) {
-  const [content, setContent] = useState("");
-  const [loaded, setLoaded] = useState(false);
-  const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const [pendingRemote, setPendingRemote] = useState<string | null>(null);
-  const focusedRef = useRef(false);
-  const dirtyRef = useRef(false);
-  const lastSavedRef = useRef("");
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchScratchpad(threadId)
-      .then((row) => {
-        if (cancelled) return;
-        const c = row?.content ?? "";
-        setContent(c);
-        lastSavedRef.current = c;
-        setLoaded(true);
-      })
-      .catch((e: Error) => toast.error(e.message));
-    return () => {
-      cancelled = true;
-    };
-  }, [threadId]);
-
-  useEffect(() => {
-    const ch = supabase
-      .channel(`thread-scratchpad-${threadId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "thread_scratchpad",
-          filter: `thread_id=eq.${threadId}`,
-        },
-        (payload) => {
-          const row = payload.new as ThreadScratchpadRow;
-          if (!row || row.updated_by === userId) return;
-          const incoming = row.content ?? "";
-          if (incoming === lastSavedRef.current) return;
-          if (focusedRef.current || dirtyRef.current) {
-            setPendingRemote(incoming);
-            toast.info("Client updated the Hiring Huddle notes");
-          } else {
-            lastSavedRef.current = incoming;
-            setContent(incoming);
-          }
-        },
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
-  }, [threadId, userId]);
-
-  const save = async (value: string) => {
-    setStatus("saving");
-    try {
-      await updateScratchpad(threadId, value);
-      lastSavedRef.current = value;
-      dirtyRef.current = false;
-      setStatus("saved");
-    } catch (e) {
-      toast.error((e as Error).message);
-      setStatus("idle");
-    }
-  };
-
-  // Flush pending save on unmount/thread change
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
-
-  const onChange = (v: string) => {
-    setContent(v);
-    dirtyRef.current = true;
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => save(v), 800);
-  };
-
-  const applyRemote = () => {
-    if (pendingRemote == null) return;
-    if (timerRef.current) clearTimeout(timerRef.current);
-    lastSavedRef.current = pendingRemote;
-    dirtyRef.current = false;
-    setContent(pendingRemote);
-    setPendingRemote(null);
-  };
-
-  return (
-    <div className="card-amber flex min-h-0 flex-1 flex-col rounded-2xl border bg-card p-5">
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <div>
-          <h3 className="font-semibold">Hiring Huddle Notes</h3>
-          <p className="text-xs text-muted-foreground">Shared with the client on this request.</p>
-        </div>
-        <span className="text-[11px] text-muted-foreground">
-          {status === "saving" ? "Saving…" : status === "saved" ? "Saved" : ""}
-        </span>
-      </div>
-      {pendingRemote != null && (
-        <div className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-amber/40 bg-amber-soft px-3 py-1.5 text-xs text-amber-foreground">
-          <span>Client made changes.</span>
-          <button type="button" className="font-semibold underline" onClick={applyRemote}>
-            Load latest
-          </button>
-        </div>
-      )}
-      <Textarea
-        value={content}
-        disabled={!loaded}
-        placeholder="Jot down shared notes, next steps, feedback…"
-        onChange={(e) => onChange(e.target.value)}
-        onFocus={() => {
-          focusedRef.current = true;
-        }}
-        onBlur={() => {
-          focusedRef.current = false;
-        }}
-        className="min-h-[160px] flex-1 resize-none"
-      />
-    </div>
-  );
-}
