@@ -409,14 +409,29 @@ export function Composer({
     setSending(structured ?? "text");
     let tid = threadId;
     if (!tid && target) {
-      try {
-        tid = await createThread(target);
-        onThreadCreated?.(tid);
-      } catch (e) {
-        setSending(null);
-        toast.error((e as Error).message);
+      // Atomic path: create/find the thread and insert the first message in one transaction.
+      const { data, error } = await supabase.rpc("send_thread_message_ensuring_thread", {
+        p_client_request_id: target.kind === "request" ? target.id : null,
+        p_candidate_match_id: target.kind === "candidate" ? target.id : null,
+        p_client_id: target.kind === "general" ? target.id : null,
+        p_body: trimmed,
+        p_structured_type: structured,
+      });
+      setSending(null);
+      if (error) {
+        toast.error(error.message);
         return;
       }
+      const result = (Array.isArray(data) ? data[0] : data) as { thread?: { id?: string } | null; message?: ThreadMessage | null } | null;
+      tid = result?.thread?.id ?? null;
+      if (!tid) {
+        toast.error("Could not start the conversation.");
+        return;
+      }
+      onThreadCreated?.(tid);
+      if (!structured) setBody("");
+      if (result?.message?.id) onSent(result.message);
+      return;
     }
     if (!tid) {
       setSending(null);
