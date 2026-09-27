@@ -618,13 +618,6 @@ export function CandidateCard({
         )}
 
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          {onViewProfile && (
-            <Button variant="secondary" size="sm" onClick={onViewProfile}>
-              <UserSearch className="mr-1.5 h-4 w-4" />
-              View full profile
-            </Button>
-          )}
-
           {canAct && onShortlist && (
             <Button
               variant={status === "shortlisted" ? "default" : "outline"}
