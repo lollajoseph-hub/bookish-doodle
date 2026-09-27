@@ -57,7 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             </Button>
             <Button asChild variant="ghost" size="sm">
-              <Link to="/new-request">
+              <Link to="/new-request" search={{}}>
                 <PlusCircle className="mr-1.5 h-4 w-4" />
                 New Request
               </Link>

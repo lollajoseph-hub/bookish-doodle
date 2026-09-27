@@ -1,5 +1,5 @@
 import { CandidateRating } from "@/components/candidate-rating";
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
@@ -14,7 +14,7 @@ import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { InterviewRequestDialog } from "@/components/interview-request-dialog";
 import { RequestMessages } from "@/components/request-messages";
 import { toast } from "sonner";
-import { ArrowLeft, ChevronLeft, ChevronRight, Columns3, LayoutGrid, Loader2, ScrollText, Sparkles, UsersRound } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Columns3, Copy, LayoutGrid, Loader2, ScrollText, Sparkles, UsersRound } from "lucide-react";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 import { ENGAGEMENT_TYPES, DAYS_OF_WEEK } from "@/lib/catalog";
 import {
@@ -81,6 +81,7 @@ const STATUS_ORDER: MatchStatus[] = [
 
 function RequestDetail() {
   const { id } = useParams({ from: "/requests/$id" });
+  const navigate = useNavigate();
   const [request, setRequest] = useState<RequestHeader | null>(null);
   const [matches, setMatches] = useState<MatchRow[] | null>(null);
   const [photos, setPhotos] = useState<Record<string, string | null>>({});
@@ -261,8 +262,15 @@ function RequestDetail() {
                   </Badge>
                 )}
               </div>
-              <div className="mt-3">
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                 <RequestMessages requestId={id} />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate({ to: "/new-request", search: { clone: id } })}
+                >
+                  <Copy className="mr-1.5 h-3.5 w-3.5" /> Clone request
+                </Button>
               </div>
 
               {request && (
