@@ -289,6 +289,7 @@ export interface CandidateThreadContext {
   candidateName: string;
   clientRequestId: string;
   requestTitle: string | null;
+  clientId: string | null;
   clientName: string | null;
 }
 
@@ -323,6 +324,7 @@ export async function fetchCandidateThreadContext(matchId: string): Promise<Cand
     candidateName: candRes.data?.full_name ?? "Candidate",
     clientRequestId: m.client_request_id,
     requestTitle: reqRes.data?.title ?? null,
+    clientId: reqRes.data?.client_id ?? null,
     clientName,
   };
 }
