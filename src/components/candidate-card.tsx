@@ -226,6 +226,7 @@ export function CandidateCard({
   const [rejectNote, setRejectNote] = useState("");
   const [rejectBusy, setRejectBusy] = useState(false);
   const [acceptingTime, setAcceptingTime] = useState(false);
+  const [reasonExpanded, setReasonExpanded] = useState(false);
 
   async function acceptInterviewTime() {
     setAcceptingTime(true);
@@ -354,7 +355,12 @@ export function CandidateCard({
         {match.match_reason?.trim() && (
           <div className="border-t border-border/70 pt-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Why this candidate</p>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{match.match_reason}</p>
+            <p className={reasonExpanded ? "mt-1 text-sm leading-relaxed text-muted-foreground" : "mt-1 text-sm leading-relaxed text-muted-foreground line-clamp-2"}>{match.match_reason}</p>
+            {match.match_reason.length > 120 && (
+              <button type="button" onClick={() => setReasonExpanded((v) => !v)} className="mt-0.5 text-xs font-medium text-primary">
+                {reasonExpanded ? "Show less" : "Read more"}
+              </button>
+            )}
           </div>
         )}
 

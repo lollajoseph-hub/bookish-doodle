@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/lib/supabase";
 import { displayName, firstNameOnlyAnalysis, formatDate, signedPhotoUrl, signedVideoUrl, toStringList } from "@/lib/matches";
 
-interface FullPoolProfile {
+export interface FullPoolProfile {
   candidate_id: string;
   full_name: string | null;
   headline: string | null;
@@ -37,7 +37,7 @@ interface Entry {
   detail: string | null;
 }
 
-const PROFILE_SELECT = "candidate_id,full_name,headline,availability,country,timezone,weekly_hours_available,preferred_shift,years_experience,earliest_start_date,approved_summary,highlights,skills,work_history,education,primary_role,secondary_roles,profile_photo_path,intro_video_path";
+export const PROFILE_SELECT = "candidate_id,full_name,headline,availability,country,timezone,weekly_hours_available,preferred_shift,years_experience,earliest_start_date,approved_summary,highlights,skills,work_history,education,primary_role,secondary_roles,profile_photo_path,intro_video_path";
 
 
 function str(object: Record<string, unknown>, ...keys: string[]) {
@@ -65,13 +65,14 @@ function toEntries(value: unknown): Entry[] {
   });
 }
 
-export function CandidateFullProfileView({ candidateId, matchId, matchStatus, matchReason, requiredSkills, candidateSkills, scrollable = false }: {
+export function CandidateFullProfileView({ candidateId, matchId, matchStatus, matchReason, requiredSkills, candidateSkills, preloadedProfile, scrollable = false }: {
   candidateId: string | null;
   matchId?: string | null;
   matchStatus: string | null;
   matchReason?: string | null;
   requiredSkills?: string[];
   candidateSkills?: string[];
+  preloadedProfile?: FullPoolProfile | null;
   scrollable?: boolean;
 }) {
   const [profile, setProfile] = useState<FullPoolProfile | null>(null);
@@ -100,17 +101,19 @@ export function CandidateFullProfileView({ candidateId, matchId, matchStatus, ma
     }
     let cancelled = false;
     void (async () => {
-      const { data, error } = await supabase.from("candidate_pool_profile").select(PROFILE_SELECT).eq("candidate_id", candidateId).maybeSingle();
+      const result = preloadedProfile === undefined
+        ? await supabase.from("candidate_pool_profile").select(PROFILE_SELECT).eq("candidate_id", candidateId).maybeSingle()
+        : { data: preloadedProfile, error: null };
       if (cancelled) return;
       setLoading(false);
-      if (error) { setErr(error.message); return; }
-      const nextProfile = (data as unknown as FullPoolProfile) ?? null;
+      if (result.error) { setErr(result.error.message); return; }
+      const nextProfile = (result.data as unknown as FullPoolProfile) ?? null;
       setProfile(nextProfile);
       const [nextPhoto, nextVideo] = await Promise.all([signedPhotoUrl(nextProfile?.profile_photo_path), signedVideoUrl(nextProfile?.intro_video_path)]);
       if (!cancelled) { setPhoto(nextPhoto); setVideo(nextVideo); }
     })();
     return () => { cancelled = true; };
-  }, [candidateId]);
+  }, [candidateId, preloadedProfile]);
 
   useEffect(() => {
     const area = scrollRef.current;

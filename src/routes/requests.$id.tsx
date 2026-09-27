@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CandidateCard, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { CandidateActions, CandidateCompareTable } from "@/components/candidate-compare-table";
-import { CandidateFullProfileView } from "@/components/candidate-full-profile-view";
+import { CandidateFullProfileView, PROFILE_SELECT, type FullPoolProfile } from "@/components/candidate-full-profile-view";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { InterviewRequestDialog } from "@/components/interview-request-dialog";
 import { RequestMessages } from "@/components/request-messages";
@@ -87,6 +87,7 @@ function RequestDetail() {
   const [photos, setPhotos] = useState<Record<string, string | null>>({});
   const [requiredSkills, setRequiredSkills] = useState<string[]>([]);
   const [candidateSkills, setCandidateSkills] = useState<Record<string, string[]>>({});
+  const [fullProfiles, setFullProfiles] = useState<Record<string, FullPoolProfile>>({});
   const [err, setErr] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
   const [profileFor, setProfileFor] = useState<MatchRow | null>(null);
@@ -163,6 +164,17 @@ function RequestDetail() {
     }
     setRequiredSkills(required);
     setCandidateSkills(byCandidate);
+    const fullProfilesRes = candidateIds.length
+      ? await supabase.from("candidate_pool_profile").select(PROFILE_SELECT).in("candidate_id", candidateIds)
+      : { data: [], error: null };
+    if (loadTokenRef.current !== token) return null;
+    if (fullProfilesRes.error) setErr(fullProfilesRes.error.message);
+    const profilesByCandidate: Record<string, FullPoolProfile> = {};
+    for (const row of fullProfilesRes.data ?? []) {
+      const profile = row as unknown as FullPoolProfile;
+      profilesByCandidate[profile.candidate_id] = profile;
+    }
+    setFullProfiles(profilesByCandidate);
     setMatches(list);
 
     const entries = await Promise.all(
@@ -416,13 +428,13 @@ function RequestDetail() {
                     </Button>
                   </div>
                   <CandidateFullProfileView
-                    key={reviewMatch.id}
                     candidateId={reviewMatch.candidate_id}
                     matchId={reviewMatch.id}
                     matchStatus={reviewMatch.status}
                     matchReason={reviewMatch.match_reason}
                     requiredSkills={requiredSkills}
                     candidateSkills={candidateSkills[reviewMatch.candidate_id] ?? []}
+                    preloadedProfile={fullProfiles[reviewMatch.candidate_id] ?? null}
                   />
                   <Card className="rounded-lg">
                     <CardContent className="space-y-3 p-4">
