@@ -23,6 +23,8 @@ import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import {
   fetchCandidateThreadContext,
+  fetchPrimaryContact,
+  type PrimaryContact,
   fetchInbox,
   fetchThreadMessages,
   getLastRead,
