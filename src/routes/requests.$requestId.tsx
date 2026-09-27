@@ -619,3 +619,98 @@ function RequestDetailPage() {
     </AppShell>
   );
 }
+
+/* -------------------------- match score breakdown ------------------------- */
+
+interface MatchScoreBreakdownRow {
+  match_id: string;
+  match_created_at: string;
+  role_name: string | null;
+  is_primary_role: boolean | null;
+  role_fit_points: number | null;
+  matched_required_skills: string[] | null;
+  missing_required_skills: string[] | null;
+  skills_points: number | null;
+  candidate_years_experience: number | null;
+  required_years_experience_min: number | null;
+  experience_points: number | null;
+  ai_rank_score: number | null;
+  computed_total: number | null;
+  stored_match_score: number | null;
+  is_stale: boolean | null;
+}
+
+function useMatchScoreBreakdown(matchId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: ["match-score-breakdown", matchId],
+    queryFn: async (): Promise<MatchScoreBreakdownRow | null> => {
+      const { data, error } = await supabase
+        .rpc("get_match_score_breakdown", { p_match_id: matchId! })
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: enabled && !!matchId,
+  });
+}
+
+function ScoreBadge({ matchId, score }: { matchId: string; score: number }) {
+  const [open, setOpen] = useState(false);
+  const { data, isLoading, error } = useMatchScoreBreakdown(matchId, open);
+
+  const capturedAt = data?.match_created_at
+    ? new Date(data.match_created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : null;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button type="button" aria-label="Show match score breakdown" className="rounded-full outline-none">
+          <Badge variant="secondary">{score}</Badge>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80">
+        {isLoading && <p className="text-xs text-muted-foreground">Loading breakdown…</p>}
+        {!isLoading && (error || !data) && (
+          <p className="text-xs text-muted-foreground">Couldn&apos;t load breakdown</p>
+        )}
+        {!isLoading && data && (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Score breakdown</p>
+            <ul className="space-y-1 text-sm">
+              <li>
+                Role fit ({data.role_name ?? "—"}, {data.is_primary_role ? "primary" : "secondary"}):{" "}
+                <span className="font-medium">{data.role_fit_points ?? 0} pts</span>
+              </li>
+              <li>
+                Required skills matched (
+                {data.matched_required_skills?.length ? data.matched_required_skills.join(", ") : "none"}):{" "}
+                <span className="font-medium">{data.skills_points ?? 0} pts</span>
+                {data.missing_required_skills && data.missing_required_skills.length > 0 && (
+                  <span className="block text-xs text-muted-foreground">
+                    Missing: {data.missing_required_skills.join(", ")}
+                  </span>
+                )}
+              </li>
+              <li>
+                Experience ({data.candidate_years_experience ?? "unknown"} yrs vs{" "}
+                {data.required_years_experience_min ?? 0} yrs required):{" "}
+                <span className="font-medium">{data.experience_points ?? 0} pts</span>
+              </li>
+              <li>
+                AI resume score: <span className="font-medium">{data.ai_rank_score ?? 0}/15 pts</span>
+              </li>
+              <li className="border-t pt-1 font-semibold">Total: {data.computed_total ?? 0} pts</li>
+            </ul>
+            {data.is_stale && (
+              <p className="text-xs text-muted-foreground">
+                Card shows {data.stored_match_score ?? score} — captured {capturedAt ?? "earlier"}. Recalculated
+                total reflects current data.
+              </p>
+            )}
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
