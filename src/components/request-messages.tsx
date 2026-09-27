@@ -36,12 +36,20 @@ export interface QuickAction {
   tone: string;
 }
 
-/** Display metadata for every structured type (including legacy ones in old messages). */
-export const ACTION_META: Record<StructuredType, QuickAction> = {
+/** Display metadata for sendable structured types; legacy types render via LEGACY_ACTION_META. */
+export const ACTION_META: Record<Exclude<StructuredType, "call_me_asap">, QuickAction> = {
   reschedule_request: { type: "reschedule_request", label: "Request Reschedule", body: "Request Reschedule", icon: CalendarClock, tone: "bg-amber-100 text-amber-800 border-amber-300" },
-  call_me_asap: { type: "call_me_asap", label: "Call Me ASAP", body: "Please call me as soon as possible.", icon: PhoneCall, tone: "bg-destructive/10 text-destructive border-destructive/30" },
   send_portfolio: { type: "send_portfolio", label: "Send Portfolio", body: "Send Portfolio", icon: FileText, tone: "bg-primary-soft text-primary border-primary/30" },
 };
+
+/** Render-only metadata for legacy structured types that can no longer be sent. */
+const LEGACY_ACTION_META: Record<string, QuickAction> = {
+  call_me_asap: { type: "call_me_asap", label: "Call Me ASAP", body: "Please call me as soon as possible.", icon: PhoneCall, tone: "bg-destructive/10 text-destructive border-destructive/30" },
+};
+
+function actionMetaFor(type: StructuredType): QuickAction | null {
+  return (ACTION_META as Partial<Record<StructuredType, QuickAction>>)[type] ?? LEGACY_ACTION_META[type] ?? null;
+}
 
 export type ThreadTarget =
   | { kind: "request"; id: string }
@@ -305,7 +313,6 @@ export function CandidateMessages({
 
 /** Quick actions available for a thread kind. */
 export function actionsFor(kind: ThreadTarget["kind"], matchStatus?: string | null): QuickAction[] {
-  if (kind === "general") return [ACTION_META.call_me_asap];
   if (kind === "candidate" && matchStatus === "interview_confirmed") return [ACTION_META.reschedule_request];
   return [];
 }
@@ -325,7 +332,7 @@ export function ChatFeed({
   }, [messages?.length]);
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+    <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 py-4">
       {messages === null ? (
         <p className="py-8 text-center text-sm text-muted-foreground">Loading messages…</p>
       ) : messages.length === 0 ? (
@@ -334,7 +341,7 @@ export function ChatFeed({
         <ul className="space-y-3">
           {messages.map((m) => {
             const mine = m.sender_role === "client" && (!userId || !m.sender_id || m.sender_id === userId);
-            const action = m.structured_type ? ACTION_META[m.structured_type] ?? null : null;
+            const action = m.structured_type ? actionMetaFor(m.structured_type) : null;
             const senderProfile = m.sender_role === "staff" ? senderProfiles[m.sender_id ?? ""] : null;
             const firstName = senderProfile?.full_name?.trim().split(/\s+/)[0];
             const roleLabel = senderProfile?.role
@@ -348,12 +355,12 @@ export function ChatFeed({
                   {formatDateTime(m.created_at)}
                 </span>
                 {action ? (
-                  <div className={`inline-flex max-w-[85%] flex-col gap-1 rounded-xl border px-3 py-2 text-sm ${action.tone}`}>
-                    <span className="inline-flex items-center gap-1.5 font-semibold">
+                  <div className={`inline-flex min-w-0 max-w-[85%] flex-col gap-1 break-words rounded-xl border px-3 py-2 text-sm ${action.tone}`}>
+                    <span className="inline-flex items-center gap-1.5 break-words font-semibold">
                       <action.icon className="h-3.5 w-3.5 flex-none" />
                       {action.label}
                     </span>
-                    {m.body && m.body !== action.label && m.body !== action.body && <span className="whitespace-pre-line">{m.body}</span>}
+                    {m.body && m.body !== action.label && m.body !== action.body && <span className="whitespace-pre-line break-words">{m.body}</span>}
                   </div>
                 ) : (
                   <div
@@ -402,14 +409,29 @@ export function Composer({
     setSending(structured ?? "text");
     let tid = threadId;
     if (!tid && target) {
-      try {
-        tid = await createThread(target);
-        onThreadCreated?.(tid);
-      } catch (e) {
-        setSending(null);
-        toast.error((e as Error).message);
+      // Atomic path: create/find the thread and insert the first message in one transaction.
+      const { data, error } = await supabase.rpc("send_thread_message_ensuring_thread", {
+        p_client_request_id: target.kind === "request" ? target.id : null,
+        p_candidate_match_id: target.kind === "candidate" ? target.id : null,
+        p_client_id: target.kind === "general" ? target.id : null,
+        p_body: trimmed,
+        p_structured_type: structured,
+      });
+      setSending(null);
+      if (error) {
+        toast.error(error.message);
         return;
       }
+      const result = (Array.isArray(data) ? data[0] : data) as { thread?: { id?: string } | null; message?: ThreadMessage | null } | null;
+      tid = result?.thread?.id ?? null;
+      if (!tid) {
+        toast.error("Could not start the conversation.");
+        return;
+      }
+      onThreadCreated?.(tid);
+      if (!structured) setBody("");
+      if (result?.message?.id) onSent(result.message);
+      return;
     }
     if (!tid) {
       setSending(null);
