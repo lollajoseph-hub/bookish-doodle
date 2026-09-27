@@ -15,12 +15,14 @@ import {
 } from "@/lib/crm-queries";
 import type { MatchStatus } from "@/lib/database.types";
 import {
-  fetchScratchpad,
+  addThreadNote,
+  fetchThreadNoteAuthors,
+  fetchThreadNotes,
   findThreadId,
   getOrCreateThread,
-  updateScratchpad,
   type ThreadTarget,
 } from "@/lib/messages-queries";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
