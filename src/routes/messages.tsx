@@ -23,6 +23,8 @@ import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import {
   fetchCandidateThreadContext,
+  fetchPrimaryContact,
+  type PrimaryContact,
   fetchInbox,
   fetchThreadMessages,
   getLastRead,
@@ -467,6 +469,7 @@ function RequestWorkspace({
   onRead: () => void;
 }) {
   const requestId = item.request.id;
+  const primaryContact = usePrimaryContact(item.request.client_id);
   return (
     <ThreadWorkspace
       target={{ kind: "request", clientRequestId: requestId }}
@@ -502,7 +505,12 @@ function RequestWorkspace({
             <Detail label="Matches" value={String(item.request.matchCount)} />
           </dl>
         </div>
-        <CompanyCard clientId={item.request.client_id} clientName={item.request.clientName} />
+        <CompanyCard
+          clientId={item.request.client_id}
+          clientName={item.request.clientName}
+          primaryContact={primaryContact}
+          roleName={item.request.roleName ?? null}
+        />
         </div>
       }
     />
@@ -518,6 +526,7 @@ function GeneralWorkspace({
   userId: string;
   onRead: () => void;
 }) {
+  const primaryContact = usePrimaryContact(item.clientId);
   return (
     <ThreadWorkspace
       target={{ kind: "general", clientId: item.clientId }}
@@ -528,7 +537,7 @@ function GeneralWorkspace({
       onRead={onRead}
       quickActions={[]}
       side={
-        <CompanyCard clientId={item.clientId} clientName={item.clientName} />
+        <CompanyCard clientId={item.clientId} clientName={item.clientName} primaryContact={primaryContact} />
       }
     />
   );
@@ -601,19 +610,70 @@ function CandidateWorkspace({
                   <MatchStatusBadge status={ctx.status as never} />
                 </dd>
               </div>
+              {(ctx.roleName || ctx.requestTitle) && (
+                <Detail label="Presented for" value={(ctx.roleName || ctx.requestTitle)!} />
+              )}
+              {ctx.headline && <Detail label="Headline" value={ctx.headline} />}
+              {ctx.yearsExperience != null && (
+                <Detail label="Experience" value={`${ctx.yearsExperience} years`} />
+              )}
+              {ctx.availability && (
+                <Detail
+                  label="Availability"
+                  value={AVAILABILITY_LABELS[ctx.availability] ?? ctx.availability}
+                />
+              )}
             </dl>
           ) : (
             <p className="text-muted-foreground">Loading…</p>
           )}
         </div>
-        {ctx && <CompanyCard clientId={ctx.clientId} clientName={ctx.clientName} />}
+        {ctx && (
+          <CompanyCard
+            clientId={ctx.clientId}
+            clientName={ctx.clientName}
+            primaryContact={ctx.primaryContact}
+            roleName={ctx.roleName ?? ctx.requestTitle}
+          />
+        )}
         </div>
       }
     />
   );
 }
 
-function CompanyCard({ clientId, clientName }: { clientId: string | null | undefined; clientName: string | null | undefined }) {
+const AVAILABILITY_LABELS: Record<string, string> = {
+  available_now: "Available Immediately",
+  available_from: "Available from a future date",
+  interviewing: "Currently interviewing",
+  closing_next_week: "Closing next week",
+  exploring: "Exploring options",
+  off_market: "Off the market",
+};
+
+function usePrimaryContact(clientId: string | null | undefined) {
+  const { data } = useQuery({
+    queryKey: ["client-primary-contact", clientId],
+    queryFn: () => fetchPrimaryContact(clientId!),
+    enabled: !!clientId,
+  });
+  return data ?? null;
+}
+
+function CompanyCard({
+  clientId,
+  clientName,
+  primaryContact,
+  roleName,
+}: {
+  clientId: string | null | undefined;
+  clientName: string | null | undefined;
+  primaryContact?: PrimaryContact | null;
+  roleName?: string | null;
+}) {
+  const contactLine = primaryContact
+    ? [primaryContact.name, primaryContact.title].filter(Boolean).join(" · ")
+    : "";
   return (
     <div className="card-amber rounded-2xl border bg-card p-5 text-sm">
       <div className="mb-3 flex items-center justify-between">
@@ -627,6 +687,22 @@ function CompanyCard({ clientId, clientName }: { clientId: string | null | undef
         )}
       </div>
       <p className="font-medium">{clientName ?? "—"}</p>
+      {(contactLine || primaryContact?.email || roleName) && (
+        <dl className="mt-3 space-y-2">
+          {contactLine && <Detail label="Primary contact" value={contactLine} />}
+          {primaryContact?.email && (
+            <div className="flex items-center justify-between gap-2">
+              <dt className="text-muted-foreground">Email</dt>
+              <dd className="truncate">
+                <a href={`mailto:${primaryContact.email}`} className="text-primary hover:underline">
+                  {primaryContact.email}
+                </a>
+              </dd>
+            </div>
+          )}
+          {roleName && <Detail label="Requested role" value={roleName} />}
+        </dl>
+      )}
     </div>
   );
 }

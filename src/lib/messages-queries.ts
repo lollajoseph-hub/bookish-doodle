@@ -309,6 +309,38 @@ export interface CandidateThreadContext {
   requestTitle: string | null;
   clientId: string | null;
   clientName: string | null;
+  headline: string | null;
+  yearsExperience: number | null;
+  availability: string | null;
+  roleName: string | null;
+  primaryContact: PrimaryContact | null;
+}
+
+export interface PrimaryContact {
+  name: string | null;
+  title: string | null;
+  email: string | null;
+}
+
+export async function fetchPrimaryContact(clientId: string): Promise<PrimaryContact | null> {
+  const { data: member } = await supabase
+    .from("client_members")
+    .select("profile_id, client_position")
+    .eq("client_id", clientId)
+    .eq("is_primary", true)
+    .limit(1)
+    .maybeSingle();
+  if (!member) return null;
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select("full_name, email")
+    .eq("id", member.profile_id)
+    .maybeSingle();
+  return {
+    name: prof?.full_name ?? null,
+    title: member.client_position ?? null,
+    email: prof?.email ?? null,
+  };
 }
 
 export async function fetchCandidateThreadContext(matchId: string): Promise<CandidateThreadContext> {
@@ -319,10 +351,10 @@ export async function fetchCandidateThreadContext(matchId: string): Promise<Cand
     .single();
   if (error) throw error;
   const [candRes, reqRes] = await Promise.all([
-    supabase.from("candidates").select("full_name").eq("id", m.candidate_id).maybeSingle(),
+    supabase.from("candidates").select("full_name, headline, years_experience, availability").eq("id", m.candidate_id).maybeSingle(),
     supabase
       .from("client_requests")
-      .select("title, client_id")
+      .select("title, client_id, role_id")
       .eq("id", m.client_request_id)
       .maybeSingle(),
   ]);
@@ -335,7 +367,22 @@ export async function fetchCandidateThreadContext(matchId: string): Promise<Cand
       .maybeSingle();
     clientName = c?.name ?? null;
   }
+  const cand = candRes.data as
+    | { full_name: string | null; headline: string | null; years_experience: number | null; availability: string | null }
+    | null;
+  const req = reqRes.data as { title: string | null; client_id: string | null; role_id: string | null } | null;
+  const [roleRes, primaryContact] = await Promise.all([
+    req?.role_id
+      ? supabase.from("job_roles").select("name").eq("id", req.role_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    req?.client_id ? fetchPrimaryContact(req.client_id) : Promise.resolve(null),
+  ]);
   return {
+    headline: cand?.headline ?? null,
+    yearsExperience: cand?.years_experience ?? null,
+    availability: cand?.availability ?? null,
+    roleName: (roleRes.data as { name: string } | null)?.name ?? null,
+    primaryContact,
     matchId: m.id,
     status: m.status as string,
     candidateId: m.candidate_id,
