@@ -441,7 +441,15 @@ function InterviewsPage() {
     const proposed = formatDateTime(m.interview_proposed_at);
     const photo = photos[m.id] ?? null;
     return (
-      <Card key={m.id} className="card-amber rounded-2xl">
+      <Card
+        key={m.id}
+        className="card-amber cursor-pointer rounded-2xl transition-shadow hover:shadow-md"
+        onClick={(e) => {
+          // Inner buttons, links and form fields keep their own behavior.
+          if ((e.target as HTMLElement).closest("button, a, input, textarea, select, [role='button'], [data-no-card-click]")) return;
+          setProfileFor(m);
+        }}
+      >
         <CardContent className="space-y-3 p-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="flex min-w-0 items-start gap-3">
