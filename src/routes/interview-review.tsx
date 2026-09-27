@@ -248,14 +248,30 @@ function InterviewReviewPage() {
                           Move to next stage
                         </Button>
                       )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={advance.isPending}
-                        onClick={() => advance.mutate({ id: m.id, status: "rejected" })}
-                      >
-                        Reject
-                      </Button>
+                      {m.status === "interview_requested" ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={proposeTime.isPending}
+                          onClick={() => {
+                            setProposedTime("");
+                            setProposeNotes("");
+                            setDeclineMode(true);
+                            setProposeFor({ id: m.id, name: m.candidateName ?? "Candidate" });
+                          }}
+                        >
+                          Decline time
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={advance.isPending}
+                          onClick={() => advance.mutate({ id: m.id, status: "rejected" })}
+                        >
+                          Reject
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="ghost"
