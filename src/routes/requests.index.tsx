@@ -66,7 +66,7 @@ function RequestsList() {
           <p className="text-sm text-muted-foreground">All hiring requests for your company.</p>
         </div>
         <Button asChild>
-          <Link to="/new-request">
+          <Link to="/new-request" search={{}}>
             <PlusCircle className="mr-1.5 h-4 w-4" />
             New request
           </Link>
@@ -90,7 +90,7 @@ function RequestsList() {
               Submit your first hiring request and we&apos;ll start matching candidates.
             </p>
             <Button asChild className="mt-2">
-              <Link to="/new-request">New request</Link>
+              <Link to="/new-request" search={{}}>New request</Link>
             </Button>
           </CardContent>
         </Card>
