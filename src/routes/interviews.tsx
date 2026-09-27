@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
-import { MatchStatusIcon, statusTone, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
+import { CandidateSkillGap, MatchStatusIcon, statusTone, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { toast } from "sonner";
 import { CalendarClock, ChevronDown, Clock, ExternalLink, Loader2, StickyNote, UserSearch, Video } from "lucide-react";
 import {
@@ -162,6 +162,8 @@ function InterviewsPage() {
   const [rows, setRows] = useState<MatchRow[] | null>(null);
   const [requests, setRequests] = useState<Record<string, string>>({});
   const [photos, setPhotos] = useState<Record<string, string | null>>({});
+  const [requestSkills, setRequestSkills] = useState<Record<string, string[]>>({});
+  const [candidateSkillsMap, setCandidateSkillsMap] = useState<Record<string, string[]>>({});
   const [err, setErr] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
@@ -188,7 +190,40 @@ function InterviewsPage() {
       return;
     }
 
-    const list = ((matchRes.data ?? []) as unknown as MatchRow[]).slice().sort((a, b) => {
+    const raw = (matchRes.data ?? []) as unknown as MatchRow[];
+    const requestIds = [...new Set(raw.map((match) => match.client_request_id))];
+    const candidateIds = [...new Set(raw.map((match) => match.candidate_id))];
+    const [requestSkillsRes, candidateSkillsRes] = await Promise.all([
+      requestIds.length
+        ? supabase.from("client_request_skills").select("request_id,skills(name)").eq("is_required", true).in("request_id", requestIds)
+        : Promise.resolve({ data: [], error: null }),
+      candidateIds.length
+        ? supabase.from("candidate_skills").select("candidate_id,skills(name)").in("candidate_id", candidateIds)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    if (requestSkillsRes.error || candidateSkillsRes.error) {
+      setErr(requestSkillsRes.error?.message ?? candidateSkillsRes.error?.message ?? "Unable to load skills");
+    }
+
+    const byRequest: Record<string, string[]> = {};
+    for (const row of requestSkillsRes.data ?? []) {
+      const requestId = row.request_id;
+      const skillName = (row.skills as unknown as { name: string | null } | null)?.name?.trim();
+      if (!requestId || !skillName) continue;
+      byRequest[requestId] = [...(byRequest[requestId] ?? []), skillName];
+    }
+    const byCandidate: Record<string, string[]> = {};
+    for (const row of candidateSkillsRes.data ?? []) {
+      const candidateId = row.candidate_id;
+      const skillName = (row.skills as unknown as { name: string | null } | null)?.name?.trim();
+      if (!candidateId || !skillName) continue;
+      byCandidate[candidateId] = [...(byCandidate[candidateId] ?? []), skillName];
+    }
+    setRequestSkills(byRequest);
+    setCandidateSkillsMap(byCandidate);
+
+    const list = raw.slice().sort((a, b) => {
       const rank = ORDER.indexOf(a.status) - ORDER.indexOf(b.status);
       if (rank !== 0) return rank;
        const aTime = a.interview_scheduled_at ?? a.interview_proposed_at;
@@ -323,6 +358,18 @@ function InterviewsPage() {
                     </div>
                   </div>
 
+                   {m.match_reason?.trim() && (
+                     <div className="border-t border-border/70 pt-3">
+                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Why this candidate</p>
+                       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{m.match_reason}</p>
+                     </div>
+                   )}
+
+                   <CandidateSkillGap
+                     requiredSkills={requestSkills[m.client_request_id] ?? []}
+                     candidateSkills={candidateSkillsMap[m.candidate_id] ?? []}
+                   />
+
                   {m.status === "interview_requested" &&
                     (m.interview_proposed_by === "staff" ? (
                       <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary">
@@ -420,6 +467,9 @@ function InterviewsPage() {
         candidateId={profileFor?.candidate_id ?? null}
         matchId={profileFor?.id ?? null}
         matchStatus={profileFor?.status ?? null}
+        matchReason={profileFor?.match_reason ?? null}
+        requiredSkills={profileFor ? (requestSkills[profileFor.client_request_id] ?? []) : []}
+        candidateSkills={profileFor ? (candidateSkillsMap[profileFor.candidate_id] ?? []) : []}
         onClose={() => setProfileFor(null)}
       />
     </div>

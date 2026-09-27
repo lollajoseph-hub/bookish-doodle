@@ -420,6 +420,9 @@ function RequestDetail() {
                     candidateId={reviewMatch.candidate_id}
                     matchId={reviewMatch.id}
                     matchStatus={reviewMatch.status}
+                    matchReason={reviewMatch.match_reason}
+                    requiredSkills={requiredSkills}
+                    candidateSkills={candidateSkills[reviewMatch.candidate_id] ?? []}
                   />
                   <Card className="rounded-lg">
                     <CardContent className="space-y-3 p-4">
@@ -477,6 +480,9 @@ function RequestDetail() {
         candidateId={profileFor?.candidate_id ?? null}
         matchId={profileFor?.id ?? null}
         matchStatus={profileFor?.status ?? null}
+        matchReason={profileFor?.match_reason ?? null}
+        requiredSkills={requiredSkills}
+        candidateSkills={profileFor ? (candidateSkills[profileFor.candidate_id] ?? []) : []}
         onClose={() => setProfileFor(null)}
       />
 
