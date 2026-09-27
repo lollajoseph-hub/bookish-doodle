@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { labelize } from "@/lib/crm-queries";
-import type { MatchStatus } from "@/lib/database.types";
+import type { MatchStatus, RequestPriority } from "@/lib/database.types";
 
 const STYLES: Record<MatchStatus, string> = {
   recommended: "bg-primary-soft text-primary border-primary/20",
