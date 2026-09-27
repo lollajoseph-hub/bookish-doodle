@@ -505,6 +505,12 @@ function InterviewsPage() {
                             <MatchStatusIcon status={m.status} />
                             {MATCH_STATUS_LABELS[m.status] ?? m.status}
                           </span>
+                          {isUnseen(m) && (
+                            <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-amber bg-amber/10 px-2.5 py-0.5 text-xs font-semibold text-amber-foreground">
+                              <span className="h-1.5 w-1.5 rounded-full bg-amber" />
+                              New
+                            </span>
+                          )}
                         </div>
                         {p?.headline && <p className="truncate text-xs text-muted-foreground">{p.headline}</p>}
                         <Link
