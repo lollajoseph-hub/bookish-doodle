@@ -142,7 +142,6 @@ function InterviewReviewPage() {
   const [proposeFor, setProposeFor] = useState<{ id: string; name: string } | null>(null);
   const [proposedTime, setProposedTime] = useState("");
   const [proposeNotes, setProposeNotes] = useState("");
-  const [declineMode, setDeclineMode] = useState(false);
   const [notesOpenFor, setNotesOpenFor] = useState<string | null>(null);
   const [rejectFor, setRejectFor] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState<RejectionReason>("skill_mismatch");
@@ -437,17 +436,14 @@ function InterviewReviewPage() {
             setProposeFor(null);
             setProposedTime("");
             setProposeNotes("");
-            setDeclineMode(false);
           }
         }}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Propose different time</DialogTitle>
+            <DialogTitle>Decline proposed time</DialogTitle>
             <DialogDescription>
-              {declineMode
-                ? `You've declined that time — propose one that works for ${proposeFor?.name}. The client will be notified.`
-                : `Propose a new interview time for ${proposeFor?.name}. The client will be notified.`}
+              {`You've declined that time — propose one that works for ${proposeFor?.name}. The client will be notified.`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
