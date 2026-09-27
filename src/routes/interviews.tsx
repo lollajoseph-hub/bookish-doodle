@@ -8,25 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { CandidateSkillGap, MatchStatusIcon, statusTone, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { toast } from "sonner";
 import { CalendarClock, ChevronDown, Clock, ExternalLink, Loader2, StickyNote, ThumbsDown, UserSearch, Video } from "lucide-react";
 import {
   MATCH_STATUS_LABELS,
-  REJECTION_REASONS,
   displayName,
   formatDateTime,
   signedPhotoUrl,
   type MatchStatus,
-  type RejectionReason,
 } from "@/lib/matches";
 import { createThread, findThreadId } from "@/components/request-messages";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
@@ -249,12 +240,9 @@ function InterviewReason({ reason }: { reason: string }) {
  */
 function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: string; locked: boolean; onRefresh: () => void }) {
   const [proposing, setProposing] = useState(false);
+  const [declinedTime, setDeclinedTime] = useState(false);
   const [proposedAt, setProposedAt] = useState("");
   const [proposingBusy, setProposingBusy] = useState(false);
-  const [rejecting, setRejecting] = useState(false);
-  const [rejectReason, setRejectReason] = useState<RejectionReason | null>(null);
-  const [rejectNote, setRejectNote] = useState("");
-  const [rejectBusy, setRejectBusy] = useState(false);
 
   async function submitPropose() {
     if (!proposedAt || proposingBusy) return;
@@ -275,28 +263,8 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
     }
     toast.success("New time proposed — ScaleSource will confirm.");
     setProposing(false);
+    setDeclinedTime(false);
     setProposedAt("");
-    onRefresh();
-  }
-
-  async function submitRejection() {
-    if (!rejectReason || rejectBusy) return;
-    setRejectBusy(true);
-    const { error } = await supabase.rpc("reject_candidate_match", {
-      p_match_id: matchId,
-      p_reason: rejectReason,
-      p_note: rejectNote.trim() ? rejectNote.trim() : null,
-      p_rejected_by: "client",
-    });
-    setRejectBusy(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success("Feedback sent — thanks");
-    setRejecting(false);
-    setRejectReason(null);
-    setRejectNote("");
     onRefresh();
   }
 
@@ -305,10 +273,10 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
       <Button
         variant="outline"
         size="sm"
-        disabled={locked || proposingBusy || rejectBusy}
+        disabled={locked || proposingBusy}
         onClick={() => {
+          setDeclinedTime(false);
           setProposing((v) => !v);
-          setRejecting(false);
         }}
       >
         <CalendarClock className="mr-1.5 h-4 w-4" />
@@ -317,10 +285,10 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
       <Button
         variant="ghost"
         size="sm"
-        disabled={locked || proposingBusy || rejectBusy}
+        disabled={locked || proposingBusy}
         onClick={() => {
-          setRejecting((v) => !v);
-          setProposing(false);
+          setDeclinedTime(true);
+          setProposing(true);
         }}
         className="text-destructive hover:bg-destructive/10 hover:text-destructive"
       >
@@ -330,6 +298,11 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
 
       {proposing && (
         <div className="w-full space-y-2 rounded-lg border border-border bg-background/60 p-3">
+          {declinedTime && (
+            <p className="text-sm font-medium">
+              You've declined that time — suggest one that works:
+            </p>
+          )}
           <Label htmlFor={`propose-when-${matchId}`}>Your preferred time</Label>
           <Input
             id={`propose-when-${matchId}`}
@@ -345,6 +318,7 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
               disabled={proposingBusy}
               onClick={() => {
                 setProposing(false);
+                setDeclinedTime(false);
                 setProposedAt("");
               }}
             >
@@ -353,56 +327,6 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
             <Button size="sm" disabled={!proposedAt || proposingBusy} onClick={() => void submitPropose()}>
               {proposingBusy && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
               Send proposal
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {rejecting && (
-        <div className="w-full space-y-3 rounded-lg border border-border bg-muted/40 p-3">
-          <p className="text-sm font-medium">Not a fit — tell us why so we can find better matches.</p>
-          <div className="space-y-1.5">
-            <Label>Reason</Label>
-            <Select value={rejectReason ?? undefined} onValueChange={(v) => setRejectReason(v as RejectionReason)}>
-              <SelectTrigger className="w-full bg-background">
-                <SelectValue placeholder="Select a reason" />
-              </SelectTrigger>
-              <SelectContent>
-                {REJECTION_REASONS.map((r) => (
-                  <SelectItem key={r.value} value={r.value}>
-                    {r.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor={`reject-note-${matchId}`}>Additional notes (optional)</Label>
-            <Textarea
-              id={`reject-note-${matchId}`}
-              value={rejectNote}
-              onChange={(e) => setRejectNote(e.target.value)}
-              rows={3}
-              placeholder="Anything else we should know?"
-              className="bg-background"
-            />
-          </div>
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={rejectBusy}
-              onClick={() => {
-                setRejecting(false);
-                setRejectReason(null);
-                setRejectNote("");
-              }}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" size="sm" disabled={!rejectReason || rejectBusy} onClick={() => void submitRejection()}>
-              {rejectBusy && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
-              Submit
             </Button>
           </div>
         </div>
