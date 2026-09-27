@@ -43,7 +43,7 @@ export function MessagesWidget() {
   return (
     <section
       aria-label="Messages"
-      className="fixed bottom-4 right-4 z-50 flex h-[min(600px,80vh)] w-[calc(100vw-2rem)] max-w-[400px] flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-2xl sm:bottom-6 sm:right-6"
+      className="fixed bottom-4 right-4 z-50 flex h-[min(600px,80vh)] w-[calc(100vw-2rem)] max-w-[400px] flex-col overflow-hidden rounded-lg border-amber bg-card text-card-foreground shadow-2xl sm:bottom-6 sm:right-6"
     >
       {selected ? (
         <ChatPane
