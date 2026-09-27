@@ -17,6 +17,7 @@ import { MatchStatusBadge, RequestStatusBadge } from "@/components/match-status"
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
@@ -94,6 +95,12 @@ type Selection =
   | { kind: "general"; id: string }
   | { kind: "candidate"; id: string };
 
+function isUnread(thread: ThreadRow | null, lastMessage: ThreadMessageRow | null, userId: string) {
+  if (!thread || !lastMessage || !userId || lastMessage.sender_role !== "client") return false;
+  const lastRead = getLastRead(userId, thread.id);
+  return !lastRead || lastRead < lastMessage.created_at;
+}
+
 function MessagesPage() {
   const { session } = useAuth();
   const userId = session?.user.id ?? "";
@@ -105,13 +112,18 @@ function MessagesPage() {
   );
   const [search, setSearch] = useState("");
   const [readTick, setReadTick] = useState(0);
+  const [activeTab, setActiveTab] = useState<Selection["kind"]>(search_.match ? "candidate" : "general");
 
   useEffect(() => {
-    if (search_.match) setSelection({ kind: "candidate", id: search_.match });
+    if (search_.match) {
+      setSelection({ kind: "candidate", id: search_.match });
+      setActiveTab("candidate");
+    }
   }, [search_.match]);
 
   const select = (s: Selection) => {
     setSelection(s);
+    setActiveTab(s.kind);
     if (search_.match) navigate({ to: "/messages", search: {}, replace: true });
   };
 
@@ -123,6 +135,11 @@ function MessagesPage() {
   const requestItems = inbox?.requests ?? [];
   const generalItems = inbox?.generals ?? [];
   const candidateItems = inbox?.candidates ?? [];
+  const unreadCounts = {
+    general: generalItems.filter((i) => isUnread(i.thread, i.lastMessage, userId)).length,
+    candidate: candidateItems.filter((i) => isUnread(i.thread, i.lastMessage, userId)).length,
+    request: requestItems.filter((i) => isUnread(i.thread, i.lastMessage, userId)).length,
+  };
 
   // Refresh inbox whenever any message lands anywhere
   useEffect(() => {
@@ -212,17 +229,27 @@ function MessagesPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as Selection["kind"])} className="flex min-h-0 flex-1 flex-col">
+            <TabsList className="mx-2 mt-2 grid h-auto grid-cols-3 gap-0.5 p-0.5">
+              {([ ["general", "General"], ["candidate", "Candidates"], ["request", "Requests"] ] as const).map(([kind, label]) => (
+                <TabsTrigger key={kind} value={kind} className="min-w-0 gap-1 px-1 py-1.5 text-xs">
+                  <span className="truncate">{label}</span>
+                  {unreadCounts[kind] > 0 && (
+                    <span className="grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-amber px-1 text-[10px] font-semibold text-amber-foreground">
+                      {unreadCounts[kind] > 9 ? "9+" : unreadCounts[kind]}
+                    </span>
+                  )}
+                </TabsTrigger>
+              ))}
+            </TabsList>
           <div className="min-h-0 flex-1 overflow-y-auto">
             {isLoading ? (
               <p className="p-4 text-sm text-muted-foreground">Loading…</p>
             ) : (
               <>
-                {filteredGenerals.length > 0 && (
-                  <>
-                    <div className="bg-muted/60 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      General
-                    </div>
-                    {filteredGenerals.map((g) => (
+                <TabsContent value="general" className="m-0">
+                  {filteredGenerals.length === 0 ? <p className="p-4 text-sm text-muted-foreground">No conversations.</p> :
+                    filteredGenerals.map((g) => (
                       <ThreadListRow
                         key={`g-${g.clientId}`}
                         icon={Building2}
@@ -236,14 +263,10 @@ function MessagesPage() {
                         onClick={() => select({ kind: "general", id: g.clientId })}
                       />
                     ))}
-                  </>
-                )}
-                {filteredCandidates.length > 0 && (
-                  <>
-                    <div className="bg-muted/60 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      Candidates
-                    </div>
-                    {filteredCandidates.map((c) => (
+                </TabsContent>
+                <TabsContent value="candidate" className="m-0">
+                  {filteredCandidates.length === 0 ? <p className="p-4 text-sm text-muted-foreground">No conversations.</p> :
+                    filteredCandidates.map((c) => (
                       <ThreadListRow
                         key={`c-${c.matchId}`}
                         icon={UserRound}
@@ -259,11 +282,8 @@ function MessagesPage() {
                         onClick={() => select({ kind: "candidate", id: c.matchId })}
                       />
                     ))}
-                  </>
-                )}
-                <div className="bg-muted/60 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  Requests
-                </div>
+                </TabsContent>
+                <TabsContent value="request" className="m-0">
                 {filtered.length === 0 ? (
                   <p className="p-4 text-sm text-muted-foreground">No conversations.</p>
                 ) : (
@@ -281,9 +301,11 @@ function MessagesPage() {
                     />
                   ))
                 )}
+                </TabsContent>
               </>
             )}
           </div>
+          </Tabs>
         </section>
 
         {workspace ?? (
@@ -319,11 +341,7 @@ function ThreadListRow({
   readTick: number;
   onClick: () => void;
 }) {
-  const lastRead = thread && userId ? getLastRead(userId, thread.id) : null;
-  const unread =
-    !!lastMessage &&
-    lastMessage.sender_id !== userId &&
-    (!lastRead || lastRead < lastMessage.created_at);
+  const unread = isUnread(thread, lastMessage, userId);
 
   return (
     <button
@@ -386,6 +404,7 @@ function RequestWorkspace({
       onRead={onRead}
       quickActions={[]}
       side={
+        <div className="space-y-4">
         <div className="card-amber rounded-2xl border bg-card p-5 text-sm">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="font-semibold">Request details</h3>
@@ -398,7 +417,6 @@ function RequestWorkspace({
             </Link>
           </div>
           <dl className="space-y-2">
-            <Detail label="Client" value={item.request.clientName ?? "—"} />
             <Detail label="Role" value={item.request.roleName ?? "—"} />
             {item.request.title && <Detail label="Title" value={item.request.title} />}
             <div className="flex items-center justify-between gap-2">
@@ -410,6 +428,8 @@ function RequestWorkspace({
             <Detail label="Candidates wanted" value={String(item.request.candidates_wanted)} />
             <Detail label="Matches" value={String(item.request.matchCount)} />
           </dl>
+        </div>
+        <CompanyCard clientId={item.request.client_id} clientName={item.request.clientName} />
         </div>
       }
     />
@@ -435,23 +455,7 @@ function GeneralWorkspace({
       onRead={onRead}
       quickActions={[]}
       side={
-        <div className="card-amber rounded-2xl border bg-card p-5 text-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 font-semibold">
-              <Building2 className="h-4 w-4 text-primary" /> Client
-            </h3>
-            <Link
-              to="/clients/$clientId"
-              params={{ clientId: item.clientId }}
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              Open
-            </Link>
-          </div>
-          <p className="text-muted-foreground">
-            General conversation with {item.clientName}, not tied to a specific request.
-          </p>
-        </div>
+        <CompanyCard clientId={item.clientId} clientName={item.clientName} />
       }
     />
   );
@@ -487,6 +491,7 @@ function CandidateWorkspace({
       onRead={onRead}
       quickActions={quickActions}
       side={
+        <div className="space-y-4">
         <div className="card-amber rounded-2xl border bg-card p-5 text-sm">
           <h3 className="mb-3 flex items-center gap-2 font-semibold">
             <UserRound className="h-4 w-4 text-primary" /> Candidate
@@ -505,7 +510,6 @@ function CandidateWorkspace({
                   </Link>
                 </dd>
               </div>
-              <Detail label="Client" value={ctx.clientName ?? "—"} />
               <div className="flex items-center justify-between gap-2">
                 <dt className="text-muted-foreground">Request</dt>
                 <dd>
@@ -529,8 +533,28 @@ function CandidateWorkspace({
             <p className="text-muted-foreground">Loading…</p>
           )}
         </div>
+        {ctx && <CompanyCard clientId={ctx.clientId} clientName={ctx.clientName} />}
+        </div>
       }
     />
+  );
+}
+
+function CompanyCard({ clientId, clientName }: { clientId: string | null | undefined; clientName: string | null | undefined }) {
+  return (
+    <div className="card-amber rounded-2xl border bg-card p-5 text-sm">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="flex items-center gap-2 font-semibold">
+          <Building2 className="h-4 w-4 text-primary" /> Company
+        </h3>
+        {clientId && (
+          <Link to="/clients/$clientId" params={{ clientId }} className="text-xs font-medium text-primary hover:underline">
+            Open
+          </Link>
+        )}
+      </div>
+      <p className="font-medium">{clientName ?? "—"}</p>
+    </div>
   );
 }
 
@@ -636,9 +660,8 @@ function ThreadWorkspace({
   };
 
   return (
-    <>
-      {/* Column 2: chat */}
-      <section className="card-amber flex min-h-0 flex-col rounded-2xl border bg-card lg:col-span-2">
+    <section className="flex min-h-0 flex-col gap-4 lg:col-span-3 lg:overflow-y-auto">
+      <div className="card-amber flex min-h-[400px] flex-1 flex-col rounded-2xl border bg-card">
         <div className="border-b px-5 py-3">
           <div className="font-semibold">{title}</div>
           {subtitle && <div className="text-xs text-muted-foreground">{subtitle}</div>}
@@ -695,13 +718,9 @@ function ThreadWorkspace({
             </Button>
           </div>
         </div>
-      </section>
-
-      {/* Column 3: context */}
-      <section className="flex min-h-0 flex-col gap-4 lg:col-span-1">
-        {side}
-      </section>
-    </>
+      </div>
+      <div className="shrink-0">{side}</div>
+    </section>
   );
 }
 
