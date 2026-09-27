@@ -1,6 +1,6 @@
 import { CandidateRating } from "@/components/candidate-rating";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
