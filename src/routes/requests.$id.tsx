@@ -7,12 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CandidateCard, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
-import { CandidateCompareTable } from "@/components/candidate-compare-table";
+import { CandidateActions, CandidateCompareTable } from "@/components/candidate-compare-table";
+import { CandidateFullProfileView } from "@/components/candidate-full-profile-view";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { InterviewRequestDialog } from "@/components/interview-request-dialog";
 import { RequestMessages } from "@/components/request-messages";
 import { toast } from "sonner";
-import { ArrowLeft, Columns3, LayoutGrid, Loader2, Sparkles, UsersRound } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Columns3, LayoutGrid, Loader2, ScrollText, Sparkles, UsersRound } from "lucide-react";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 import { ENGAGEMENT_TYPES, DAYS_OF_WEEK } from "@/lib/catalog";
 import {
@@ -88,7 +89,8 @@ function RequestDetail() {
   const [interviewFor, setInterviewFor] = useState<MatchRow | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [noMoreCandidates, setNoMoreCandidates] = useState(false);
-  const [candidateView, setCandidateView] = useState<"cards" | "compare">("cards");
+  const [candidateView, setCandidateView] = useState<"cards" | "compare" | "review">("cards");
+  const [reviewIndex, setReviewIndex] = useState(0);
   const loadTokenRef = useRef(0);
   /** Stable display order of match ids, captured on first load per request id. */
   const orderRef = useRef<{ requestId: string; order: string[] } | null>(null);
@@ -192,6 +194,13 @@ function RequestDetail() {
   const days = (request?.days_of_week_needed ?? [])
     .map((d) => DAYS_OF_WEEK.find((x) => x.value === d)?.label ?? d)
     .join(", ");
+  const currentReviewIndex = matches?.length ? Math.min(reviewIndex, matches.length - 1) : 0;
+  const reviewMatch = matches?.[currentReviewIndex] ?? null;
+
+  function selectCandidateView(view: "cards" | "compare" | "review") {
+    if (view === "review") setReviewIndex(0);
+    setCandidateView(view);
+  }
 
   return (
     <div className="space-y-6">
@@ -253,18 +262,18 @@ function RequestDetail() {
         <div aria-hidden className="hidden lg:block lg:w-px lg:bg-amber" />
 
         <div className="min-w-0 space-y-4">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+          <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <div className="min-w-0">
               <h2 className="text-lg font-semibold tracking-tight">Presented candidates</h2>
               <p className="text-sm text-muted-foreground">
                 Shortlist the people you like, request an interview, or tell us why someone isn&apos;t a fit.
               </p>
             </div>
-            <div className="flex shrink-0 rounded-md border border-border bg-background p-1" aria-label="Candidate view">
+            <div className="flex w-fit max-w-full shrink-0 overflow-x-auto rounded-md border border-border bg-background p-1" aria-label="Candidate view">
               <Button
                 variant={candidateView === "cards" ? "secondary" : "ghost"}
                 size="sm"
-                onClick={() => setCandidateView("cards")}
+                onClick={() => selectCandidateView("cards")}
                 aria-pressed={candidateView === "cards"}
               >
                 <LayoutGrid className="mr-1.5 h-4 w-4" /> Cards
@@ -272,10 +281,18 @@ function RequestDetail() {
               <Button
                 variant={candidateView === "compare" ? "secondary" : "ghost"}
                 size="sm"
-                onClick={() => setCandidateView("compare")}
+                onClick={() => selectCandidateView("compare")}
                 aria-pressed={candidateView === "compare"}
               >
                 <Columns3 className="mr-1.5 h-4 w-4" /> Compare
+              </Button>
+              <Button
+                variant={candidateView === "review" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => selectCandidateView("review")}
+                aria-pressed={candidateView === "review"}
+              >
+                <ScrollText className="mr-1.5 h-4 w-4" /> Review
               </Button>
             </div>
           </div>
@@ -315,7 +332,7 @@ function RequestDetail() {
                     />
                   ))}
                 </div>
-              ) : (
+              ) : candidateView === "compare" ? (
                 <CandidateCompareTable
                   matches={matches}
                   photos={photos}
@@ -334,7 +351,58 @@ function RequestDetail() {
                   onRejected={() => void load()}
                   onInterviewTimeAccepted={() => void load()}
                 />
-              )}
+              ) : reviewMatch ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border bg-card p-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentReviewIndex === 0}
+                      onClick={() => setReviewIndex((index) => Math.max(0, index - 1))}
+                    >
+                      <ChevronLeft className="mr-1.5 h-4 w-4" /> Previous
+                    </Button>
+                    <p className="text-center text-sm font-medium text-muted-foreground">
+                      Candidate {currentReviewIndex + 1} of {matches.length}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentReviewIndex === matches.length - 1}
+                      onClick={() => setReviewIndex((index) => Math.min(matches.length - 1, index + 1))}
+                    >
+                      Next <ChevronRight className="ml-1.5 h-4 w-4" />
+                    </Button>
+                  </div>
+                  <CandidateFullProfileView
+                    key={reviewMatch.id}
+                    candidateId={reviewMatch.candidate_id}
+                    matchId={reviewMatch.id}
+                    matchStatus={reviewMatch.status}
+                  />
+                  <Card className="rounded-lg">
+                    <CardContent className="p-4">
+                      <CandidateActions
+                        key={reviewMatch.id}
+                        match={reviewMatch}
+                        busy={actingId === reviewMatch.id}
+                        locked={actingId !== null && actingId !== reviewMatch.id}
+                        onShortlist={() =>
+                          callRpc(
+                            "client_shortlist_candidate",
+                            reviewMatch.id,
+                            reviewMatch.status === "shortlisted" ? "Removed from shortlist" : "Added to shortlist"
+                          )
+                        }
+                        onRequestInterview={() => setInterviewFor(reviewMatch)}
+                        onRequestHire={() => callRpc("client_request_hire", reviewMatch.id, "Hire request sent to ScaleSource")}
+                        onRejected={() => void load()}
+                        onInterviewTimeAccepted={() => void load()}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : null}
 
               {SHOW_MORE_CANDIDATES_ENABLED && (
                 <div className="flex flex-col items-center gap-2 pt-2">
