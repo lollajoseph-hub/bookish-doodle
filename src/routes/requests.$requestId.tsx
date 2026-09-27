@@ -243,6 +243,11 @@ function RequestDetailPage() {
                         {m.candidateHeadline && (
                           <p className="text-xs text-muted-foreground">{m.candidateHeadline}</p>
                         )}
+                        <p className="text-xs text-muted-foreground">
+                          {m.viewCount > 0 && m.lastViewedAt
+                            ? `Viewed ${m.viewCount}x · last ${new Date(m.lastViewedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
+                            : "Not yet viewed by client"}
+                        </p>
                         {m.match_reason && <p className="mt-1 text-sm">{m.match_reason}</p>}
                         {m.status === "rejected" && (
                           <p className="mt-1 text-xs text-muted-foreground">

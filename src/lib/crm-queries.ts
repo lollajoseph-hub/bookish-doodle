@@ -242,6 +242,8 @@ export interface MatchView extends CandidateMatchRow {
   candidateName: string | null;
   candidateHeadline: string | null;
   candidateSkills: string[];
+  viewCount: number;
+  lastViewedAt: string | null;
 }
 
 export interface ClientRequestDetail {
@@ -296,6 +298,23 @@ export async function fetchClientRequestDetail(id: string): Promise<ClientReques
     }
   }
 
+  // Client profile-view analytics for each match.
+  const viewsByMatch = new Map<string, { count: number; lastViewedAt: string | null }>();
+  const matchIds = matchRows.map((m) => m.id);
+  if (matchIds.length) {
+    const { data: viewRows, error: viewsError } = await supabase
+      .from("match_views")
+      .select("match_id, viewed_at")
+      .in("match_id", matchIds);
+    if (viewsError) throw viewsError;
+    for (const row of (viewRows ?? []) as { match_id: string; viewed_at: string }[]) {
+      const agg = viewsByMatch.get(row.match_id) ?? { count: 0, lastViewedAt: null as string | null };
+      agg.count += 1;
+      if (!agg.lastViewedAt || row.viewed_at > agg.lastViewedAt) agg.lastViewedAt = row.viewed_at;
+      viewsByMatch.set(row.match_id, agg);
+    }
+  }
+
   const skillById = new Map((skillsRes.data ?? []).map((s) => [s.id, s]));
   const candidateById = new Map((candidatesRes.data ?? []).map((c) => [c.id, c]));
 
@@ -314,6 +333,8 @@ export async function fetchClientRequestDetail(id: string): Promise<ClientReques
       candidateName: candidateById.get(m.candidate_id)?.full_name ?? null,
       candidateHeadline: candidateById.get(m.candidate_id)?.headline ?? null,
       candidateSkills: skillsByCandidate.get(m.candidate_id) ?? [],
+      viewCount: viewsByMatch.get(m.id)?.count ?? 0,
+      lastViewedAt: viewsByMatch.get(m.id)?.lastViewedAt ?? null,
     })),
   };
 }
