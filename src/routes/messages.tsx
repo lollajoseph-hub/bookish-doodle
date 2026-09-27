@@ -343,7 +343,7 @@ function MessagesPage() {
                       <ThreadListRow
                         key={`c-${c.matchId}`}
                         icon={UserRound}
-                        title={c.candidateName}
+                        title={`Inquiry about ${c.candidateName}`}
                         subtitle={
                           [c.clientName, c.requestTitle].filter(Boolean).join(" — ") || "Candidate conversation"
                         }
@@ -558,7 +558,7 @@ function CandidateWorkspace({
     <ThreadWorkspace
       target={{ kind: "candidate", candidateMatchId: matchId }}
       initialThread={null}
-      title={ctx ? `${ctx.candidateName} — ${ctx.clientName ?? "Client"}` : "Candidate conversation"}
+      title={ctx ? `Inquiry about ${ctx.candidateName} — ${ctx.clientName ?? "Client"}` : "Candidate conversation"}
       subtitle={ctx?.requestTitle ?? ""}
       userId={userId}
       onRead={onRead}
