@@ -249,12 +249,9 @@ function InterviewReason({ reason }: { reason: string }) {
  */
 function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: string; locked: boolean; onRefresh: () => void }) {
   const [proposing, setProposing] = useState(false);
+  const [declinedTime, setDeclinedTime] = useState(false);
   const [proposedAt, setProposedAt] = useState("");
   const [proposingBusy, setProposingBusy] = useState(false);
-  const [rejecting, setRejecting] = useState(false);
-  const [rejectReason, setRejectReason] = useState<RejectionReason | null>(null);
-  const [rejectNote, setRejectNote] = useState("");
-  const [rejectBusy, setRejectBusy] = useState(false);
 
   async function submitPropose() {
     if (!proposedAt || proposingBusy) return;
@@ -275,28 +272,8 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
     }
     toast.success("New time proposed — ScaleSource will confirm.");
     setProposing(false);
+    setDeclinedTime(false);
     setProposedAt("");
-    onRefresh();
-  }
-
-  async function submitRejection() {
-    if (!rejectReason || rejectBusy) return;
-    setRejectBusy(true);
-    const { error } = await supabase.rpc("reject_candidate_match", {
-      p_match_id: matchId,
-      p_reason: rejectReason,
-      p_note: rejectNote.trim() ? rejectNote.trim() : null,
-      p_rejected_by: "client",
-    });
-    setRejectBusy(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success("Feedback sent — thanks");
-    setRejecting(false);
-    setRejectReason(null);
-    setRejectNote("");
     onRefresh();
   }
 
