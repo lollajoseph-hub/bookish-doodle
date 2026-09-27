@@ -428,6 +428,29 @@ function InterviewsPage() {
 
   usePollingRefresh(load, 20000);
 
+  const isUnseen = (m: MatchRow) => views[m.id] !== m.status;
+
+  async function markStageSeen(stageStatus: MatchStatus, stageRows: MatchRow[]) {
+    if (!profileId || stageRows.length === 0) return;
+    const now = new Date().toISOString();
+    const upsertRows = stageRows.map((m) => ({
+      profile_id: profileId,
+      candidate_match_id: m.id,
+      last_seen_status: m.status,
+      last_seen_at: now,
+    }));
+    const { error } = await supabase
+      .from("candidate_match_views" as never)
+      .upsert(upsertRows as never, { onConflict: "profile_id,candidate_match_id" });
+    if (error) return;
+    setViews((prev) => {
+      const next = { ...prev };
+      for (const m of stageRows) next[m.id] = m.status;
+      return next;
+    });
+    void stageStatus;
+  }
+
   async function requestHire(matchId: string) {
     setActingId(matchId);
     const { error } = await supabase.rpc("client_request_hire", { p_match_id: matchId });
