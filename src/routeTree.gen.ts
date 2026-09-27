@@ -13,6 +13,7 @@ import { Route as TeamRouteImport } from './routes/team'
 import { Route as ShortlistedRouteImport } from './routes/shortlisted'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as NewRequestRouteImport } from './routes/new-request'
+import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InterviewsRouteImport } from './routes/interviews'
 import { Route as GetStartedRouteImport } from './routes/get-started'
@@ -38,6 +39,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const NewRequestRoute = NewRequestRouteImport.update({
   id: '/new-request',
   path: '/new-request',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/get-started': typeof GetStartedRoute
   '/interviews': typeof InterviewsRoute
   '/login': typeof LoginRoute
+  '/messages': typeof MessagesRoute
   '/new-request': typeof NewRequestRoute
   '/reset-password': typeof ResetPasswordRoute
   '/shortlisted': typeof ShortlistedRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/get-started': typeof GetStartedRoute
   '/interviews': typeof InterviewsRoute
   '/login': typeof LoginRoute
+  '/messages': typeof MessagesRoute
   '/new-request': typeof NewRequestRoute
   '/reset-password': typeof ResetPasswordRoute
   '/shortlisted': typeof ShortlistedRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/get-started': typeof GetStartedRoute
   '/interviews': typeof InterviewsRoute
   '/login': typeof LoginRoute
+  '/messages': typeof MessagesRoute
   '/new-request': typeof NewRequestRoute
   '/reset-password': typeof ResetPasswordRoute
   '/shortlisted': typeof ShortlistedRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/get-started'
     | '/interviews'
     | '/login'
+    | '/messages'
     | '/new-request'
     | '/reset-password'
     | '/shortlisted'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/get-started'
     | '/interviews'
     | '/login'
+    | '/messages'
     | '/new-request'
     | '/reset-password'
     | '/shortlisted'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/get-started'
     | '/interviews'
     | '/login'
+    | '/messages'
     | '/new-request'
     | '/reset-password'
     | '/shortlisted'
@@ -152,6 +164,7 @@ export interface RootRouteChildren {
   GetStartedRoute: typeof GetStartedRoute
   InterviewsRoute: typeof InterviewsRoute
   LoginRoute: typeof LoginRoute
+  MessagesRoute: typeof MessagesRoute
   NewRequestRoute: typeof NewRequestRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ShortlistedRoute: typeof ShortlistedRoute
@@ -188,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/new-request'
       fullPath: '/new-request'
       preLoaderRoute: typeof NewRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -240,6 +260,7 @@ const rootRouteChildren: RootRouteChildren = {
   GetStartedRoute: GetStartedRoute,
   InterviewsRoute: InterviewsRoute,
   LoginRoute: LoginRoute,
+  MessagesRoute: MessagesRoute,
   NewRequestRoute: NewRequestRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ShortlistedRoute: ShortlistedRoute,

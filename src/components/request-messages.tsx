@@ -1,16 +1,16 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { CalendarClock, FileText, Loader2, MessageSquare, PhoneCall, Send } from "lucide-react";
 import { formatDateTime } from "@/lib/matches";
 
 type StructuredType = "reschedule_request" | "call_me_asap" | "send_portfolio";
 
-interface ThreadMessage {
+export interface ThreadMessage {
   id: string;
   thread_id: string;
   sender_id: string | null;
@@ -20,7 +20,7 @@ interface ThreadMessage {
   created_at: string;
 }
 
-interface QuickAction {
+export interface QuickAction {
   type: StructuredType;
   label: string;
   /** Message body sent with the action. */
@@ -30,13 +30,13 @@ interface QuickAction {
 }
 
 /** Display metadata for every structured type (including legacy ones in old messages). */
-const ACTION_META: Record<StructuredType, QuickAction> = {
+export const ACTION_META: Record<StructuredType, QuickAction> = {
   reschedule_request: { type: "reschedule_request", label: "Request Reschedule", body: "Request Reschedule", icon: CalendarClock, tone: "bg-amber-100 text-amber-800 border-amber-300" },
   call_me_asap: { type: "call_me_asap", label: "Call Me ASAP", body: "Please call me as soon as possible.", icon: PhoneCall, tone: "bg-destructive/10 text-destructive border-destructive/30" },
   send_portfolio: { type: "send_portfolio", label: "Send Portfolio", body: "Send Portfolio", icon: FileText, tone: "bg-primary-soft text-primary border-primary/30" },
 };
 
-type ThreadTarget =
+export type ThreadTarget =
   | { kind: "request"; id: string }
   | { kind: "candidate"; id: string }
   | { kind: "general"; id: string };
@@ -45,87 +45,31 @@ function lastReadKey(userId: string, threadId: string) {
   return `cp:thread-last-read:${userId}:${threadId}`;
 }
 
-/** Request-level thread: no quick actions. */
-export function RequestMessages({ requestId }: { requestId: string }) {
-  return (
-    <ThreadPanel
-      target={{ kind: "request", id: requestId }}
-      label="Talk to us about this request"
-      description="Chat with your ScaleSource recruiter about this request."
-      actions={[]}
-    />
-  );
-}
-
-/** Client-wide general thread with the Call Me ASAP action. */
-export function GeneralMessages({ clientId }: { clientId: string }) {
-  return (
-    <ThreadPanel
-      target={{ kind: "general", id: clientId }}
-      label="Message ScaleSource"
-      title="Message ScaleSource"
-      description="A general conversation with your ScaleSource team — not tied to any request."
-      actions={[ACTION_META.call_me_asap]}
-      variant="ghost"
-    />
-  );
-}
-
-/** Candidate-level thread; Request Reschedule only while the interview is confirmed. */
-export function CandidateMessages({
-  matchId,
-  matchStatus,
-  candidateName,
-}: {
-  matchId: string;
-  matchStatus: string | null;
-  candidateName: string;
-}) {
-  const firstName = candidateName.split(" ")[0] || candidateName;
-  return (
-    <ThreadPanel
-      target={{ kind: "candidate", id: matchId }}
-      label={`Talk to us about ${firstName}`}
-      title={`About ${candidateName}`}
-      description={`Chat with your ScaleSource recruiter about ${candidateName}.`}
-      actions={matchStatus === "interview_confirmed" ? [ACTION_META.reschedule_request] : []}
-    />
-  );
-}
-
-function ThreadPanel({
-  target,
-  label,
-  title = "Messages",
-  description,
-  actions,
-  variant = "outline",
-}: {
-  target: ThreadTarget;
-  label: string;
-  title?: string;
-  description: string;
-  actions: QuickAction[];
-  variant?: "outline" | "ghost";
-}) {
+/**
+ * Resolves (get_or_create_thread) a thread, loads its messages with realtime,
+ * and tracks unread staff messages via a localStorage last-read marker.
+ * Pass `null` to skip. `active` marks the thread read while true.
+ */
+export function useThread(target: ThreadTarget | null, active = false) {
   const { user } = useAuth();
-  const [open, setOpen] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ThreadMessage[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [lastRead, setLastRead] = useState<string | null>(null);
+  const kind = target?.kind ?? null;
+  const targetId = target?.id ?? null;
 
-  // Thread bootstrap (created transparently if missing)
   useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
     setThreadId(null);
     setMessages(null);
+    setErr(null);
+    if (!user || !kind || !targetId) return;
+    let cancelled = false;
     void (async () => {
       const { data, error } = await supabase.rpc("get_or_create_thread", {
-        p_client_request_id: target.kind === "request" ? target.id : null,
-        p_candidate_match_id: target.kind === "candidate" ? target.id : null,
-        p_client_id: target.kind === "general" ? target.id : null,
+        p_client_request_id: kind === "request" ? targetId : null,
+        p_candidate_match_id: kind === "candidate" ? targetId : null,
+        p_client_id: kind === "general" ? targetId : null,
       });
       if (cancelled) return;
       if (error) {
@@ -140,15 +84,13 @@ function ThreadPanel({
     return () => {
       cancelled = true;
     };
-  }, [target.kind, target.id, user]);
+  }, [kind, targetId, user]);
 
-  // Last-read from localStorage
   useEffect(() => {
     if (!user || !threadId) return;
     setLastRead(window.localStorage.getItem(lastReadKey(user.id, threadId)));
   }, [user, threadId]);
 
-  // Messages + realtime
   useEffect(() => {
     if (!threadId) return;
     let cancelled = false;
@@ -159,18 +101,17 @@ function ThreadPanel({
       .order("created_at", { ascending: true })
       .then(({ data, error }) => {
         if (cancelled) return;
-        if (error) setErr(error.message);
-        else setErr(null);
+        setErr(error ? error.message : null);
         setMessages((data ?? []) as ThreadMessage[]);
       });
     const channel = supabase
-      .channel(`thread-messages-${threadId}`)
+      .channel(`thread-messages-${threadId}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "thread_messages", filter: `thread_id=eq.${threadId}` },
         (payload) => {
           const m = payload.new as ThreadMessage;
-          setMessages((prev) => (prev ?? []).some((x) => x.id === m.id) ? prev : [...(prev ?? []), m]);
+          setMessages((prev) => ((prev ?? []).some((x) => x.id === m.id) ? prev : [...(prev ?? []), m]));
         }
       )
       .subscribe();
@@ -182,52 +123,79 @@ function ThreadPanel({
 
   const latest = messages && messages.length > 0 ? messages[messages.length - 1] : null;
 
-  // Mark read while open
   useEffect(() => {
-    if (!open || !user || !threadId || !latest) return;
+    if (!active || !user || !threadId || !latest) return;
     window.localStorage.setItem(lastReadKey(user.id, threadId), latest.created_at);
     setLastRead(latest.created_at);
-  }, [open, user, threadId, latest]);
+  }, [active, user, threadId, latest]);
 
   const unread = (messages ?? []).filter(
     (m) => m.sender_role === "staff" && (!lastRead || new Date(m.created_at) > new Date(lastRead))
   ).length;
 
+  const addMessage = (m: ThreadMessage) =>
+    setMessages((prev) => ((prev ?? []).some((x) => x.id === m.id) ? prev : [...(prev ?? []), m]));
+
+  return { threadId, messages, err, unread, latest, addMessage, userId: user?.id ?? null };
+}
+
+function MessagesButton({
+  target,
+  label,
+  search,
+  variant = "outline",
+}: {
+  target: ThreadTarget;
+  label: string;
+  search: { request?: string; candidate?: string; general?: boolean };
+  variant?: "outline" | "ghost";
+}) {
+  const navigate = useNavigate();
+  const { unread } = useThread(target);
   return (
-    <>
-      <Button variant={variant} size="sm" className="relative" onClick={() => setOpen(true)}>
-        <MessageSquare className="mr-1.5 h-4 w-4" />
-        {label}
-        {unread > 0 && (
-          <span className="absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white">
-            {unread > 9 ? "9+" : unread}
-          </span>
-        )}
-      </Button>
-
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
-          <SheetHeader className="border-b px-5 py-4 text-left">
-            <SheetTitle>{title}</SheetTitle>
-            <SheetDescription>{description}</SheetDescription>
-          </SheetHeader>
-
-          {err && <p className="px-5 pt-3 text-xs text-destructive">{err}</p>}
-
-          <ChatFeed messages={messages} userId={user?.id ?? null} />
-          <Composer
-            threadId={threadId}
-            actions={actions}
-            onSent={(m) => setMessages((prev) => (prev ?? []).some((x) => x.id === m.id) ? prev : [...(prev ?? []), m])}
-          />
-
-        </SheetContent>
-      </Sheet>
-    </>
+    <Button variant={variant} size="sm" className="relative" onClick={() => navigate({ to: "/messages", search })}>
+      <MessageSquare className="mr-1.5 h-4 w-4" />
+      {label}
+      {unread > 0 && (
+        <span className="absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white">
+          {unread > 9 ? "9+" : unread}
+        </span>
+      )}
+    </Button>
   );
 }
 
-function ChatFeed({ messages, userId }: { messages: ThreadMessage[] | null; userId: string | null }) {
+/** Opens the request thread in the unified Messages page. */
+export function RequestMessages({ requestId }: { requestId: string }) {
+  return <MessagesButton target={{ kind: "request", id: requestId }} label="Talk to us about this request" search={{ request: requestId }} />;
+}
+
+/** Opens the general ScaleSource thread in the unified Messages page. */
+export function GeneralMessages({ clientId }: { clientId: string }) {
+  return <MessagesButton target={{ kind: "general", id: clientId }} label="Messages" search={{ general: true }} variant="ghost" />;
+}
+
+/** Opens the candidate thread in the unified Messages page. */
+export function CandidateMessages({
+  matchId,
+  candidateName,
+}: {
+  matchId: string;
+  matchStatus?: string | null;
+  candidateName: string;
+}) {
+  const firstName = candidateName.split(" ")[0] || candidateName;
+  return <MessagesButton target={{ kind: "candidate", id: matchId }} label={`Talk to us about ${firstName}`} search={{ candidate: matchId }} />;
+}
+
+/** Quick actions available for a thread kind. */
+export function actionsFor(kind: ThreadTarget["kind"], matchStatus?: string | null): QuickAction[] {
+  if (kind === "general") return [ACTION_META.call_me_asap];
+  if (kind === "candidate" && matchStatus === "interview_confirmed") return [ACTION_META.reschedule_request];
+  return [];
+}
+
+export function ChatFeed({ messages, userId }: { messages: ThreadMessage[] | null; userId: string | null }) {
   const endRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
@@ -277,7 +245,7 @@ function ChatFeed({ messages, userId }: { messages: ThreadMessage[] | null; user
   );
 }
 
-function Composer({
+export function Composer({
   threadId,
   actions,
   onSent,
@@ -349,113 +317,6 @@ function Composer({
         </Button>
       </div>
       <p className="text-[11px] text-muted-foreground">Enter to send · Shift+Enter for a new line</p>
-    </div>
-  );
-}
-
-function HuddleNotes({ threadId, userId }: { threadId: string; userId: string | null }) {
-  const [content, setContent] = useState("");
-  const [loaded, setLoaded] = useState(false);
-  const [saving, setSaving] = useState<"idle" | "saving" | "saved">("idle");
-  const [remote, setRemote] = useState<string | null>(null);
-  const focusedRef = useRef(false);
-  const dirtyRef = useRef(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    void supabase
-      .from("thread_scratchpad")
-      .select("content")
-      .eq("thread_id", threadId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (cancelled) return;
-        setContent((data as { content: string | null } | null)?.content ?? "");
-        setLoaded(true);
-      });
-    const channel = supabase
-      .channel(`thread-scratchpad-${threadId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "thread_scratchpad", filter: `thread_id=eq.${threadId}` },
-        (payload) => {
-          const row = payload.new as { content: string | null; updated_by: string | null } | null;
-          if (!row || (userId && row.updated_by === userId)) return;
-          const next = row.content ?? "";
-          if (focusedRef.current || dirtyRef.current) setRemote(next);
-          else {
-            setContent(next);
-            setRemote(null);
-          }
-        }
-      )
-      .subscribe();
-    return () => {
-      cancelled = true;
-      void supabase.removeChannel(channel);
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [threadId, userId]);
-
-  const save = useCallback(
-    async (text: string) => {
-      setSaving("saving");
-      const { error } = await supabase.rpc("update_thread_scratchpad", { p_thread_id: threadId, p_content: text });
-      if (error) {
-        setSaving("idle");
-        toast.error(error.message);
-        return;
-      }
-      dirtyRef.current = false;
-      setSaving("saved");
-    },
-    [threadId]
-  );
-
-  function onChange(text: string) {
-    setContent(text);
-    dirtyRef.current = true;
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => void save(text), 800);
-  }
-
-  function loadLatest() {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    dirtyRef.current = false;
-    setContent(remote ?? "");
-    setRemote(null);
-  }
-
-  return (
-    <div className="space-y-2 px-5 py-4">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-semibold">Hiring Huddle Notes</h3>
-          <p className="text-xs text-muted-foreground">Shared with your ScaleSource recruiter.</p>
-        </div>
-        <span className="text-[11px] text-muted-foreground">
-          {saving === "saving" ? "Saving…" : saving === "saved" ? "Saved" : ""}
-        </span>
-      </div>
-      {remote !== null && (
-        <div className="flex items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary-soft px-3 py-1.5 text-xs text-primary">
-          <span>ScaleSource updated the notes</span>
-          <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={loadLatest}>
-            Load latest
-          </Button>
-        </div>
-      )}
-      <Textarea
-        value={content}
-        disabled={!loaded}
-        onChange={(e) => onChange(e.target.value)}
-        onFocus={() => (focusedRef.current = true)}
-        onBlur={() => (focusedRef.current = false)}
-        placeholder={loaded ? "Jot down priorities, questions, or candidate thoughts…" : "Loading…"}
-        rows={5}
-        className="resize-none"
-      />
     </div>
   );
 }
