@@ -1,5 +1,5 @@
 # Candidate review workflow fixes
-- [ ] Replace header/page-first messaging with a global floating chat widget while preserving `/messages` deep links
+- [x] Replace header/page-first messaging with a global floating chat widget while preserving `/messages` deep links
 - [x] Add required proposed date/time dialog to every client interview request action
 - [x] Include and display interview_proposed_at across candidate and interview views
 - [x] Apply the pre-hire “Meet FirstName” heading pattern consistently
