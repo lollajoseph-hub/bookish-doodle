@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { CandidateSkillGap, MatchStatusIcon, statusTone, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { toast } from "sonner";
-import { CalendarClock, ChevronDown, Clock, ExternalLink, Loader2, StickyNote, ThumbsDown, Video } from "lucide-react";
+import { CalendarClock, ChevronDown, Clock, ExternalLink, Loader2, StickyNote, ThumbsDown, UserSearch, Video } from "lucide-react";
 import {
   MATCH_STATUS_LABELS,
   displayName,
@@ -441,15 +441,7 @@ function InterviewsPage() {
     const proposed = formatDateTime(m.interview_proposed_at);
     const photo = photos[m.id] ?? null;
     return (
-      <Card
-        key={m.id}
-        className="card-amber cursor-pointer rounded-2xl transition-shadow hover:shadow-md"
-        onClick={(e) => {
-          // Inner buttons, links and form fields keep their own behavior.
-          if ((e.target as HTMLElement).closest("button, a, input, textarea, select, [role='button'], [data-no-card-click]")) return;
-          setProfileFor(m);
-        }}
-      >
+      <Card key={m.id} className="card-amber rounded-2xl">
         <CardContent className="space-y-3 p-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="flex min-w-0 items-start gap-3">
@@ -487,6 +479,10 @@ function InterviewsPage() {
                     </div>
 
                     <div className="flex flex-none flex-wrap items-center gap-2">
+                      <Button variant="secondary" size="sm" onClick={() => setProfileFor(m)}>
+                        <UserSearch className="mr-1.5 h-4 w-4" />
+                        View full profile
+                      </Button>
                       {m.status === "interview_confirmed" && m.meet_url && (
                         <Button asChild size="sm">
                           <a href={m.meet_url} target="_blank" rel="noreferrer">
