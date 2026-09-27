@@ -262,14 +262,14 @@ function RequestDetail() {
         <div aria-hidden className="hidden lg:block lg:w-px lg:bg-amber" />
 
         <div className="min-w-0 space-y-4">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+          <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <div className="min-w-0">
               <h2 className="text-lg font-semibold tracking-tight">Presented candidates</h2>
               <p className="text-sm text-muted-foreground">
                 Shortlist the people you like, request an interview, or tell us why someone isn&apos;t a fit.
               </p>
             </div>
-            <div className="flex shrink-0 rounded-md border border-border bg-background p-1" aria-label="Candidate view">
+            <div className="flex w-fit max-w-full shrink-0 overflow-x-auto rounded-md border border-border bg-background p-1" aria-label="Candidate view">
               <Button
                 variant={candidateView === "cards" ? "secondary" : "ghost"}
                 size="sm"
