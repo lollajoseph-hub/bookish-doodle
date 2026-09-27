@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowDown, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { availabilityLabel } from "@/components/candidate-card";
 import { CandidateMessages } from "@/components/request-messages";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,12 +39,6 @@ interface Entry {
 
 const PROFILE_SELECT = "candidate_id,full_name,headline,availability,country,timezone,weekly_hours_available,preferred_shift,years_experience,earliest_start_date,approved_summary,highlights,skills,work_history,education,primary_role,secondary_roles,profile_photo_path,intro_video_path";
 
-function availabilityLabel(value: string | null | undefined) {
-  if (value === "available") return "Available Immediately";
-  if (value === "open_to_offers") return "Open to offers";
-  if (value === "not_available") return "Not available";
-  return null;
-}
 
 function str(object: Record<string, unknown>, ...keys: string[]) {
   for (const key of keys) {

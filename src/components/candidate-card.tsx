@@ -140,14 +140,42 @@ export function MatchStatusIcon({ status }: { status: MatchStatus | string }) {
 
 export function availabilityLabel(value: string | null | undefined) {
   switch (value) {
-    case "available":
+    case "available_now":
       return "Available Immediately";
+    // The exact date is already shown in the schedule details / profile grid,
+    // so the label stays date-free to avoid printing it twice.
+    case "available_from":
+      return "Available from a future date";
+    case "interviewing":
+      return "Currently interviewing";
+    case "closing_next_week":
+      return "Closing next week";
+    case "exploring":
+      return "Exploring options";
     case "open_to_offers":
       return "Open to offers";
-    case "not_available":
-      return "Not available";
+    case "off_market":
+      return "Off the market";
     default:
       return null;
+  }
+}
+
+/** Text color for the availability line — interviewing/closing are "act fast" states. */
+export function availabilityToneClass(value: string | null | undefined) {
+  switch (value) {
+    case "interviewing":
+    case "closing_next_week":
+      return "text-amber";
+    case "off_market":
+      return "text-muted-foreground";
+    case "available_now":
+    case "open_to_offers":
+    case "available_from":
+    case "exploring":
+      return "text-success";
+    default:
+      return "text-success";
   }
 }
 
@@ -283,9 +311,7 @@ export function CandidateCard({
               <h3 className="truncate text-lg font-semibold leading-tight">{name}</h3>
               {p?.headline && <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">{p.headline}</p>}
               {availabilityStatus && (
-                <p
-                  className={`text-sm font-semibold ${p?.availability === "not_available" ? "text-muted-foreground" : "text-success"}`}
-                >
+                <p className={`text-sm font-semibold ${availabilityToneClass(p?.availability)}`}>
                   {availabilityStatus}
                 </p>
               )}
