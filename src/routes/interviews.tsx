@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import { CalendarClock, ChevronDown, Clock, ExternalLink, Loader2, StickyNote, ThumbsDown, UserSearch, Video } from "lucide-react";
 import {
   MATCH_STATUS_LABELS,
-  REJECTION_REASONS,
   displayName,
   formatDateTime,
   signedPhotoUrl,
