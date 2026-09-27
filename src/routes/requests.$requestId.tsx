@@ -637,7 +637,6 @@ interface MatchScoreBreakdownRow {
   ai_rank_score: number | null;
   computed_total: number | null;
   stored_match_score: number | null;
-  is_stale: boolean | null;
 }
 
 function useMatchScoreBreakdown(matchId: string | undefined, enabled: boolean) {
@@ -654,29 +653,9 @@ function useMatchScoreBreakdown(matchId: string | undefined, enabled: boolean) {
   });
 }
 
-function useRefreshMatchScore(matchId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.rpc("refresh_match_score", { p_match_id: matchId });
-      if (error) throw new Error(error.message);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["match-score-breakdown", matchId] });
-      await queryClient.invalidateQueries({ queryKey: ["client-request"] });
-      await queryClient.invalidateQueries({ queryKey: ["client-requests"] });
-     },
-  });
-}
-
 function ScoreBadge({ matchId, score }: { matchId: string; score: number }) {
   const [open, setOpen] = useState(false);
   const { data, isLoading, error } = useMatchScoreBreakdown(matchId, open);
-  const refresh = useRefreshMatchScore(matchId);
-
-  const capturedAt = data?.match_created_at
-    ? new Date(data.match_created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
-    : null;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
