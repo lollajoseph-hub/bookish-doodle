@@ -334,6 +334,9 @@ function InterviewsPage() {
   const [actingId, setActingId] = useState<string | null>(null);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [profileFor, setProfileFor] = useState<MatchRow | null>(null);
+  const [views, setViews] = useState<Record<string, string>>({});
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("requested");
 
   const load = useCallback(async () => {
     setErr(null);
@@ -359,14 +362,27 @@ function InterviewsPage() {
     const raw = (matchRes.data ?? []) as unknown as MatchRow[];
     const requestIds = [...new Set(raw.map((match) => match.client_request_id))];
     const candidateIds = [...new Set(raw.map((match) => match.candidate_id))];
-    const [requestSkillsRes, candidateSkillsRes] = await Promise.all([
+    const matchIds = raw.map((match) => match.id);
+    const [requestSkillsRes, candidateSkillsRes, authRes, viewsRes] = await Promise.all([
       requestIds.length
         ? supabase.from("client_request_skills").select("request_id,skills(name)").eq("is_required", true).in("request_id", requestIds)
         : Promise.resolve({ data: [], error: null }),
       candidateIds.length
         ? supabase.from("candidate_skills").select("candidate_id,skills(name)").in("candidate_id", candidateIds)
         : Promise.resolve({ data: [], error: null }),
+      supabase.auth.getUser(),
+      matchIds.length
+        ? supabase.from("candidate_match_views" as never).select("*").in("candidate_match_id", matchIds)
+        : Promise.resolve({ data: [], error: null }),
     ]);
+
+    const uid = authRes.data.user?.id ?? null;
+    setProfileId(uid);
+    const viewsMap: Record<string, string> = {};
+    for (const v of (viewsRes.data ?? []) as unknown as { candidate_match_id: string; last_seen_status: string }[]) {
+      viewsMap[v.candidate_match_id] = v.last_seen_status;
+    }
+    setViews(viewsMap);
 
     if (requestSkillsRes.error || candidateSkillsRes.error) {
       setErr(requestSkillsRes.error?.message ?? candidateSkillsRes.error?.message ?? "Unable to load skills");
@@ -411,6 +427,29 @@ function InterviewsPage() {
   }, [load]);
 
   usePollingRefresh(load, 20000);
+
+  const isUnseen = (m: MatchRow) => views[m.id] !== m.status;
+
+  async function markStageSeen(stageStatus: MatchStatus, stageRows: MatchRow[]) {
+    if (!profileId || stageRows.length === 0) return;
+    const now = new Date().toISOString();
+    const upsertRows = stageRows.map((m) => ({
+      profile_id: profileId,
+      candidate_match_id: m.id,
+      last_seen_status: m.status,
+      last_seen_at: now,
+    }));
+    const { error } = await supabase
+      .from("candidate_match_views" as never)
+      .upsert(upsertRows as never, { onConflict: "profile_id,candidate_match_id" });
+    if (error) return;
+    setViews((prev) => {
+      const next = { ...prev };
+      for (const m of stageRows) next[m.id] = m.status;
+      return next;
+    });
+    void stageStatus;
+  }
 
   async function requestHire(matchId: string) {
     setActingId(matchId);
@@ -466,6 +505,12 @@ function InterviewsPage() {
                             <MatchStatusIcon status={m.status} />
                             {MATCH_STATUS_LABELS[m.status] ?? m.status}
                           </span>
+                          {isUnseen(m) && (
+                            <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-amber bg-amber/10 px-2.5 py-0.5 text-xs font-semibold text-amber-foreground">
+                              <span className="h-1.5 w-1.5 rounded-full bg-amber" />
+                              New
+                            </span>
+                          )}
                         </div>
                         {p?.headline && <p className="truncate text-xs text-muted-foreground">{p.headline}</p>}
                         <Link
@@ -624,11 +669,22 @@ function InterviewsPage() {
           </CardContent>
         </Card>
       ) : (
-        <Tabs defaultValue="requested" className="space-y-3">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => {
+            setActiveTab(v);
+            const tab = STAGE_TABS.find((t) => t.value === v);
+            if (tab && rows) void markStageSeen(tab.status, rows.filter((m) => m.status === tab.status));
+          }}
+          className="space-y-3"
+        >
           <TabsList>
             {STAGE_TABS.map((tab) => (
               <TabsTrigger key={tab.value} value={tab.value}>
                 {tab.label}
+                {rows.some((m) => m.status === tab.status && isUnseen(m)) && (
+                  <span className="ml-1.5 h-2 w-2 rounded-full bg-amber" />
+                )}
               </TabsTrigger>
             ))}
           </TabsList>
