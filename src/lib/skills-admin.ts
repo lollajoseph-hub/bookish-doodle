@@ -44,6 +44,18 @@ export function distinctCategories(skills: SkillRow[]): string[] {
   return [...set].sort((a, b) => a.localeCompare(b));
 }
 
+export async function createSkill(name: string, category: string): Promise<void> {
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error("Skill name is required");
+  const { error } = await supabase.from("skills").insert({ name: trimmed, category });
+  if (error) {
+    if (error.code === "23505") {
+      throw new Error("A skill with that name already exists in this category.");
+    }
+    throw error;
+  }
+}
+
 export async function updateSkill(
   id: string,
   patch: { name?: string; category?: string | null },
