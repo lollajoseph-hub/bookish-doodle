@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ArrowLeft, Loader2, MessageSquare, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
-import { CuratedBadge, MatchStatusBadge, RequestStatusBadge } from "@/components/match-status";
+import { CuratedBadge, MatchStatusBadge, PriorityBadge, RequestStatusBadge } from "@/components/match-status";
 import {
   MATCH_STATUSES,
   REJECTION_REASONS,
@@ -18,7 +18,7 @@ import {
 } from "@/lib/crm-queries";
 import { fetchCandidates } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
-import type { MatchStatus, RejectionReason } from "@/lib/database.types";
+import type { MatchStatus, RejectionReason, RequestPriority } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -164,6 +164,22 @@ function RequestDetailPage() {
     onSuccess: () => {
       toast.success("Request updated");
       invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const setPriority = useMutation({
+    mutationFn: async (priority: RequestPriority) => {
+      const { error } = await supabase
+        .from("client_requests")
+        .update({ priority })
+        .eq("id", requestId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Priority updated");
+      queryClient.invalidateQueries({ queryKey: ["client-request", requestId] });
+      queryClient.invalidateQueries({ queryKey: ["client-requests"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -406,6 +422,23 @@ function RequestDetailPage() {
                         {labelize(s)}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Priority</span>
+                  <PriorityBadge priority={r.priority} />
+                </div>
+                <Select
+                  value={r.priority ?? "normal"}
+                  onValueChange={(v: string) => setPriority.mutate(v as RequestPriority)}
+                >
+                  <SelectTrigger className="h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="high">High Priority</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-muted-foreground">Role: {data.roleName ?? "—"}</p>
