@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { Input } from "@/components/ui/input";
 import { CandidateRating } from "@/components/candidate-rating";
 import {
   BriefcaseBusiness,
@@ -226,6 +227,9 @@ export function CandidateCard({
   const [rejectNote, setRejectNote] = useState("");
   const [rejectBusy, setRejectBusy] = useState(false);
   const [acceptingTime, setAcceptingTime] = useState(false);
+  const [proposing, setProposing] = useState(false);
+  const [proposedAt, setProposedAt] = useState("");
+  const [proposeBusy, setProposeBusy] = useState(false);
   const [reasonExpanded, setReasonExpanded] = useState(false);
 
   async function acceptInterviewTime() {
@@ -237,6 +241,29 @@ export function CandidateCard({
       return;
     }
     toast.success("Interview confirmed");
+    onInterviewTimeAccepted?.();
+  }
+
+  async function submitPropose() {
+    if (!proposedAt || proposeBusy) return;
+    const when = new Date(proposedAt);
+    if (Number.isNaN(when.getTime()) || when.getTime() <= Date.now()) {
+      toast.error("Pick a date and time in the future.");
+      return;
+    }
+    setProposeBusy(true);
+    const { error } = await supabase.rpc("client_propose_interview_time", {
+      p_match_id: match.id,
+      p_proposed_at: when.toISOString(),
+    });
+    setProposeBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("New time proposed — ScaleSource will confirm.");
+    setProposing(false);
+    setProposedAt("");
     onInterviewTimeAccepted?.();
   }
 
@@ -381,10 +408,55 @@ export function CandidateCard({
                 <Clock className="h-4 w-4 flex-none" />
                 ScaleSource proposed a new time: {formatDateTime(match.interview_proposed_at)}
               </p>
-              <Button size="sm" disabled={acceptingTime} onClick={acceptInterviewTime}>
-                {acceptingTime && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
-                Accept this time
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button size="sm" disabled={acceptingTime || proposeBusy} onClick={acceptInterviewTime}>
+                  {acceptingTime && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                  Accept this time
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={locked || proposeBusy}
+                  onClick={() => setProposing((v) => !v)}
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <ThumbsDown className="mr-1.5 h-4 w-4" />
+                  Reject
+                </Button>
+              </div>
+
+              {proposing && (
+                <div className="space-y-2 rounded-lg border border-border bg-background/60 p-3">
+                  <p className="text-sm font-medium">
+                    You've declined that time — suggest one that works:
+                  </p>
+                  <Label htmlFor={`propose-when-${match.id}`}>Your preferred time</Label>
+                  <Input
+                    id={`propose-when-${match.id}`}
+                    type="datetime-local"
+                    value={proposedAt}
+                    onChange={(e) => setProposedAt(e.target.value)}
+                    className="bg-background"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={proposeBusy}
+                      onClick={() => {
+                        setProposing(false);
+                        setProposedAt("");
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button size="sm" disabled={!proposedAt || proposeBusy} onClick={() => void submitPropose()}>
+                      {proposeBusy && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                      Send proposal
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary">

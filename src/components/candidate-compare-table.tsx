@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import {
   displayName,
@@ -239,6 +240,9 @@ export function CandidateActions({
   const [rejectNote, setRejectNote] = useState("");
   const [rejectBusy, setRejectBusy] = useState(false);
   const [acceptingTime, setAcceptingTime] = useState(false);
+  const [proposing, setProposing] = useState(false);
+  const [proposedAt, setProposedAt] = useState("");
+  const [proposeBusy, setProposeBusy] = useState(false);
   const canAct = match.status === "recommended" || match.status === "shortlisted";
   const canReject = canAct || match.status === "interview_completed";
 
@@ -271,6 +275,29 @@ export function CandidateActions({
       return;
     }
     toast.success("Interview confirmed");
+    onInterviewTimeAccepted();
+  }
+
+  async function submitPropose() {
+    if (!proposedAt || proposeBusy) return;
+    const when = new Date(proposedAt);
+    if (Number.isNaN(when.getTime()) || when.getTime() <= Date.now()) {
+      toast.error("Pick a date and time in the future.");
+      return;
+    }
+    setProposeBusy(true);
+    const { error } = await supabase.rpc("client_propose_interview_time", {
+      p_match_id: match.id,
+      p_proposed_at: when.toISOString(),
+    });
+    setProposeBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("New time proposed — ScaleSource will confirm.");
+    setProposing(false);
+    setProposedAt("");
     onInterviewTimeAccepted();
   }
 
@@ -331,9 +358,51 @@ export function CandidateActions({
       {match.status === "interview_requested" && match.interview_proposed_by === "staff" && (
         <div className="space-y-2 rounded-md bg-primary/5 p-2 text-primary">
           <p className="text-xs"><CalendarClock className="mr-1 inline h-3.5 w-3.5" />New time: {formatDateTime(match.interview_proposed_at)}</p>
-          <Button size="sm" disabled={acceptingTime} onClick={acceptInterviewTime}>
+          <Button size="sm" disabled={acceptingTime || proposeBusy} onClick={acceptInterviewTime}>
             {acceptingTime && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />} Accept this time
           </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={busy || locked || proposeBusy}
+            onClick={() => setProposing((v) => !v)}
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            <ThumbsDown className="mr-1.5 h-4 w-4" /> Reject
+          </Button>
+
+          {proposing && (
+            <div className="w-full space-y-2 rounded-md border border-border bg-background/60 p-3 text-foreground">
+              <p className="text-sm font-medium">
+                You've declined that time — suggest one that works:
+              </p>
+              <Label htmlFor={`compare-propose-when-${match.id}`}>Your preferred time</Label>
+              <Input
+                id={`compare-propose-when-${match.id}`}
+                type="datetime-local"
+                value={proposedAt}
+                onChange={(e) => setProposedAt(e.target.value)}
+                className="bg-background"
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={proposeBusy}
+                  onClick={() => {
+                    setProposing(false);
+                    setProposedAt("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button size="sm" disabled={!proposedAt || proposeBusy} onClick={() => void submitPropose()}>
+                  {proposeBusy && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                  Send proposal
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
       {canReject && (
