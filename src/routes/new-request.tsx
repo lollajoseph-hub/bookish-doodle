@@ -86,6 +86,71 @@ function NewRequest() {
     };
   }, [user]);
 
+  // Clone prefill: carry over the source request's fields; the start date is
+  // cleared on purpose so a stale date isn't copied into the new request.
+  useEffect(() => {
+    if (!clone || catalog.loading) return;
+    let cancelled = false;
+    (async () => {
+      const [reqRes, skillsRes] = await Promise.all([
+        supabase
+          .from("client_requests")
+          .select(
+            "role_id,engagement_type,hours_needed,days_of_week_needed,timezone_requirement,hires_needed,years_experience_min,notes"
+          )
+          .eq("id", clone)
+          .maybeSingle(),
+        supabase
+          .from("client_request_skills")
+          .select("skills(id,name)")
+          .eq("client_request_id", clone)
+          .eq("is_required", true),
+      ]);
+      if (cancelled) return;
+      const req = reqRes.data as
+        | {
+            role_id: string | null;
+            engagement_type: string | null;
+            hours_needed: string | null;
+            days_of_week_needed: string[] | null;
+            timezone_requirement: string | null;
+            hires_needed: number | null;
+            years_experience_min: number | null;
+            notes: string | null;
+          }
+        | null;
+      if (reqRes.error || !req) {
+        toast.error("We couldn't load the request you want to clone.");
+        return;
+      }
+      const languageIds = new Set(catalog.languageSkills.map((s) => s.id));
+      const mustHaveNames: string[] = [];
+      const language_skill_ids: string[] = [];
+      for (const row of (skillsRes.data ?? []) as unknown as { skills: { id: string; name: string | null } | null }[]) {
+        const skill = row.skills;
+        if (!skill?.id) continue;
+        if (languageIds.has(skill.id)) language_skill_ids.push(skill.id);
+        else if (skill.name) mustHaveNames.push(skill.name);
+      }
+      setF({
+        ...emptyRequestForm,
+        role_id: req.role_id ?? "",
+        engagement_type: req.engagement_type ?? "",
+        hours_needed: req.hours_needed ?? "",
+        days_of_week_needed: req.days_of_week_needed ?? [],
+        timezone_requirement: req.timezone_requirement ?? "",
+        must_have_skill_names: mustHaveNames,
+        language_skill_ids,
+        hires_needed: String(req.hires_needed ?? 1),
+        years_experience_min: req.years_experience_min ? String(req.years_experience_min) : "",
+        notes: req.notes ?? "",
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [clone, catalog.loading, catalog.languageSkills]);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!membership || !user) return;
@@ -222,6 +287,16 @@ function NewRequest() {
             {membershipError
               ? "We couldn't find a company linked to your account. Please contact your ScaleSource representative."
               : "We couldn't load the role and skill options. Please refresh and try again."}
+          </span>
+        </div>
+      )}
+
+      {clone && (
+        <div className="flex items-start gap-2 rounded-xl border border-primary/30 bg-primary-soft/60 p-3 text-sm text-primary">
+          <Copy className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            You&apos;re cloning a previous request — everything is filled in for you. Review the details and pick a
+            new start date before submitting.
           </span>
         </div>
       )}
