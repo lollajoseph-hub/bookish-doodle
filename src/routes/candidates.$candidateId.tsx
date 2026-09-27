@@ -823,12 +823,14 @@ function AiSummaryCard({
   recruiterSummary,
   approvedSummary,
   rankScore,
+  highlights,
 }: {
   candidateId: string;
   canEdit: boolean;
   recruiterSummary: string | null;
   approvedSummary: string | null;
   rankScore: number | null;
+  highlights: string[] | null;
 }) {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<string | null>(null);
