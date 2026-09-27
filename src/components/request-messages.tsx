@@ -217,7 +217,7 @@ function MessagesButton({
   variant?: "outline" | "ghost";
 }) {
   const navigate = useNavigate();
-  const { unread } = useThread(target);
+  const { unread } = useThreadPreview(target);
   return (
     <Button variant={variant} size="sm" className="relative" onClick={() => navigate({ to: "/messages", search })}>
       <MessageSquare className="mr-1.5 h-4 w-4" />
@@ -313,23 +313,47 @@ export function ChatFeed({ messages, userId }: { messages: ThreadMessage[] | nul
 
 export function Composer({
   threadId,
+  target,
+  ready = true,
   actions,
   onSent,
+  onThreadCreated,
 }: {
   threadId: string | null;
+  /** When set and no thread exists yet, the thread is created on first send. */
+  target?: ThreadTarget;
+  /** False while the existing-thread lookup is still in flight. */
+  ready?: boolean;
   actions: QuickAction[];
   onSent: (m: ThreadMessage) => void;
+  onThreadCreated?: (id: string) => void;
 }) {
+  const canSend = ready && (!!threadId || !!target);
   const [body, setBody] = useState("");
   const [sending, setSending] = useState<string | null>(null);
 
   async function send(text: string, structured: StructuredType | null) {
-    if (!threadId || sending) return;
+    if (!canSend || sending) return;
     const trimmed = text.trim();
     if (!trimmed && !structured) return;
     setSending(structured ?? "text");
+    let tid = threadId;
+    if (!tid && target) {
+      try {
+        tid = await createThread(target);
+        onThreadCreated?.(tid);
+      } catch (e) {
+        setSending(null);
+        toast.error((e as Error).message);
+        return;
+      }
+    }
+    if (!tid) {
+      setSending(null);
+      return;
+    }
     const { data, error } = await supabase.rpc("send_thread_message", {
-      p_thread_id: threadId,
+      p_thread_id: tid,
       p_body: trimmed,
       p_structured_type: structured,
     });
@@ -358,7 +382,7 @@ export function Composer({
           <button
             key={a.type}
             type="button"
-            disabled={!threadId || sending !== null}
+            disabled={!canSend || sending !== null}
             onClick={() => void send(a.body, a.type)}
             className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-opacity hover:opacity-80 disabled:opacity-50 ${a.tone}`}
           >
@@ -376,9 +400,9 @@ export function Composer({
           placeholder="Write a message…"
           rows={2}
           className="min-h-[44px] resize-none"
-          disabled={!threadId}
+          disabled={!canSend}
         />
-        <Button size="icon" aria-label="Send" disabled={!threadId || !body.trim() || sending !== null} onClick={() => void send(body, null)}>
+        <Button size="icon" aria-label="Send" disabled={!canSend || !body.trim() || sending !== null} onClick={() => void send(body, null)}>
           {sending === "text" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </div>

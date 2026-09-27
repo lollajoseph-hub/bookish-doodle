@@ -164,6 +164,7 @@ function MessagesPage() {
         subtitle: statusText(r.status),
       })
     )
+    .filter((r) => r.threadId && r.lastMessage)
     .sort(byRecent);
   const candidateRows: Row[] = (matches ?? [])
     .map((m) =>
@@ -175,6 +176,7 @@ function MessagesPage() {
         matchStatus: m.status,
       })
     )
+    .filter((r) => r.threadId && r.lastMessage)
     .sort(byRecent);
 
   const selectedKey = search.candidate
@@ -291,7 +293,7 @@ function ThreadListRow({ row, selected, onSelect }: { row: Row; selected: boolea
 }
 
 function ChatPane({ row }: { row: Row }) {
-  const { threadId, messages, err, latest, addMessage, userId } = useThread(row.target, true);
+  const { threadId, setThreadId, resolved, messages, err, latest, addMessage, userId } = useThread(row.target, true);
   return (
     <>
       <header className="border-b px-5 py-3">
@@ -303,7 +305,7 @@ function ChatPane({ row }: { row: Row }) {
       </header>
       {err && <p className="px-5 pt-3 text-xs text-destructive">{err}</p>}
       <ChatFeed messages={messages} userId={userId} />
-      <Composer threadId={threadId} actions={actionsFor(row.target.kind, row.matchStatus)} onSent={addMessage} />
+      <Composer threadId={threadId} target={row.target} ready={resolved} onThreadCreated={setThreadId} actions={actionsFor(row.target.kind, row.matchStatus)} onSent={addMessage} />
     </>
   );
 }
