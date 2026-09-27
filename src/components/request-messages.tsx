@@ -332,7 +332,7 @@ export function ChatFeed({
   }, [messages?.length]);
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+    <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 py-4">
       {messages === null ? (
         <p className="py-8 text-center text-sm text-muted-foreground">Loading messages…</p>
       ) : messages.length === 0 ? (
@@ -341,7 +341,7 @@ export function ChatFeed({
         <ul className="space-y-3">
           {messages.map((m) => {
             const mine = m.sender_role === "client" && (!userId || !m.sender_id || m.sender_id === userId);
-            const action = m.structured_type ? ACTION_META[m.structured_type] ?? null : null;
+            const action = m.structured_type ? actionMetaFor(m.structured_type) : null;
             const senderProfile = m.sender_role === "staff" ? senderProfiles[m.sender_id ?? ""] : null;
             const firstName = senderProfile?.full_name?.trim().split(/\s+/)[0];
             const roleLabel = senderProfile?.role
@@ -355,12 +355,12 @@ export function ChatFeed({
                   {formatDateTime(m.created_at)}
                 </span>
                 {action ? (
-                  <div className={`inline-flex max-w-[85%] flex-col gap-1 rounded-xl border px-3 py-2 text-sm ${action.tone}`}>
-                    <span className="inline-flex items-center gap-1.5 font-semibold">
+                  <div className={`inline-flex min-w-0 max-w-[85%] flex-col gap-1 break-words rounded-xl border px-3 py-2 text-sm ${action.tone}`}>
+                    <span className="inline-flex items-center gap-1.5 break-words font-semibold">
                       <action.icon className="h-3.5 w-3.5 flex-none" />
                       {action.label}
                     </span>
-                    {m.body && m.body !== action.label && m.body !== action.body && <span className="whitespace-pre-line">{m.body}</span>}
+                    {m.body && m.body !== action.label && m.body !== action.body && <span className="whitespace-pre-line break-words">{m.body}</span>}
                   </div>
                 ) : (
                   <div
