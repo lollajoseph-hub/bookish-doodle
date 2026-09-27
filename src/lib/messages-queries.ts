@@ -223,6 +223,24 @@ export async function getOrCreateThread(target: ThreadTarget): Promise<ThreadRow
   return (Array.isArray(data) ? data[0] : data) as ThreadRow;
 }
 
+/** Read-only lookup — never creates a thread. */
+export async function findThreadId(target: ThreadTarget): Promise<string | null> {
+  const [col, val] =
+    target.kind === "candidate"
+      ? ["candidate_match_id", target.candidateMatchId]
+      : target.kind === "request"
+        ? ["client_request_id", target.clientRequestId]
+        : ["client_id", target.clientId];
+  const { data, error } = await supabase
+    .from("threads")
+    .select("id")
+    .eq("kind", target.kind)
+    .eq(col, val)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as { id: string } | null)?.id ?? null;
+}
+
 export async function fetchThreadMessages(threadId: string): Promise<ThreadMessageRow[]> {
   const { data, error } = await supabase
     .from("thread_messages")
