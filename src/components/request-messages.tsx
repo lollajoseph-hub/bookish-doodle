@@ -252,7 +252,7 @@ function ChatFeed({ messages, userId }: { messages: ThreadMessage[] | null; user
         <ul className="space-y-3">
           {messages.map((m) => {
             const mine = m.sender_role === "client" && (!userId || !m.sender_id || m.sender_id === userId);
-            const action = m.structured_type ? QUICK_ACTIONS.find((a) => a.type === m.structured_type) : null;
+            const action = m.structured_type ? ACTION_META[m.structured_type] ?? null : null;
             return (
               <li key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
                 <span className="mb-1 text-xs text-muted-foreground">
@@ -265,7 +265,7 @@ function ChatFeed({ messages, userId }: { messages: ThreadMessage[] | null; user
                       <action.icon className="h-3.5 w-3.5 flex-none" />
                       {action.label}
                     </span>
-                    {m.body && m.body !== action.label && <span className="whitespace-pre-line">{m.body}</span>}
+                    {m.body && m.body !== action.label && m.body !== action.body && <span className="whitespace-pre-line">{m.body}</span>}
                   </div>
                 ) : (
                   <div
@@ -286,7 +286,15 @@ function ChatFeed({ messages, userId }: { messages: ThreadMessage[] | null; user
   );
 }
 
-function Composer({ threadId, onSent }: { threadId: string | null; onSent: (m: ThreadMessage) => void }) {
+function Composer({
+  threadId,
+  actions,
+  onSent,
+}: {
+  threadId: string | null;
+  actions: QuickAction[];
+  onSent: (m: ThreadMessage) => void;
+}) {
   const [body, setBody] = useState("");
   const [sending, setSending] = useState<string | null>(null);
 
@@ -319,13 +327,14 @@ function Composer({ threadId, onSent }: { threadId: string | null; onSent: (m: T
 
   return (
     <div className="space-y-2 border-t px-5 py-3">
+      {actions.length > 0 && (
       <div className="flex flex-wrap gap-1.5">
-        {QUICK_ACTIONS.map((a) => (
+        {actions.map((a) => (
           <button
             key={a.type}
             type="button"
             disabled={!threadId || sending !== null}
-            onClick={() => void send(a.label, a.type)}
+            onClick={() => void send(a.body, a.type)}
             className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-opacity hover:opacity-80 disabled:opacity-50 ${a.tone}`}
           >
             {sending === a.type ? <Loader2 className="h-3 w-3 animate-spin" /> : <a.icon className="h-3 w-3" />}
@@ -333,6 +342,7 @@ function Composer({ threadId, onSent }: { threadId: string | null; onSent: (m: T
           </button>
         ))}
       </div>
+      )}
       <div className="flex items-end gap-2">
         <Textarea
           value={body}

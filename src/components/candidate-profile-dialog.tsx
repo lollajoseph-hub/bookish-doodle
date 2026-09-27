@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { CandidateMessages } from "@/components/request-messages";
 import { ArrowDown, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import {
   displayName,
@@ -96,10 +97,12 @@ function toEntries(v: unknown): Entry[] {
 
 export function CandidateProfileDialog({
   candidateId,
+  matchId,
   matchStatus,
   onClose,
 }: {
   candidateId: string | null;
+  matchId?: string | null;
   matchStatus: string | null;
   onClose: () => void;
 }) {
@@ -234,6 +237,11 @@ export function CandidateProfileDialog({
                       {profile.headline ?? "Full candidate profile"}
                     </DialogDescription>
                   </DialogHeader>
+                  {matchId && (
+                    <div className="mt-3">
+                      <CandidateMessages matchId={matchId} matchStatus={matchStatus} candidateName={name} />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
