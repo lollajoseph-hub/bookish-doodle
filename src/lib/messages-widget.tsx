@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import type { ThreadTarget } from "@/components/request-messages";
+import { useMembership } from "@/lib/membership";
 
 interface MessagesWidgetValue {
   openThread: (target: ThreadTarget) => void;
@@ -13,6 +14,7 @@ interface MessagesWidgetValue {
 const MessagesWidgetContext = createContext<MessagesWidgetValue | null>(null);
 
 export function MessagesWidgetProvider({ children }: { children: ReactNode }) {
+  const { membership } = useMembership();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTarget, setSelectedTarget] = useState<ThreadTarget | null>(null);
   const value = useMemo<MessagesWidgetValue>(
@@ -24,13 +26,13 @@ export function MessagesWidgetProvider({ children }: { children: ReactNode }) {
         setIsOpen(true);
       },
       openGeneral: () => {
-        setSelectedTarget(null);
+        setSelectedTarget(membership?.client_id ? { kind: "general", id: membership.client_id } : null);
         setIsOpen(true);
       },
       showInbox: () => setSelectedTarget(null),
       close: () => setIsOpen(false),
     }),
-    [isOpen, selectedTarget],
+    [isOpen, membership?.client_id, selectedTarget],
   );
   return <MessagesWidgetContext.Provider value={value}>{children}</MessagesWidgetContext.Provider>;
 }
