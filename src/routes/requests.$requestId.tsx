@@ -719,10 +719,20 @@ function ScoreBadge({ matchId, score }: { matchId: string; score: number }) {
               <li className="border-t pt-1 font-semibold">Total: {data.computed_total ?? 0} pts</li>
             </ul>
             {data.is_stale && (
-              <p className="text-xs text-muted-foreground">
-                Card shows {data.stored_match_score ?? score} — captured {capturedAt ?? "earlier"}. Recalculated
-                total reflects current data.
-              </p>
+              <div className="space-y-1.5">
+                <p className="text-xs text-muted-foreground">
+                  Card shows {data.stored_match_score ?? score} — captured {capturedAt ?? "earlier"}. Recalculated
+                  total reflects current data.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={refresh.isPending}
+                  onClick={() => refresh.mutate(undefined, { onError: (e: Error) => toast.error(e.message) })}
+                >
+                  {refresh.isPending ? "Refreshing…" : "Refresh score"}
+                </Button>
+              </div>
             )}
           </div>
         )}
