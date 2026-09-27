@@ -19,7 +19,9 @@ import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 import { ENGAGEMENT_TYPES, DAYS_OF_WEEK } from "@/lib/catalog";
 import {
   REQUEST_STATUS_LABELS,
+  REQUEST_PRIORITY_LABELS,
   requestStatusTone,
+  requestPriorityTone,
   signedPhotoUrl,
   displayName,
   formatDate,
@@ -48,6 +50,7 @@ interface RequestHeader {
   id: string;
   status: string | null;
   source: string | null;
+  priority: string | null;
   engagement_type: string | null;
   hours_needed: string | null;
   days_of_week_needed: string[] | null;
@@ -61,7 +64,7 @@ interface RequestHeader {
 }
 
 const REQUEST_SELECT =
-  "id,status,source,engagement_type,hours_needed,days_of_week_needed,hires_needed,timezone_requirement,years_experience_min,desired_start_date,notes,created_at,job_roles(name)";
+  "id,status,source,priority,engagement_type,hours_needed,days_of_week_needed,hires_needed,timezone_requirement,years_experience_min,desired_start_date,notes,created_at,job_roles(name)";
 
 /** Disabled: candidates are only reshuffled from Admin Tools after a request is rejected 4x. */
 const SHOW_MORE_CANDIDATES_ENABLED = false;
@@ -271,6 +274,11 @@ function RequestDetail() {
                   <Badge className="bg-primary-soft text-primary" variant="secondary">
                     <Sparkles className="mr-1 h-3 w-3" />
                     Hand-picked
+                  </Badge>
+                )}
+                {request?.priority && request.priority !== "normal" && (
+                  <Badge className={requestPriorityTone(request.priority)} variant="secondary">
+                    {REQUEST_PRIORITY_LABELS[request.priority] ?? request.priority}
                   </Badge>
                 )}
               </div>
