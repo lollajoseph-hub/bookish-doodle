@@ -202,6 +202,7 @@ export interface Database {
 export type ClientRequestSource = "standard" | "staff_curated";
 export type EngagementType = "full_time" | "part_time" | "project";
 export type RequestStatus = "open" | "needs_attention" | "fulfilled" | "closed";
+export type RequestPriority = "normal" | "high" | "urgent";
 export type MatchStatus =
   | "recommended"
   | "shortlisted"
@@ -262,6 +263,7 @@ export interface ClientRequestRow {
   desired_start_date: string | null;
   notes: string | null;
   status: RequestStatus;
+  priority: RequestPriority;
   source: ClientRequestSource;
   rejection_count: number | null;
   created_by: string | null;

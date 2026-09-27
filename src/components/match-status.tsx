@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { labelize } from "@/lib/crm-queries";
-import type { MatchStatus } from "@/lib/database.types";
+import type { MatchStatus, RequestPriority } from "@/lib/database.types";
 
 const STYLES: Record<MatchStatus, string> = {
   recommended: "bg-primary-soft text-primary border-primary/20",
@@ -42,6 +42,20 @@ export function CuratedBadge({ source }: { source?: string | null }) {
   return (
     <Badge variant="outline" className="border-amber bg-amber/10 text-amber-foreground">
       Staff-curated
+    </Badge>
+  );
+}
+
+const PRIORITY_STYLES: Record<Exclude<RequestPriority, "normal">, string> = {
+  high: "bg-amber/20 text-amber-foreground border-amber/50",
+  urgent: "bg-destructive/10 text-destructive border-destructive/40",
+};
+
+export function PriorityBadge({ priority }: { priority: string | null | undefined }) {
+  if (priority !== "high" && priority !== "urgent") return null;
+  return (
+    <Badge variant="outline" className={PRIORITY_STYLES[priority]}>
+      {priority === "high" ? "High Priority" : "Urgent"}
     </Badge>
   );
 }

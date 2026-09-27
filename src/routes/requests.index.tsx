@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { ChevronDown, ChevronUp, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
-import { CuratedBadge, RequestStatusBadge } from "@/components/match-status";
+import { CuratedBadge, PriorityBadge, RequestStatusBadge } from "@/components/match-status";
 import {
   createClientRequest,
   fetchClientRequests,
@@ -284,8 +284,11 @@ function RequestsPage() {
               className="card-amber rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-amber hover:shadow-md"
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <div className="font-semibold">{r.title || r.roleName || "Request"}</div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold">{r.title || r.roleName || "Request"}</span>
+                    <PriorityBadge priority={r.priority} />
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     {r.clientName} · {r.roleName} · {labelize(r.engagement_type)}
                   </div>
