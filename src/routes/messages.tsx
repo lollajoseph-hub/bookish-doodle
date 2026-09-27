@@ -296,7 +296,7 @@ function MessagesPage() {
     <AppShell title="Messages">
       <div className="grid h-[calc(100vh-10rem)] min-h-[560px] grid-cols-1 gap-4 lg:grid-cols-4">
         {/* Column 1: thread list */}
-        <section className="card-amber flex min-h-0 flex-col rounded-2xl border bg-card lg:col-span-1">
+        <section className="card-amber flex min-h-0 flex-col overflow-hidden rounded-2xl border bg-card lg:col-span-1">
           <div className="border-b p-3">
             <Input
               placeholder="Search client or role…"
