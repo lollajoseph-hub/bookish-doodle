@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { MatchStatusIcon, statusTone, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { toast } from "sonner";
-import { CalendarClock, Clock, ExternalLink, Loader2, UserSearch, Video } from "lucide-react";
+import { CalendarClock, ChevronDown, Clock, ExternalLink, Loader2, StickyNote, UserSearch, Video } from "lucide-react";
 import {
   MATCH_STATUS_LABELS,
   displayName,
@@ -52,6 +53,108 @@ const ORDER: MatchStatus[] = [
 interface RequestMeta {
   id: string;
   job_roles: { name: string | null } | null;
+}
+
+/**
+ * Shared prep notes for a candidate's interview, stored on the candidate-kind
+ * thread's scratchpad. Autosaves ~800ms after typing stops; last write wins.
+ */
+function PrepNotes({ matchId }: { matchId: string }) {
+  const [open, setOpen] = useState(false);
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const [content, setContent] = useState("");
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState<"idle" | "saving" | "saved">("idle");
+  const dirtyRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await supabase.rpc("get_or_create_thread", {
+        p_client_request_id: null,
+        p_candidate_match_id: matchId,
+        p_client_id: null,
+      });
+      if (cancelled) return;
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      const row = (Array.isArray(data) ? data[0] : data) as { id: string } | string | null;
+      const tid = typeof row === "string" ? row : row?.id;
+      if (!tid) return;
+      setThreadId(tid);
+      const { data: pad } = await supabase
+        .from("thread_scratchpad")
+        .select("content")
+        .eq("thread_id", tid)
+        .maybeSingle();
+      if (cancelled) return;
+      // Don't clobber text the client started typing while this load was in flight.
+      if (!dirtyRef.current) setContent((pad as { content: string | null } | null)?.content ?? "");
+      setLoaded(true);
+    })();
+    return () => {
+      cancelled = true;
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [open, matchId]);
+
+  const save = useCallback(
+    async (text: string) => {
+      if (!threadId) return;
+      setSaving("saving");
+      const { error } = await supabase.rpc("update_thread_scratchpad", { p_thread_id: threadId, p_content: text });
+      if (error) {
+        setSaving("idle");
+        toast.error(error.message);
+        return;
+      }
+      dirtyRef.current = false;
+      setSaving("saved");
+    },
+    [threadId]
+  );
+
+  function onChange(text: string) {
+    setContent(text);
+    dirtyRef.current = true;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => void save(text), 800);
+  }
+
+  return (
+    <div className="space-y-2">
+      <Button variant="secondary" size="sm" onClick={() => setOpen((v) => !v)}>
+        <StickyNote className="mr-1.5 h-4 w-4" />
+        Prep notes
+        <ChevronDown className={`ml-1.5 h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
+      </Button>
+      {open && (
+        <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="text-sm font-semibold text-primary">Interview Prep Notes</p>
+              <p className="text-xs text-muted-foreground">Shared prep notes for this candidate&apos;s interview.</p>
+            </div>
+            <span className="text-[11px] text-muted-foreground">
+              {saving === "saving" ? "Saving…" : saving === "saved" ? "Saved" : ""}
+            </span>
+          </div>
+          <Textarea
+            value={content}
+            disabled={!loaded}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={loaded ? "Jot down questions, talking points, or things to cover…" : "Loading…"}
+            rows={4}
+            className="resize-none bg-background"
+          />
+        </div>
+      )}
+    </div>
+  );
 }
 
 function InterviewsPage() {
