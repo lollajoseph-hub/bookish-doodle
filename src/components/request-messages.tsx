@@ -46,7 +46,7 @@ function lastReadKey(userId: string, threadId: string) {
   return `cp:thread-last-read:${userId}:${threadId}`;
 }
 
-/** Request-level thread: no quick actions, includes Hiring Huddle Notes. */
+/** Request-level thread: no quick actions. */
 export function RequestMessages({ requestId }: { requestId: string }) {
   return (
     <ThreadPanel
@@ -54,7 +54,6 @@ export function RequestMessages({ requestId }: { requestId: string }) {
       label="Messages"
       description="Chat with your ScaleSource recruiter about this request."
       actions={[]}
-      scratchpad
     />
   );
 }
@@ -101,7 +100,6 @@ function ThreadPanel({
   title = "Messages",
   description,
   actions,
-  scratchpad = false,
   variant = "outline",
 }: {
   target: ThreadTarget;
@@ -109,7 +107,6 @@ function ThreadPanel({
   title?: string;
   description: string;
   actions: QuickAction[];
-  scratchpad?: boolean;
   variant?: "outline" | "ghost";
 }) {
   const { user } = useAuth();
@@ -225,12 +222,6 @@ function ThreadPanel({
             onSent={(m) => setMessages((prev) => (prev ?? []).some((x) => x.id === m.id) ? prev : [...(prev ?? []), m])}
           />
 
-          {scratchpad && threadId ? (
-            <>
-              <Separator />
-              <HuddleNotes threadId={threadId} userId={user?.id ?? null} />
-            </>
-          ) : null}
         </SheetContent>
       </Sheet>
     </>
