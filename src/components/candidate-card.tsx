@@ -421,7 +421,7 @@ export function CandidateCard({
                   className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                 >
                   <ThumbsDown className="mr-1.5 h-4 w-4" />
-                  Reject
+                  Reject this time
                 </Button>
               </div>
 
