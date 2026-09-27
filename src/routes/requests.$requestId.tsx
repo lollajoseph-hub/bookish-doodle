@@ -21,6 +21,7 @@ import { supabase } from "@/lib/supabase";
 import type { MatchStatus, RejectionReason } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -262,7 +263,7 @@ function RequestDetailPage() {
                         )}
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
-                        {m.match_score != null && <Badge variant="secondary">{m.match_score}</Badge>}
+                        {m.match_score != null && <ScoreBadge matchId={m.id} score={m.match_score} />}
                         <MatchStatusBadge status={m.status} />
                       </div>
                     </div>
