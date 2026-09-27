@@ -158,6 +158,22 @@ function PrepNotes({ matchId }: { matchId: string }) {
   );
 }
 
+function InterviewReason({ reason }: { reason: string }) {
+  const [reasonExpanded, setReasonExpanded] = useState(false);
+
+  return (
+    <div className="border-t border-border/70 pt-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Why this candidate</p>
+      <p className={reasonExpanded ? "mt-1 text-sm leading-relaxed text-muted-foreground" : "mt-1 text-sm leading-relaxed text-muted-foreground line-clamp-2"}>{reason}</p>
+      {reason.length > 120 && (
+        <button type="button" onClick={() => setReasonExpanded((v) => !v)} className="mt-0.5 text-xs font-medium text-primary">
+          {reasonExpanded ? "Show less" : "Read more"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function InterviewsPage() {
   const [rows, setRows] = useState<MatchRow[] | null>(null);
   const [requests, setRequests] = useState<Record<string, string>>({});
@@ -358,12 +374,7 @@ function InterviewsPage() {
                     </div>
                   </div>
 
-                   {m.match_reason?.trim() && (
-                     <div className="border-t border-border/70 pt-3">
-                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Why this candidate</p>
-                       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{m.match_reason}</p>
-                     </div>
-                   )}
+                   {m.match_reason?.trim() && <InterviewReason reason={m.match_reason} />}
 
                    <CandidateSkillGap
                      requiredSkills={requestSkills[m.client_request_id] ?? []}
