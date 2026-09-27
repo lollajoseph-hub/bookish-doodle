@@ -28,10 +28,10 @@ import {
   fetchInbox,
   fetchThreadMessages,
   getLastRead,
-  getOrCreateThread,
   findThreadId,
   markRead,
   sendThreadMessage,
+  sendThreadMessageEnsuringThread,
   threadTargetKey,
   type CandidateInboxItem,
   type GeneralInboxItem,
@@ -798,13 +798,14 @@ function ThreadWorkspace({
   const [draft, setDraft] = useState("");
   const send = useMutation({
     mutationFn: async (v: { body: string; type: StructuredType | null }) => {
-      let id = threadId;
-      if (!id) {
-        id = (await getOrCreateThread(target)).id;
-        queryClient.setQueryData(threadKey, id);
+      if (!threadId) {
+        // Atomic: creates/finds the thread and inserts the message in one transaction.
+        const { thread, message } = await sendThreadMessageEnsuringThread(target, v.body, v.type);
+        queryClient.setQueryData(threadKey, thread.id);
+        return { msg: message, id: thread.id };
       }
-      const msg = await sendThreadMessage(id, v.body, v.type);
-      return { msg, id };
+      const msg = await sendThreadMessage(threadId, v.body, v.type);
+      return { msg, id: threadId };
     },
     onSuccess: ({ msg, id }, v) => {
       if (!v.type) setDraft("");
@@ -829,7 +830,7 @@ function ThreadWorkspace({
           <div className="font-semibold">{title}</div>
           {subtitle && <div className="text-xs text-muted-foreground">{subtitle}</div>}
         </div>
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-5 py-4">
+        <div className="min-h-0 flex-1 space-y-3 overflow-x-hidden overflow-y-auto px-5 py-4">
           {threadLoading ? (
             <p className="text-sm text-muted-foreground">Opening conversation…</p>
           ) : messages.length === 0 ? (
@@ -905,10 +906,10 @@ function MessageBubble({ m }: { m: ThreadMessageRow }) {
     const Icon = action.icon;
     return (
       <div className={cn("flex", mine ? "justify-end" : "justify-start")}>
-        <div className="max-w-[80%]">
+        <div className="min-w-0 max-w-[80%] break-words">
           <div
             className={cn(
-              "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold",
+              "inline-flex min-w-0 max-w-full items-center gap-2 break-words rounded-full border px-3 py-1.5 text-xs font-semibold",
               action.chip,
             )}
           >
@@ -925,10 +926,10 @@ function MessageBubble({ m }: { m: ThreadMessageRow }) {
 
   return (
     <div className={cn("flex", mine ? "justify-end" : "justify-start")}>
-      <div className="max-w-[75%]">
+      <div className="min-w-0 max-w-[75%] break-words">
         <div
           className={cn(
-            "whitespace-pre-wrap rounded-2xl px-4 py-2 text-sm",
+            "min-w-0 whitespace-pre-wrap break-words rounded-2xl px-4 py-2 text-sm",
             mine
               ? "rounded-br-sm bg-primary text-primary-foreground"
               : "rounded-bl-sm bg-muted text-foreground",
