@@ -16,6 +16,9 @@ import {
   CommandList,
 } from "@/components/ui/command";
 
+/** Id prefix for skills typed by an unauthenticated visitor, not yet created. */
+export const PENDING_PREFIX = "new:";
+
 interface RoleSkill {
   skill_id: string;
   name: string;
@@ -32,11 +35,17 @@ export function RoleSkillSelect({
   value,
   onChange,
   knownNames,
+  localAdd,
 }: {
   roleId: string;
   value: string[];
   onChange: (ids: string[], names: string[]) => void;
   knownNames: Record<string, string>;
+  /**
+   * Unauthenticated flows: don't call the RPC — add unlisted skills as pending entries
+   * with id `new:<name>`, to be resolved server-side on submission.
+   */
+  localAdd?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState<RoleSkill[]>([]);
@@ -64,6 +73,7 @@ export function RoleSkillSelect({
   }, [roleId]);
 
   const labelFor = (id: string) =>
+    (id.startsWith(PENDING_PREFIX) ? id.slice(PENDING_PREFIX.length) : undefined) ??
     options.find((o) => o.skill_id === id)?.name ?? knownNames[id] ?? "Skill";
 
   const emit = (ids: string[]) => onChange(ids, ids.map(labelFor));
@@ -77,6 +87,13 @@ export function RoleSkillSelect({
     const existing = options.find((o) => o.name.toLowerCase() === name.toLowerCase());
     if (existing) {
       if (!value.includes(existing.skill_id)) emit([...value, existing.skill_id]);
+      setDraft("");
+      return;
+    }
+    if (localAdd) {
+      const pendingId = `${PENDING_PREFIX}${name}`;
+      const already = value.find((v) => labelFor(v).toLowerCase() === name.toLowerCase());
+      if (!already) emit([...value, pendingId]);
       setDraft("");
       return;
     }
