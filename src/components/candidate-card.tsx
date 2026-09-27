@@ -313,7 +313,18 @@ export function CandidateCard({
   const canReject = canAct || status === "interview_completed";
 
   return (
-    <Card className={`card-amber relative rounded-2xl ${isRejected ? "opacity-60" : ""}`}>
+    <Card
+      className={`card-amber relative rounded-2xl ${isRejected ? "opacity-60" : ""} ${onViewProfile ? "cursor-pointer transition-shadow hover:shadow-md" : ""}`}
+      onClick={
+        onViewProfile
+          ? (e) => {
+              // Inner buttons, links and form fields keep their own behavior.
+              if ((e.target as HTMLElement).closest("button, a, input, textarea, select, [role='button'], [data-no-card-click]")) return;
+              onViewProfile();
+            }
+          : undefined
+      }
+    >
       <div className="absolute right-4 top-4 z-10 flex flex-col items-end gap-1.5">
         <span
           className={`inline-flex w-fit max-w-[calc(100%-2rem)] min-w-0 items-center gap-1 truncate rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(status)}`}
