@@ -2,7 +2,7 @@ import { LANGUAGE_CATEGORY } from "@/lib/queries";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Loader2, Plus } from "lucide-react";
+import { ArrowLeft, Loader2, MessageSquare, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { CuratedBadge, MatchStatusBadge, RequestStatusBadge } from "@/components/match-status";
@@ -205,9 +205,14 @@ function RequestDetailPage() {
       title={r.title || data.roleName || "Client request"}
       description={`${data.clientName ?? "Client"} · ${labelize(r.engagement_type)}`}
       actions={
-        <Button onClick={() => setAddOpen(true)}>
-          <Plus className="mr-1 h-4 w-4" /> Add candidate
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate({ to: "/messages", search: { request: requestId } })}>
+            <MessageSquare className="mr-1 h-4 w-4" /> Message
+          </Button>
+          <Button onClick={() => setAddOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" /> Add candidate
+          </Button>
+        </div>
       }
     >
       <div className="space-y-6">

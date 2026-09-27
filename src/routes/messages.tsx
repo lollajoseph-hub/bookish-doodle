@@ -42,12 +42,16 @@ import {
 
 interface MessagesSearch {
   match?: string;
+  client?: string;
+  request?: string;
 }
 
 export const Route = createFileRoute("/messages")({
   ssr: false,
   validateSearch: (search: Record<string, unknown>): MessagesSearch => ({
     match: typeof search.match === "string" ? search.match : undefined,
+    client: typeof search.client === "string" ? search.client : undefined,
+    request: typeof search.request === "string" ? search.request : undefined,
   }),
   head: () => ({
     meta: [
@@ -96,6 +100,50 @@ type Selection =
   | { kind: "general"; id: string }
   | { kind: "candidate"; id: string };
 
+async function fetchRequestInboxItem(requestId: string): Promise<InboxItem | null> {
+  const { data: req, error } = await supabase.from("client_requests").select("*").eq("id", requestId).maybeSingle();
+  if (error) throw error;
+  if (!req) return null;
+  const [clientRes, roleRes, matchesRes, threadId] = await Promise.all([
+    supabase.from("clients").select("name").eq("id", req.client_id).maybeSingle(),
+    req.role_id
+      ? supabase.from("job_roles").select("name").eq("id", req.role_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase.from("candidate_matches").select("status").eq("client_request_id", requestId),
+    findThreadId({ kind: "request", clientRequestId: requestId }),
+  ]);
+  const matches = (matchesRes.data ?? []) as { status: string }[];
+  const thread = threadId ? await fetchThreadRow(threadId) : null;
+  return {
+    request: {
+      ...req,
+      clientName: clientRes.data?.name ?? null,
+      roleName: (roleRes.data as { name: string } | null)?.name ?? null,
+      matchCount: matches.length,
+      hiredCount: matches.filter((m) => m.status === "hired").length,
+    },
+    thread,
+    lastMessage: null,
+    sortAt: req.created_at,
+  };
+}
+
+async function fetchGeneralInboxItem(clientId: string): Promise<GeneralInboxItem | null> {
+  const [{ data: c, error }, threadId] = await Promise.all([
+    supabase.from("clients").select("name").eq("id", clientId).maybeSingle(),
+    findThreadId({ kind: "general", clientId }),
+  ]);
+  if (error) throw error;
+  if (!c) return null;
+  const thread = threadId ? await fetchThreadRow(threadId) : null;
+  return { clientId, clientName: c.name, thread, lastMessage: null, sortAt: "" };
+}
+
+async function fetchThreadRow(threadId: string): Promise<ThreadRow | null> {
+  const { data } = await supabase.from("threads").select("*").eq("id", threadId).maybeSingle();
+  return (data as ThreadRow | null) ?? null;
+}
+
 function isUnread(thread: ThreadRow | null, lastMessage: ThreadMessageRow | null, userId: string) {
   if (!thread || !lastMessage || !userId || lastMessage.sender_role !== "client") return false;
   const lastRead = getLastRead(userId, thread.id);
@@ -108,24 +156,30 @@ function MessagesPage() {
   const queryClient = useQueryClient();
   const search_ = Route.useSearch();
   const navigate = useNavigate();
-  const [selection, setSelection] = useState<Selection | null>(
-    search_.match ? { kind: "candidate", id: search_.match } : null,
-  );
+  const deepLink: Selection | null = search_.match
+    ? { kind: "candidate", id: search_.match }
+    : search_.request
+      ? { kind: "request", id: search_.request }
+      : search_.client
+        ? { kind: "general", id: search_.client }
+        : null;
+  const [selection, setSelection] = useState<Selection | null>(deepLink);
   const [search, setSearch] = useState("");
   const [readTick, setReadTick] = useState(0);
-  const [activeTab, setActiveTab] = useState<Selection["kind"]>(search_.match ? "candidate" : "general");
+  const [activeTab, setActiveTab] = useState<Selection["kind"]>(deepLink?.kind ?? "general");
 
   useEffect(() => {
-    if (search_.match) {
-      setSelection({ kind: "candidate", id: search_.match });
-      setActiveTab("candidate");
+    if (deepLink) {
+      setSelection(deepLink);
+      setActiveTab(deepLink.kind);
     }
-  }, [search_.match]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search_.match, search_.request, search_.client]);
 
   const select = (s: Selection) => {
     setSelection(s);
     setActiveTab(s.kind);
-    if (search_.match) navigate({ to: "/messages", search: {}, replace: true });
+    if (search_.match || search_.request || search_.client) navigate({ to: "/messages", search: {}, replace: true });
   };
 
   const { data: inbox, isLoading } = useQuery({
@@ -133,8 +187,11 @@ function MessagesPage() {
     queryFn: fetchInbox,
     refetchInterval: 30000,
   });
-  const requestItems = inbox?.requests ?? [];
-  const generalItems = inbox?.generals ?? [];
+  const allRequestItems = inbox?.requests ?? [];
+  const allGeneralItems = inbox?.generals ?? [];
+  // Only started conversations (a real thread with at least one message) appear in the list.
+  const requestItems = allRequestItems.filter((i) => i.thread && i.lastMessage);
+  const generalItems = allGeneralItems.filter((g) => g.thread && g.lastMessage);
   const candidateItems = inbox?.candidates ?? [];
   const unreadCounts = {
     general: generalItems.filter((i) => isUnread(i.thread, i.lastMessage, userId)).length,
@@ -179,14 +236,29 @@ function MessagesPage() {
     );
   }, [candidateItems, q]);
 
-  const selectedRequest =
+  const inboxRequest =
     selection?.kind === "request"
-      ? (requestItems.find((i) => i.request.id === selection.id) ?? null)
+      ? (allRequestItems.find((i) => i.request.id === selection.id) ?? null)
       : null;
-  const selectedGeneral =
+  const inboxGeneral =
     selection?.kind === "general"
-      ? (generalItems.find((g) => g.clientId === selection.id) ?? null)
+      ? (allGeneralItems.find((g) => g.clientId === selection.id) ?? null)
       : null;
+  // Deep links to requests/clients not in the inbox data (e.g. closed, or no requests yet).
+  const { data: fallbackRequest } = useQuery({
+    queryKey: ["messages-request-fallback", selection?.kind === "request" ? selection.id : null],
+    enabled: !!inbox && selection?.kind === "request" && !inboxRequest,
+    queryFn: () => fetchRequestInboxItem(selection!.id),
+  });
+  const { data: fallbackGeneral } = useQuery({
+    queryKey: ["messages-client-fallback", selection?.kind === "general" ? selection.id : null],
+    enabled: !!inbox && selection?.kind === "general" && !inboxGeneral,
+    queryFn: () => fetchGeneralInboxItem(selection!.id),
+  });
+  const selectedRequest =
+    inboxRequest ?? (selection?.kind === "request" && fallbackRequest?.request.id === selection.id ? fallbackRequest : null);
+  const selectedGeneral =
+    inboxGeneral ?? (selection?.kind === "general" && fallbackGeneral?.clientId === selection.id ? fallbackGeneral : null);
 
   let workspace: ReactNode = null;
   if (selectedRequest) {

@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Building2, Loader2, Plus, Trash2, Mail, Phone } from "lucide-react";
+import { ArrowLeft, Building2, Loader2, Plus, Trash2, Mail, MessageSquare, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { RequestStatusBadge } from "@/components/match-status";
@@ -173,16 +173,21 @@ function ClientDetailPage() {
       title={c.name}
       description={c.industry ?? "Client company"}
       actions={
-        <Button
-          variant="outline"
-          onClick={() => {
-            setName(c.name);
-            setIndustry(c.industry ?? "");
-            setEditOpen(true);
-          }}
-        >
-          Edit client
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate({ to: "/messages", search: { client: clientId } })}>
+            <MessageSquare className="mr-1 h-4 w-4" /> Message
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setName(c.name);
+              setIndustry(c.industry ?? "");
+              setEditOpen(true);
+            }}
+          >
+            Edit client
+          </Button>
+        </div>
       }
     >
       <div className="space-y-6">
