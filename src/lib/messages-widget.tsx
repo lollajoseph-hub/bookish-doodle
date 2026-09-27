@@ -29,7 +29,10 @@ export function MessagesWidgetProvider({ children }: { children: ReactNode }) {
         setSelectedTarget(membership?.client_id ? { kind: "general", id: membership.client_id } : null);
         setIsOpen(true);
       },
-      showInbox: () => setSelectedTarget(null),
+      showInbox: () => {
+        setSelectedTarget(null);
+        setIsOpen(true);
+      },
       close: () => setIsOpen(false),
     }),
     [isOpen, membership?.client_id, selectedTarget],

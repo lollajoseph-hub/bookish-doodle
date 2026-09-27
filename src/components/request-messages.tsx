@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
+import { useMessagesWidget } from "@/lib/messages-widget";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -208,18 +208,16 @@ export function useThreadPreview(target: ThreadTarget | null) {
 function MessagesButton({
   target,
   label,
-  search,
   variant = "outline",
 }: {
   target: ThreadTarget;
   label: string;
-  search: { request?: string; candidate?: string; general?: boolean };
   variant?: "outline" | "ghost";
 }) {
-  const navigate = useNavigate();
+  const { openThread } = useMessagesWidget();
   const { unread } = useThreadPreview(target);
   return (
-    <Button variant={variant} size="sm" className="relative" onClick={() => navigate({ to: "/messages", search })}>
+    <Button variant={variant} size="sm" className="relative" onClick={() => openThread(target)}>
       <MessageSquare className="mr-1.5 h-4 w-4" />
       {label}
       {unread > 0 && (
@@ -233,12 +231,12 @@ function MessagesButton({
 
 /** Opens the request thread in the unified Messages page. */
 export function RequestMessages({ requestId }: { requestId: string }) {
-  return <MessagesButton target={{ kind: "request", id: requestId }} label="Talk to us about this request" search={{ request: requestId }} />;
+  return <MessagesButton target={{ kind: "request", id: requestId }} label="Talk to us about this request" />;
 }
 
 /** Opens the general ScaleSource thread in the unified Messages page. */
 export function GeneralMessages({ clientId }: { clientId: string }) {
-  return <MessagesButton target={{ kind: "general", id: clientId }} label="Messages" search={{ general: true }} variant="ghost" />;
+  return <MessagesButton target={{ kind: "general", id: clientId }} label="Messages" variant="ghost" />;
 }
 
 /** Opens the candidate thread in the unified Messages page. */
@@ -251,7 +249,7 @@ export function CandidateMessages({
   candidateName: string;
 }) {
   const firstName = candidateName.split(" ")[0] || candidateName;
-  return <MessagesButton target={{ kind: "candidate", id: matchId }} label={`Talk to us about ${firstName}`} search={{ candidate: matchId }} />;
+  return <MessagesButton target={{ kind: "candidate", id: matchId }} label={`Talk to us about ${firstName}`} />;
 }
 
 /** Quick actions available for a thread kind. */

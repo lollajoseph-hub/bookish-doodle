@@ -4,7 +4,9 @@ import { useAuth } from "@/lib/auth";
 import { useMembership } from "@/lib/membership";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { LogOut, PlusCircle, ListChecks, CalendarClock, Star, UsersRound, MessageSquare } from "lucide-react";
+import { MessagesWidget } from "@/components/messages-widget";
+import { MessagesWidgetProvider } from "@/lib/messages-widget";
+import { LogOut, PlusCircle, ListChecks, CalendarClock, Star, UsersRound } from "lucide-react";
 import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -25,6 +27,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
+    <MessagesWidgetProvider>
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-20 border-b bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
@@ -69,12 +72,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Link>
               </Button>
             )}
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/messages" search={{}}>
-                <MessageSquare className="mr-1.5 h-4 w-4" />
-                Messages
-              </Link>
-            </Button>
             <NotificationsBell />
             <Button
               variant="outline"
@@ -91,6 +88,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
+      <MessagesWidget />
     </div>
+    </MessagesWidgetProvider>
   );
 }

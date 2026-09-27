@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Candidate comparison and review receive action callbacks from the request route; shared profile/action components keep cards, tables, inline review, and dialogs consistent.
+- Messaging inbox data and conversation surfaces are shared between the persistent widget and `/messages`; this preserves one lazy-create thread flow and direct-link fallback.
