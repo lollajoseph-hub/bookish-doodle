@@ -184,6 +184,8 @@ type RequestFieldsProps = {
   catalog: Catalog;
   /** When true, must-have skills are picked from the selected role's skills (ids). */
   roleScopedSkills?: boolean;
+  /** With roleScopedSkills: add unlisted skills locally (no RPC) for unauthenticated flows. */
+  localSkillAdd?: boolean;
 };
 
 type ChoiceOption = {
@@ -395,6 +397,7 @@ export function RequestRequirementsFields(props: RequestFieldsProps) {
             roleId={f.role_id}
             value={f.must_have_skill_ids}
             knownNames={knownNames}
+            localAdd={props.localSkillAdd}
             onChange={(ids, names) => props.onChange({ ...f, must_have_skill_ids: ids, must_have_skill_names: names })}
           />
         </Field></div>

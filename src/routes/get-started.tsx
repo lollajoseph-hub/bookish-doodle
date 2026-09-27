@@ -1,3 +1,4 @@
+import { PENDING_PREFIX } from "@/components/role-skill-select";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
@@ -271,7 +272,10 @@ function GetStartedPage() {
         },
         request: {
           ...requestPayload(request),
-          must_have_skill_names: request.must_have_skill_names,
+          must_have_skill_ids: request.must_have_skill_ids.filter((id) => !id.startsWith(PENDING_PREFIX)),
+          must_have_skill_names: request.must_have_skill_ids
+            .filter((id) => id.startsWith(PENDING_PREFIX))
+            .map((id) => id.slice(PENDING_PREFIX.length)),
           required_skill_ids: request.language_skill_ids,
         },
       },
@@ -500,7 +504,7 @@ function GetStartedPage() {
                   <CardDescription>What kind of person are you looking to hire?</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RequestRoleFields value={request} onChange={setRequest} catalog={catalog} />
+                  <RequestRoleFields value={request} onChange={setRequest} catalog={catalog} roleScopedSkills localSkillAdd />
                 </CardContent>
               </>
             )}
@@ -508,7 +512,7 @@ function GetStartedPage() {
               <><CardHeader><CardTitle>Schedule</CardTitle><CardDescription>When and how much support do you need?</CardDescription></CardHeader><CardContent><RequestScheduleFields value={request} onChange={setRequest} catalog={catalog} /></CardContent></>
             )}
             {stage === 4 && (
-              <><CardHeader><CardTitle>Requirements</CardTitle><CardDescription>Tell us what matters most in your ideal candidate.</CardDescription></CardHeader><CardContent><RequestRequirementsFields value={request} onChange={setRequest} catalog={catalog} /></CardContent></>
+              <><CardHeader><CardTitle>Requirements</CardTitle><CardDescription>Tell us what matters most in your ideal candidate.</CardDescription></CardHeader><CardContent><RequestRequirementsFields value={request} onChange={setRequest} catalog={catalog} roleScopedSkills localSkillAdd /></CardContent></>
             )}
             </div>
 
