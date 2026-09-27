@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-r
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import {
+  MessageSquare,
   ArrowLeft,
   Mail,
   Phone,
@@ -585,23 +586,37 @@ function CandidateDetailPage() {
                   <div className="space-y-2">
                     {matches.length ? (
                       matches.map((m) => (
-                        <Link
+                        <div
                           key={m.id}
-                          to="/requests/$requestId"
-                          params={{ requestId: m.client_request_id }}
-                          className="block rounded-xl border p-3 transition-all hover:border-amber hover:bg-amber/5"
+                          className="rounded-xl border p-3 transition-all hover:border-amber hover:bg-amber/5"
                         >
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <span className="font-medium">
-                              {m.requestTitle || m.roleName || "Request"}
-                            </span>
-                            <MatchStatusBadge status={m.status} />
-                          </div>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {m.clientName ?? "Client"}
-                            {m.status === "rejected" ? ` · ${labelize(m.rejection_reason)}` : ""}
-                          </p>
-                        </Link>
+                          <Link
+                            to="/requests/$requestId"
+                            params={{ requestId: m.client_request_id }}
+                            className="block"
+                          >
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className="font-medium">
+                                {m.requestTitle || m.roleName || "Request"}
+                              </span>
+                              <MatchStatusBadge status={m.status} />
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {m.clientName ?? "Client"}
+                              {m.status === "rejected" ? ` · ${labelize(m.rejection_reason)}` : ""}
+                            </p>
+                          </Link>
+                          {m.status !== "rejected" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="mt-2"
+                              onClick={() => navigate({ to: "/messages", search: { match: m.id } })}
+                            >
+                              <MessageSquare className="mr-1 h-3.5 w-3.5" /> Message about this candidate
+                            </Button>
+                          )}
+                        </div>
                       ))
                     ) : (
                       <p className="text-sm text-muted-foreground">
