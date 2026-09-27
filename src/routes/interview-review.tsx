@@ -127,6 +127,7 @@ function InterviewReviewPage() {
   const [proposeFor, setProposeFor] = useState<{ id: string; name: string } | null>(null);
   const [proposedTime, setProposedTime] = useState("");
   const [proposeNotes, setProposeNotes] = useState("");
+  const [notesOpenFor, setNotesOpenFor] = useState<string | null>(null);
 
   const complete = useMutation({
     mutationFn: ({ id, notes }: { id: string; notes: string }) => completeInterview(id, notes),
@@ -160,7 +161,8 @@ function InterviewReviewPage() {
             {matches.map((m) => {
               const next = NEXT_STAGE[m.status];
               return (
-                <TableRow key={m.id}>
+                <Fragment key={m.id}>
+                <TableRow>
                   <TableCell>
                     <Link
                       to="/candidates/$candidateId"
@@ -248,9 +250,25 @@ function InterviewReviewPage() {
                       >
                         Reject
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setNotesOpenFor(notesOpenFor === m.id ? null : m.id)}
+                      >
+                        <StickyNote className="mr-1 h-3.5 w-3.5" />
+                        Prep notes
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
+                {notesOpenFor === m.id && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="bg-muted/40">
+                      <InterviewPrepNotes matchId={m.id} />
+                    </TableCell>
+                  </TableRow>
+                )}
+                </Fragment>
               );
             })}
           </TableBody>
