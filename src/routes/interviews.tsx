@@ -444,8 +444,8 @@ function InterviewsPage() {
       <Card key={m.id} className="card-amber rounded-2xl">
         <CardContent className="space-y-3 p-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-
                     <div className="flex min-w-0 items-start gap-3">
+
                       {photo ? (
                         <img src={photo} alt="" className="h-14 w-14 flex-none rounded-full object-cover ring-2 ring-primary/15" />
                       ) : (
@@ -487,8 +487,8 @@ function InterviewsPage() {
                       {m.status === "interview_confirmed" && m.meet_url && (
                         <Button asChild size="sm">
                           <a href={m.meet_url} target="_blank" rel="noreferrer">
-
                             <Video className="mr-1.5 h-4 w-4" />
+
                             Join Google Meet
                             <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
                           </a>

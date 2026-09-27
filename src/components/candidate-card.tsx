@@ -316,8 +316,8 @@ export function CandidateCard({
     <Card className={`card-amber relative rounded-2xl ${isRejected ? "opacity-60" : ""}`}>
       <div className="absolute right-4 top-4 z-10 flex flex-col items-end gap-1.5">
         <span
-
           className={`inline-flex w-fit max-w-[calc(100%-2rem)] min-w-0 items-center gap-1 truncate rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(status)}`}
+
         >
           <MatchStatusIcon status={status} />
           <span className="truncate">{MATCH_STATUS_LABELS[status] ?? status}</span>
@@ -618,8 +618,8 @@ export function CandidateCard({
           {canAct && onShortlist && (
             <Button
               variant={status === "shortlisted" ? "default" : "outline"}
-
               size="sm"
+
               disabled={busy || locked}
               onClick={onShortlist}
               className={status === "shortlisted" ? "bg-amber-500 text-white hover:bg-amber-600" : ""}
