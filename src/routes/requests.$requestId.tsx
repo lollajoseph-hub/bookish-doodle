@@ -192,6 +192,13 @@ function RequestDetailPage() {
   const pct = r.candidates_wanted
     ? Math.min(100, Math.round((data.matches.length / r.candidates_wanted) * 100))
     : 0;
+  const requiredSkillNames = data.requiredSkills.map((s) => s.name);
+  const skillMatchFor = (candidateSkills: string[]) => {
+    const lower = new Set(candidateSkills.map((s) => s.toLowerCase()));
+    const has = requiredSkillNames.filter((s) => lower.has(s.toLowerCase()));
+    const missing = requiredSkillNames.filter((s) => !lower.has(s.toLowerCase()));
+    return { has, missing };
+  };
 
   return (
     <AppShell
@@ -249,6 +256,29 @@ function RequestDetailPage() {
                         <MatchStatusBadge status={m.status} />
                       </div>
                     </div>
+                    {requiredSkillNames.length > 0 &&
+                      (() => {
+                        const { has, missing } = skillMatchFor(m.candidateSkills ?? []);
+                        return (
+                          <div className="mt-2 space-y-1">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                              Skill match
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {has.length > 0 && (
+                                <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300">
+                                  Has: {has.join(", ")}
+                                </Badge>
+                              )}
+                              {missing.length > 0 && (
+                                <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
+                                  Missing: {missing.join(", ")}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <Select
                         value={m.status}
