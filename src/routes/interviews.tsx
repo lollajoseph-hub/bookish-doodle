@@ -282,10 +282,10 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
       <Button
         variant="outline"
         size="sm"
-        disabled={locked || proposingBusy || rejectBusy}
+        disabled={locked || proposingBusy}
         onClick={() => {
+          setDeclinedTime(false);
           setProposing((v) => !v);
-          setRejecting(false);
         }}
       >
         <CalendarClock className="mr-1.5 h-4 w-4" />
@@ -294,10 +294,10 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
       <Button
         variant="ghost"
         size="sm"
-        disabled={locked || proposingBusy || rejectBusy}
+        disabled={locked || proposingBusy}
         onClick={() => {
-          setRejecting((v) => !v);
-          setProposing(false);
+          setDeclinedTime(true);
+          setProposing(true);
         }}
         className="text-destructive hover:bg-destructive/10 hover:text-destructive"
       >
