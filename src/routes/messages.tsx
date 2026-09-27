@@ -238,6 +238,29 @@ function MessagesPage() {
                     ))}
                   </>
                 )}
+                {filteredCandidates.length > 0 && (
+                  <>
+                    <div className="bg-muted/60 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Candidates
+                    </div>
+                    {filteredCandidates.map((c) => (
+                      <ThreadListRow
+                        key={`c-${c.matchId}`}
+                        icon={UserRound}
+                        title={c.candidateName}
+                        subtitle={
+                          [c.clientName, c.requestTitle].filter(Boolean).join(" — ") || "Candidate conversation"
+                        }
+                        thread={c.thread}
+                        lastMessage={c.lastMessage}
+                        userId={userId}
+                        active={selection?.kind === "candidate" && selection.id === c.matchId}
+                        readTick={readTick}
+                        onClick={() => select({ kind: "candidate", id: c.matchId })}
+                      />
+                    ))}
+                  </>
+                )}
                 <div className="bg-muted/60 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   Requests
                 </div>
