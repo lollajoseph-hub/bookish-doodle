@@ -245,11 +245,10 @@ function InterviewReason({ reason }: { reason: string }) {
 
 /**
  * Client-side parity with staff when ScaleSource counter-proposes an interview
- * time: accept (handled by the page), propose a different time, or reject.
+ * time: accept (handled by the page) or reject the time by proposing another.
  */
 function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: string; locked: boolean; onRefresh: () => void }) {
   const [proposing, setProposing] = useState(false);
-  const [declinedTime, setDeclinedTime] = useState(false);
   const [proposedAt, setProposedAt] = useState("");
   const [proposingBusy, setProposingBusy] = useState(false);
 
@@ -272,7 +271,6 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
     }
     toast.success("New time proposed — ScaleSource will confirm.");
     setProposing(false);
-    setDeclinedTime(false);
     setProposedAt("");
     onRefresh();
   }
@@ -280,25 +278,10 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
   return (
     <>
       <Button
-        variant="outline"
-        size="sm"
-        disabled={locked || proposingBusy}
-        onClick={() => {
-          setDeclinedTime(false);
-          setProposing((v) => !v);
-        }}
-      >
-        <CalendarClock className="mr-1.5 h-4 w-4" />
-        Propose a different time
-      </Button>
-      <Button
         variant="ghost"
         size="sm"
         disabled={locked || proposingBusy}
-        onClick={() => {
-          setDeclinedTime(true);
-          setProposing(true);
-        }}
+        onClick={() => setProposing((v) => !v)}
         className="text-destructive hover:bg-destructive/10 hover:text-destructive"
       >
         <ThumbsDown className="mr-1.5 h-4 w-4" />
@@ -307,11 +290,9 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
 
       {proposing && (
         <div className="w-full space-y-2 rounded-lg border border-border bg-background/60 p-3">
-          {declinedTime && (
-            <p className="text-sm font-medium">
-              You've declined that time — suggest one that works:
-            </p>
-          )}
+          <p className="text-sm font-medium">
+            You've declined that time — suggest one that works:
+          </p>
           <Label htmlFor={`propose-when-${matchId}`}>Your preferred time</Label>
           <Input
             id={`propose-when-${matchId}`}
@@ -327,7 +308,6 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
               disabled={proposingBusy}
               onClick={() => {
                 setProposing(false);
-                setDeclinedTime(false);
                 setProposedAt("");
               }}
             >
