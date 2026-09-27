@@ -36,12 +36,20 @@ export interface QuickAction {
   tone: string;
 }
 
-/** Display metadata for every structured type (including legacy ones in old messages). */
-export const ACTION_META: Record<StructuredType, QuickAction> = {
+/** Display metadata for sendable structured types; legacy types render via LEGACY_ACTION_META. */
+export const ACTION_META: Record<Exclude<StructuredType, "call_me_asap">, QuickAction> = {
   reschedule_request: { type: "reschedule_request", label: "Request Reschedule", body: "Request Reschedule", icon: CalendarClock, tone: "bg-amber-100 text-amber-800 border-amber-300" },
-  call_me_asap: { type: "call_me_asap", label: "Call Me ASAP", body: "Please call me as soon as possible.", icon: PhoneCall, tone: "bg-destructive/10 text-destructive border-destructive/30" },
   send_portfolio: { type: "send_portfolio", label: "Send Portfolio", body: "Send Portfolio", icon: FileText, tone: "bg-primary-soft text-primary border-primary/30" },
 };
+
+/** Render-only metadata for legacy structured types that can no longer be sent. */
+const LEGACY_ACTION_META: Record<string, QuickAction> = {
+  call_me_asap: { type: "call_me_asap", label: "Call Me ASAP", body: "Please call me as soon as possible.", icon: PhoneCall, tone: "bg-destructive/10 text-destructive border-destructive/30" },
+};
+
+function actionMetaFor(type: StructuredType): QuickAction | null {
+  return (ACTION_META as Partial<Record<StructuredType, QuickAction>>)[type] ?? LEGACY_ACTION_META[type] ?? null;
+}
 
 export type ThreadTarget =
   | { kind: "request"; id: string }
@@ -305,7 +313,6 @@ export function CandidateMessages({
 
 /** Quick actions available for a thread kind. */
 export function actionsFor(kind: ThreadTarget["kind"], matchStatus?: string | null): QuickAction[] {
-  if (kind === "general") return [ACTION_META.call_me_asap];
   if (kind === "candidate" && matchStatus === "interview_confirmed") return [ACTION_META.reschedule_request];
   return [];
 }
