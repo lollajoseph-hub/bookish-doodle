@@ -20,6 +20,9 @@ import { buildRequestRecap, RequestRecap } from "@/components/request-recap";
 import { SuccessFlourish } from "@/components/success-flourish";
 
 export const Route = createFileRoute("/new-request")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    clone: typeof search.clone === "string" ? search.clone : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "New hiring request — Candidate Pool" },
@@ -44,6 +47,7 @@ interface Membership {
 
 function NewRequest() {
   const navigate = useNavigate();
+  const { clone } = Route.useSearch();
   const { user } = useAuth();
   const catalog = useCatalog();
   const [membership, setMembership] = useState<Membership | null>(null);
