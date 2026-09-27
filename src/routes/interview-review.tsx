@@ -307,6 +307,74 @@ function InterviewReviewPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={!!proposeFor}
+        onOpenChange={(open) => {
+          if (!open) {
+            setProposeFor(null);
+            setProposedTime("");
+            setProposeNotes("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Propose different time</DialogTitle>
+            <DialogDescription>
+              Propose a new interview time for {proposeFor?.name}. The client will be notified.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="proposed-time">
+              Proposed time <span className="text-amber">*</span>
+            </Label>
+            <Input
+              id="proposed-time"
+              type="datetime-local"
+              value={proposedTime}
+              onChange={(e) => setProposedTime(e.target.value)}
+            />
+            <Label htmlFor="propose-notes">Notes (optional)</Label>
+            <Textarea
+              id="propose-notes"
+              rows={4}
+              value={proposeNotes}
+              onChange={(e) => setProposeNotes(e.target.value)}
+              placeholder="Anything the client should know about this time…"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setProposeFor(null);
+                setProposedTime("");
+                setProposeNotes("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={
+                !proposedTime ||
+                new Date(proposedTime).getTime() <= Date.now() ||
+                proposeTime.isPending
+              }
+              onClick={() => {
+                if (!proposeFor || !proposedTime) return;
+                proposeTime.mutate({
+                  id: proposeFor.id,
+                  proposedAt: new Date(proposedTime).toISOString(),
+                  notes: proposeNotes.trim() || undefined,
+                });
+              }}
+            >
+              Submit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
