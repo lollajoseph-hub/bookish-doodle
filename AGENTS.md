@@ -9,4 +9,4 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Candidate comparison lives in a shared table component and receives action callbacks from the request route, so card and table mutations remain consistent.
+- Candidate comparison and review receive action callbacks from the request route; shared profile/action components keep cards, tables, inline review, and dialogs consistent.

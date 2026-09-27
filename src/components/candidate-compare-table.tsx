@@ -175,7 +175,7 @@ export function CandidateCompareTable({
           <CompareRow label="Actions" last>
             {matches.map((match) => (
               <CompareCell key={match.id} className="align-top">
-                <CompareActions
+                <CandidateActions
                   match={match}
                   busy={actingId === match.id}
                   locked={actingId !== null && actingId !== match.id}
@@ -210,7 +210,7 @@ function CompareCell({ className = "", children }: { className?: string; childre
   return <td className={`w-64 min-w-64 border-l border-border px-4 py-4 text-foreground ${className}`}>{children}</td>;
 }
 
-function CompareActions({
+export function CandidateActions({
   match,
   busy,
   locked,
@@ -229,7 +229,7 @@ function CompareActions({
   onRequestHire: () => void;
   onRejected: () => void;
   onInterviewTimeAccepted: () => void;
-  onViewProfile: () => void;
+  onViewProfile?: () => void;
 }) {
   const [rejecting, setRejecting] = useState(false);
   const [rejectReason, setRejectReason] = useState<RejectionReason | null>(null);
@@ -309,9 +309,11 @@ function CompareActions({
 
   return (
     <div className="flex flex-col items-start gap-2">
-      <Button variant="secondary" size="sm" onClick={onViewProfile}>
-        <UserSearch className="mr-1.5 h-4 w-4" /> View full profile
-      </Button>
+      {onViewProfile && (
+        <Button variant="secondary" size="sm" onClick={onViewProfile}>
+          <UserSearch className="mr-1.5 h-4 w-4" /> View full profile
+        </Button>
+      )}
       {canAct && (
         <>
           <Button variant={match.status === "shortlisted" ? "default" : "outline"} size="sm" disabled={busy || locked} onClick={onShortlist}>
