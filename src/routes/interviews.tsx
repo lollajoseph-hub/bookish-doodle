@@ -1,6 +1,6 @@
 import { CandidateRating } from "@/components/candidate-rating";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
@@ -57,23 +57,55 @@ interface RequestMeta {
   job_roles: { name: string | null } | null;
 }
 
+interface ThreadNote {
+  id: string;
+  thread_id: string;
+  author_id: string | null;
+  body: string;
+  created_at: string;
+}
+
+interface NoteAuthor {
+  id: string;
+  full_name: string | null;
+  role: string | null;
+}
+
+function capitalize(s: string) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+
 /**
- * Shared prep notes for a candidate's interview, stored on the candidate-kind
- * thread's scratchpad. Autosaves ~800ms after typing stops; last write wins.
+ * Shared, append-only prep notes for a candidate's interview (thread_notes on
+ * the candidate-kind thread). Each note is attributed to its author.
  */
 function PrepNotes({ matchId }: { matchId: string }) {
   const [open, setOpen] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
-  const [content, setContent] = useState("");
+  const [notes, setNotes] = useState<ThreadNote[]>([]);
+  const [authors, setAuthors] = useState<Record<string, NoteAuthor>>({});
+  const [userId, setUserId] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const [saving, setSaving] = useState<"idle" | "saving" | "saved">("idle");
-  const dirtyRef = useRef(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const loadNotes = useCallback(async (tid: string) => {
+    const [{ data: rows, error }, { data: authorRows }] = await Promise.all([
+      supabase.from("thread_notes").select("id, thread_id, author_id, body, created_at").eq("thread_id", tid).order("created_at", { ascending: true }),
+      supabase.rpc("get_thread_note_authors", { p_thread_id: tid }),
+    ]);
+    if (error) toast.error(error.message);
+    const map: Record<string, NoteAuthor> = {};
+    for (const a of (authorRows as NoteAuthor[] | null) ?? []) map[a.id] = a;
+    return { rows: (rows as ThreadNote[] | null) ?? [], map };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     void (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!cancelled) setUserId(auth.user?.id ?? null);
       const { id: tid, error } = await findThreadId({ kind: "candidate", id: matchId });
       if (cancelled) return;
       if (error) {
@@ -85,53 +117,51 @@ function PrepNotes({ matchId }: { matchId: string }) {
         return;
       }
       setThreadId(tid);
-      const { data: pad } = await supabase
-        .from("thread_scratchpad")
-        .select("content")
-        .eq("thread_id", tid)
-        .maybeSingle();
+      const { rows, map } = await loadNotes(tid);
       if (cancelled) return;
-      // Don't clobber text the client started typing while this load was in flight.
-      if (!dirtyRef.current) setContent((pad as { content: string | null } | null)?.content ?? "");
+      setNotes(rows);
+      setAuthors(map);
       setLoaded(true);
     })();
     return () => {
       cancelled = true;
-      if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [open, matchId]);
+  }, [open, matchId, loadNotes]);
 
-  const save = useCallback(
-    async (text: string) => {
-      setSaving("saving");
+  async function submit() {
+    const body = draft.trim();
+    if (!body || sending) return;
+    setSending(true);
+    try {
       let tid = threadId;
       if (!tid) {
-        try {
-          tid = await createThread({ kind: "candidate", id: matchId });
-          setThreadId(tid);
-        } catch (e) {
-          setSaving("idle");
-          toast.error((e as Error).message);
-          return;
-        }
+        tid = await createThread({ kind: "candidate", id: matchId });
+        setThreadId(tid);
       }
-      const { error } = await supabase.rpc("update_thread_scratchpad", { p_thread_id: tid, p_content: text });
-      if (error) {
-        setSaving("idle");
-        toast.error(error.message);
-        return;
+      const { data, error } = await supabase.rpc("add_thread_note", { p_thread_id: tid, p_body: body });
+      if (error) throw new Error(error.message);
+      const returned = (Array.isArray(data) ? data[0] : data) as ThreadNote | string | null;
+      if (returned && typeof returned === "object" && "id" in returned && "body" in returned) {
+        setNotes((prev) => [...prev, returned]);
+      } else {
+        const { rows, map } = await loadNotes(tid);
+        setNotes(rows);
+        setAuthors(map);
       }
-      dirtyRef.current = false;
-      setSaving("saved");
-    },
-    [threadId, matchId]
-  );
+      setDraft("");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSending(false);
+    }
+  }
 
-  function onChange(text: string) {
-    setContent(text);
-    dirtyRef.current = true;
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => void save(text), 800);
+  function authorLabel(n: ThreadNote) {
+    if (n.author_id && n.author_id === userId) return "You";
+    const a = n.author_id ? authors[n.author_id] : undefined;
+    if (!a) return "ScaleSource Team";
+    const first = (a.full_name ?? "").trim().split(/\s+/)[0] || "ScaleSource Team";
+    return a.role ? `${first} (${capitalize(a.role)})` : first;
   }
 
   return (
@@ -142,24 +172,44 @@ function PrepNotes({ matchId }: { matchId: string }) {
         <ChevronDown className={`ml-1.5 h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
       </Button>
       {open && (
-        <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <p className="text-sm font-semibold text-primary">Interview Prep Notes</p>
-              <p className="text-xs text-muted-foreground">Shared prep notes for this candidate&apos;s interview.</p>
-            </div>
-            <span className="text-[11px] text-muted-foreground">
-              {saving === "saving" ? "Saving…" : saving === "saved" ? "Saved" : ""}
-            </span>
+        <div className="space-y-3 rounded-lg bg-primary/5 px-3 py-2">
+          <div>
+            <p className="text-sm font-semibold text-primary">Interview Prep Notes</p>
+            <p className="text-xs text-muted-foreground">Shared prep notes for this candidate&apos;s interview.</p>
           </div>
-          <Textarea
-            value={content}
-            disabled={!loaded}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={loaded ? "Jot down questions, talking points, or things to cover…" : "Loading…"}
-            rows={4}
-            className="resize-none bg-background"
-          />
+          {!loaded ? (
+            <p className="text-xs text-muted-foreground">Loading…</p>
+          ) : notes.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No notes yet.</p>
+          ) : (
+            <ul className="space-y-2">
+              {notes.map((n) => (
+                <li key={n.id} className="rounded-md bg-background px-3 py-2">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <span className="text-xs font-semibold text-foreground">{authorLabel(n)}</span>
+                    <span className="text-[11px] text-muted-foreground">{formatDateTime(n.created_at)}</span>
+                  </div>
+                  <p className="mt-1 whitespace-pre-wrap text-sm">{n.body}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="space-y-2">
+            <Textarea
+              value={draft}
+              disabled={!loaded || sending}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="Add a question, talking point, or thing to cover…"
+              rows={3}
+              className="resize-none bg-background"
+            />
+            <div className="flex justify-end">
+              <Button size="sm" onClick={() => void submit()} disabled={!loaded || sending || !draft.trim()}>
+                {sending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                Add note
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
