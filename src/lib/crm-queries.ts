@@ -428,6 +428,7 @@ export async function proposeInterviewTime(
   if (error) throw error;
 }
 
+export async function completeInterview(matchId: string, notes: string): Promise<void> {
   const { error } = await supabase.rpc("complete_interview", {
     p_match_id: matchId,
     p_notes: notes,
