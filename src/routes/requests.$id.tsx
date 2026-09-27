@@ -7,11 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CandidateCard, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
+import { CandidateCompareTable } from "@/components/candidate-compare-table";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { InterviewRequestDialog } from "@/components/interview-request-dialog";
 import { RequestMessages } from "@/components/request-messages";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Sparkles, UsersRound } from "lucide-react";
+import { ArrowLeft, Columns3, LayoutGrid, Loader2, Sparkles, UsersRound } from "lucide-react";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 import { ENGAGEMENT_TYPES, DAYS_OF_WEEK } from "@/lib/catalog";
 import {
@@ -87,6 +88,7 @@ function RequestDetail() {
   const [interviewFor, setInterviewFor] = useState<MatchRow | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [noMoreCandidates, setNoMoreCandidates] = useState(false);
+  const [candidateView, setCandidateView] = useState<"cards" | "compare">("cards");
   const loadTokenRef = useRef(0);
   /** Stable display order of match ids, captured on first load per request id. */
   const orderRef = useRef<{ requestId: string; order: string[] } | null>(null);
@@ -251,11 +253,31 @@ function RequestDetail() {
         <div aria-hidden className="hidden lg:block lg:w-px lg:bg-amber" />
 
         <div className="min-w-0 space-y-4">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight">Presented candidates</h2>
-            <p className="text-sm text-muted-foreground">
-              Shortlist the people you like, request an interview, or tell us why someone isn&apos;t a fit.
-            </p>
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+            <div className="min-w-0">
+              <h2 className="text-lg font-semibold tracking-tight">Presented candidates</h2>
+              <p className="text-sm text-muted-foreground">
+                Shortlist the people you like, request an interview, or tell us why someone isn&apos;t a fit.
+              </p>
+            </div>
+            <div className="flex shrink-0 rounded-md border border-border bg-background p-1" aria-label="Candidate view">
+              <Button
+                variant={candidateView === "cards" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setCandidateView("cards")}
+                aria-pressed={candidateView === "cards"}
+              >
+                <LayoutGrid className="mr-1.5 h-4 w-4" /> Cards
+              </Button>
+              <Button
+                variant={candidateView === "compare" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setCandidateView("compare")}
+                aria-pressed={candidateView === "compare"}
+              >
+                <Columns3 className="mr-1.5 h-4 w-4" /> Compare
+              </Button>
+            </div>
           </div>
 
           {matches === null ? (
@@ -268,30 +290,51 @@ function RequestDetail() {
             </Card>
           ) : (
             <>
-              <div className="grid gap-4 md:grid-cols-2">
-                {matches.map((m) => (
-                  <CandidateCard
-                    key={m.id}
-                    match={m}
-                    photoUrl={photos[m.id] ?? null}
-                    busy={actingId === m.id}
-                    locked={actingId !== null && actingId !== m.id}
-                    curated={request?.source === "staff_curated"}
-                    onViewProfile={() => setProfileFor(m)}
-                    onShortlist={() =>
-                      callRpc(
-                        "client_shortlist_candidate",
-                        m.id,
-                        m.status === "shortlisted" ? "Removed from shortlist" : "Added to shortlist"
-                      )
-                    }
-                    onRequestInterview={() => setInterviewFor(m)}
-                    onRequestHire={() => callRpc("client_request_hire", m.id, "Hire request sent to ScaleSource")}
-              onRejected={() => void load()}
-                    onInterviewTimeAccepted={() => void load()}
-                  />
-                ))}
-              </div>
+              {candidateView === "cards" ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {matches.map((m) => (
+                    <CandidateCard
+                      key={m.id}
+                      match={m}
+                      photoUrl={photos[m.id] ?? null}
+                      busy={actingId === m.id}
+                      locked={actingId !== null && actingId !== m.id}
+                      curated={request?.source === "staff_curated"}
+                      onViewProfile={() => setProfileFor(m)}
+                      onShortlist={() =>
+                        callRpc(
+                          "client_shortlist_candidate",
+                          m.id,
+                          m.status === "shortlisted" ? "Removed from shortlist" : "Added to shortlist"
+                        )
+                      }
+                      onRequestInterview={() => setInterviewFor(m)}
+                      onRequestHire={() => callRpc("client_request_hire", m.id, "Hire request sent to ScaleSource")}
+                      onRejected={() => void load()}
+                      onInterviewTimeAccepted={() => void load()}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <CandidateCompareTable
+                  matches={matches}
+                  photos={photos}
+                  actingId={actingId}
+                  curated={request?.source === "staff_curated"}
+                  onViewProfile={setProfileFor}
+                  onShortlist={(m) =>
+                    callRpc(
+                      "client_shortlist_candidate",
+                      m.id,
+                      m.status === "shortlisted" ? "Removed from shortlist" : "Added to shortlist"
+                    )
+                  }
+                  onRequestInterview={setInterviewFor}
+                  onRequestHire={(m) => callRpc("client_request_hire", m.id, "Hire request sent to ScaleSource")}
+                  onRejected={() => void load()}
+                  onInterviewTimeAccepted={() => void load()}
+                />
+              )}
 
               {SHOW_MORE_CANDIDATES_ENABLED && (
                 <div className="flex flex-col items-center gap-2 pt-2">
