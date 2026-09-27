@@ -334,6 +334,9 @@ function InterviewsPage() {
   const [actingId, setActingId] = useState<string | null>(null);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [profileFor, setProfileFor] = useState<MatchRow | null>(null);
+  const [views, setViews] = useState<Record<string, string>>({});
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("requested");
 
   const load = useCallback(async () => {
     setErr(null);
