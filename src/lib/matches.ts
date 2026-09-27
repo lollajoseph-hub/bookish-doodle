@@ -83,6 +83,23 @@ export function requestStatusTone(s: string | null | undefined) {
   }
 }
 
+/** `client_requests.priority` — badges show only for non-default values. */
+export const REQUEST_PRIORITY_LABELS: Record<string, string> = {
+  high: "High Priority",
+  urgent: "Urgent",
+};
+
+export function requestPriorityTone(p: string | null | undefined) {
+  switch (p) {
+    case "urgent":
+      return "bg-destructive/10 text-destructive";
+    case "high":
+      return "bg-amber-100 text-amber-900";
+    default:
+      return "bg-primary/10 text-primary";
+  }
+}
+
 /**
  * Per-match name rule: only a match with status `hired` may reveal the full name.
  * Every other match for the same candidate shows the first name only.
