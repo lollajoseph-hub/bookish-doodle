@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { MultiSelect } from "@/components/multi-select";
+import { RoleSkillSelect } from "@/components/role-skill-select";
 import { TimezoneSelect } from "@/components/timezone-select";
 import { DAYS_OF_WEEK, ENGAGEMENT_TYPES, type Catalog } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,8 @@ export interface RequestForm {
   days_of_week_needed: string[];
   timezone_requirement: string;
   must_have_skill_names: string[];
+  /** Role-scoped must-have skill ids (authenticated request form only). */
+  must_have_skill_ids: string[];
   language_skill_ids: string[];
   hires_needed: string;
   years_experience_min: string;
@@ -43,6 +46,7 @@ export const emptyRequestForm: RequestForm = {
   days_of_week_needed: [],
   timezone_requirement: "",
   must_have_skill_names: [],
+  must_have_skill_ids: [],
   language_skill_ids: [],
   hires_needed: "1",
   years_experience_min: "",
@@ -69,7 +73,7 @@ export function validateScheduleFields(f: RequestForm): string | null {
 }
 
 export function validateRequirementsFields(f: RequestForm): string | null {
-  if (f.must_have_skill_names.length === 0) return "Add at least one must-have skill.";
+  if (f.must_have_skill_names.length === 0 && f.must_have_skill_ids.length === 0) return "Add at least one must-have skill.";
   if (f.language_skill_ids.length === 0) return "Pick at least one required language.";
   return null;
 }
@@ -178,6 +182,8 @@ type RequestFieldsProps = {
   value: RequestForm;
   onChange: (next: RequestForm) => void;
   catalog: Catalog;
+  /** When true, must-have skills are picked from the selected role's skills (ids). */
+  roleScopedSkills?: boolean;
 };
 
 type ChoiceOption = {
@@ -273,9 +279,15 @@ function ChoiceCards({
   );
 }
 
-function useRequestFieldProps({ value: f, onChange, catalog }: RequestFieldsProps) {
-  const set = <K extends keyof RequestForm>(k: K, v: RequestForm[K]) =>
+function useRequestFieldProps({ value: f, onChange, catalog, roleScopedSkills }: RequestFieldsProps) {
+  const set = <K extends keyof RequestForm>(k: K, v: RequestForm[K]) => {
+    // Role-scoped skills belong to the previous role — clear them on a role change.
+    if (roleScopedSkills && k === "role_id" && v !== f.role_id) {
+      onChange({ ...f, role_id: v as string, must_have_skill_ids: [], must_have_skill_names: [] });
+      return;
+    }
     onChange({ ...f, [k]: v });
+  };
   const languageOptions = catalog.languageSkills
     .map((s) => ({ value: s.id, label: s.name }))
     .sort((a, b) => {
@@ -374,11 +386,23 @@ function parseFormDate(value: string) {
 
 export function RequestRequirementsFields(props: RequestFieldsProps) {
   const { f, set, languageOptions, catalog } = useRequestFieldProps(props);
+  const knownNames = Object.fromEntries(catalog.skills.map((s) => [s.id, s.name]));
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div className="md:col-span-2"><Field label="Must-have skills" required hint="Type a skill and press Enter to add it — e.g. Excel, QuickBooks, cold calling.">
-        <TagInput value={f.must_have_skill_names} onChange={(v) => set("must_have_skill_names", v)} placeholder="The skills a candidate absolutely must have" />
-      </Field></div>
+      {props.roleScopedSkills ? (
+        <div className="md:col-span-2"><Field label="Must-have skills" required hint={f.role_id ? "Pick from skills for this role, or add one that isn't listed." : "Select a role first."}>
+          <RoleSkillSelect
+            roleId={f.role_id}
+            value={f.must_have_skill_ids}
+            knownNames={knownNames}
+            onChange={(ids, names) => props.onChange({ ...f, must_have_skill_ids: ids, must_have_skill_names: names })}
+          />
+        </Field></div>
+      ) : (
+        <div className="md:col-span-2"><Field label="Must-have skills" required hint="Type a skill and press Enter to add it — e.g. Excel, QuickBooks, cold calling.">
+          <TagInput value={f.must_have_skill_names} onChange={(v) => set("must_have_skill_names", v)} placeholder="The skills a candidate absolutely must have" />
+        </Field></div>
+      )}
       <div className="md:col-span-2"><Field label="Required languages" required>
         <MultiSelect options={languageOptions} value={f.language_skill_ids} onChange={(v) => set("language_skill_ids", v)} placeholder={catalog.loading ? "Loading languages…" : "Select required languages"} searchPlaceholder="Search languages…" />
       </Field></div>
@@ -392,20 +416,12 @@ export function RequestRequirementsFields(props: RequestFieldsProps) {
   );
 }
 
-export function RequestFields({
-  value: f,
-  onChange,
-  catalog,
-}: {
-  value: RequestForm;
-  onChange: (next: RequestForm) => void;
-  catalog: Catalog;
-}) {
+export function RequestFields(props: RequestFieldsProps) {
   return (
     <div className="space-y-6">
-      <RequestRoleFields value={f} onChange={onChange} catalog={catalog} />
-      <RequestScheduleFields value={f} onChange={onChange} catalog={catalog} />
-      <RequestRequirementsFields value={f} onChange={onChange} catalog={catalog} />
+      <RequestRoleFields {...props} />
+      <RequestScheduleFields {...props} />
+      <RequestRequirementsFields {...props} />
     </div>
   );
 }

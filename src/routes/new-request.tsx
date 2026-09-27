@@ -125,12 +125,16 @@ function NewRequest() {
       }
       const languageIds = new Set(catalog.languageSkills.map((s) => s.id));
       const mustHaveNames: string[] = [];
+      const mustHaveIds: string[] = [];
       const language_skill_ids: string[] = [];
       for (const row of (skillsRes.data ?? []) as unknown as { skills: { id: string; name: string | null } | null }[]) {
         const skill = row.skills;
         if (!skill?.id) continue;
         if (languageIds.has(skill.id)) language_skill_ids.push(skill.id);
-        else if (skill.name) mustHaveNames.push(skill.name);
+        else {
+          mustHaveIds.push(skill.id);
+          mustHaveNames.push(skill.name ?? "Skill");
+        }
       }
       setF({
         ...emptyRequestForm,
@@ -140,6 +144,7 @@ function NewRequest() {
         days_of_week_needed: req.days_of_week_needed ?? [],
         timezone_requirement: req.timezone_requirement ?? "",
         must_have_skill_names: mustHaveNames,
+        must_have_skill_ids: mustHaveIds,
         language_skill_ids,
         hires_needed: String(req.hires_needed ?? 1),
         years_experience_min: req.years_experience_min ? String(req.years_experience_min) : "",
@@ -181,18 +186,7 @@ function NewRequest() {
 
     const requestId = (inserted as { id: string }).id;
 
-    const { data: mustHaveIds, error: resolveError } = await supabase.rpc(
-      "resolve_or_create_skills",
-      { p_names: f.must_have_skill_names },
-    );
-    if (resolveError) {
-      setBusy(false);
-      toast.error(`Request saved, but the must-have skills didn't attach: ${resolveError.message}`);
-      navigate({ to: "/requests/$id", params: { id: requestId } });
-      return;
-    }
-
-    const skillRows = [...((mustHaveIds as string[] | null) ?? []), ...f.language_skill_ids].map(
+    const skillRows = [...new Set([...f.must_have_skill_ids, ...f.language_skill_ids])].map(
       (skill_id) => ({
         request_id: requestId,
         skill_id,
@@ -307,7 +301,7 @@ function NewRequest() {
           <CardDescription>What does the role look like?</CardDescription>
         </CardHeader>
         <CardContent>
-          <RequestFields value={f} onChange={setF} catalog={catalog} />
+          <RequestFields value={f} onChange={setF} catalog={catalog} roleScopedSkills />
         </CardContent>
       </Card>
 
