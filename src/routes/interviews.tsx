@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,6 +53,14 @@ const ORDER: MatchStatus[] = [
   "interview_requested",
   "interview_completed",
   "hire_requested",
+];
+
+/** Stage tabs, in display order. */
+const STAGE_TABS: { value: string; label: string; status: MatchStatus }[] = [
+  { value: "requested", label: "Requested", status: "interview_requested" },
+  { value: "confirmed", label: "Confirmed", status: "interview_confirmed" },
+  { value: "completed", label: "Completed", status: "interview_completed" },
+  { value: "hire", label: "Hire requested", status: "hire_requested" },
 ];
 
 interface RequestMeta {
@@ -445,45 +454,16 @@ function InterviewsPage() {
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Interviews</h1>
-        <p className="text-sm text-muted-foreground">
-          Every interview requested, scheduled or already held across your hiring requests.
-        </p>
-      </div>
-
-      {err && (
-        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
-          {err}
-        </div>
-      )}
-
-      {rows === null ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      ) : rows.length === 0 ? (
-        <Card className="rounded-2xl border-dashed">
-          <CardContent className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <CalendarClock className="h-8 w-8 text-muted-foreground" />
-            <p className="font-medium">No interviews yet.</p>
-            <p className="text-sm text-muted-foreground">
-              Request an interview from a candidate&apos;s card and it will appear here.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-3">
-          {rows.map((m) => {
-            const p = m.candidate_pool_profile;
-            const name = displayName(p?.full_name, m.status);
-            const when = formatDateTime(m.interview_scheduled_at);
-            const proposed = formatDateTime(m.interview_proposed_at);
-            const photo = photos[m.id] ?? null;
-            return (
-              <Card key={m.id} className="card-amber rounded-2xl">
-                <CardContent className="space-y-3 p-5">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+  const renderCard = (m: MatchRow) => {
+    const p = m.candidate_pool_profile;
+    const name = displayName(p?.full_name, m.status);
+    const when = formatDateTime(m.interview_scheduled_at);
+    const proposed = formatDateTime(m.interview_proposed_at);
+    const photo = photos[m.id] ?? null;
+    return (
+      <Card key={m.id} className="card-amber rounded-2xl">
+        <CardContent className="space-y-3 p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="flex min-w-0 items-start gap-3">
                       {photo ? (
                         <img src={photo} alt="" className="h-14 w-14 flex-none rounded-full object-cover ring-2 ring-primary/15" />
@@ -631,11 +611,62 @@ function InterviewsPage() {
                       Request to hire
                     </Button>
                   )}
-                </CardContent>
-              </Card>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Interviews</h1>
+        <p className="text-sm text-muted-foreground">
+          Every interview requested, scheduled or already held across your hiring requests.
+        </p>
+      </div>
+
+      {err && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+          {err}
+        </div>
+      )}
+
+      {rows === null ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : rows.length === 0 ? (
+        <Card className="rounded-2xl border-dashed">
+          <CardContent className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+            <CalendarClock className="h-8 w-8 text-muted-foreground" />
+            <p className="font-medium">No interviews yet.</p>
+            <p className="text-sm text-muted-foreground">
+              Request an interview from a candidate&apos;s card and it will appear here.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Tabs defaultValue="requested" className="space-y-3">
+          <TabsList>
+            {STAGE_TABS.map((tab) => (
+              <TabsTrigger key={tab.value} value={tab.value}>
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {STAGE_TABS.map((tab) => {
+            const stageRows = rows.filter((m) => m.status === tab.status);
+            return (
+              <TabsContent key={tab.value} value={tab.value} className="mt-3">
+                {stageRows.length === 0 ? (
+                  <p className="rounded-2xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+                    No candidates in this stage right now.
+                  </p>
+                ) : (
+                  <div className="grid gap-3">{stageRows.map(renderCard)}</div>
+                )}
+              </TabsContent>
             );
           })}
-        </div>
+        </Tabs>
       )}
 
       <CandidateProfileDialog
