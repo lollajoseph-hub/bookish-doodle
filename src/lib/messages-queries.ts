@@ -45,9 +45,21 @@ export interface GeneralInboxItem {
   sortAt: string;
 }
 
+export interface CandidateInboxItem {
+  matchId: string;
+  candidateName: string;
+  clientName: string | null;
+  requestTitle: string | null;
+  status: string;
+  thread: ThreadRow;
+  lastMessage: ThreadMessageRow | null;
+  sortAt: string;
+}
+
 export interface InboxData {
   requests: InboxItem[];
   generals: GeneralInboxItem[];
+  candidates: CandidateInboxItem[];
 }
 
 export type ThreadTarget =
@@ -67,7 +79,7 @@ export function threadTargetKey(t: ThreadTarget): string {
 export async function fetchInbox(): Promise<InboxData> {
   const [requests, threadsRes] = await Promise.all([
     fetchClientRequests(),
-    supabase.from("threads").select("*").in("kind", ["request", "general"]),
+    supabase.from("threads").select("*").in("kind", ["request", "general", "candidate"]),
   ]);
   if (threadsRes.error) throw threadsRes.error;
   const threads = (threadsRes.data ?? []) as ThreadRow[];
