@@ -106,8 +106,8 @@ async function fetchRequestInboxItem(requestId: string): Promise<InboxItem | nul
   if (!req) return null;
   const [clientRes, roleRes, matchesRes, threadId] = await Promise.all([
     supabase.from("clients").select("name").eq("id", req.client_id).maybeSingle(),
-    req.job_role_id
-      ? supabase.from("job_roles").select("name").eq("id", req.job_role_id).maybeSingle()
+    req.role_id
+      ? supabase.from("job_roles").select("name").eq("id", req.role_id).maybeSingle()
       : Promise.resolve({ data: null }),
     supabase.from("candidate_matches").select("status").eq("client_request_id", requestId),
     findThreadId({ kind: "request", clientRequestId: requestId }),
