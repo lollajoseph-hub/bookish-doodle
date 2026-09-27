@@ -50,14 +50,48 @@ export function getLastRead(userId: string, threadId: string): string | null {
   return window.localStorage.getItem(lastReadKey(userId, threadId));
 }
 
+const TARGET_COLUMN = {
+  request: "client_request_id",
+  candidate: "candidate_match_id",
+  general: "client_id",
+} as const;
+
+/** Read-only lookup of an existing thread. Never creates one. */
+export async function findThreadId(target: ThreadTarget): Promise<{ id: string | null; error: string | null }> {
+  const { data, error } = await supabase
+    .from("threads")
+    .select("id")
+    .eq("kind", target.kind)
+    .eq(TARGET_COLUMN[target.kind], target.id)
+    .maybeSingle();
+  if (error) return { id: null, error: error.message };
+  return { id: (data as { id: string } | null)?.id ?? null, error: null };
+}
+
+/** Creates (or returns) the thread via get_or_create_thread. Only call on a real user write. */
+export async function createThread(target: ThreadTarget): Promise<string> {
+  const { data, error } = await supabase.rpc("get_or_create_thread", {
+    p_client_request_id: target.kind === "request" ? target.id : null,
+    p_candidate_match_id: target.kind === "candidate" ? target.id : null,
+    p_client_id: target.kind === "general" ? target.id : null,
+  });
+  if (error) throw new Error(error.message);
+  const row = (Array.isArray(data) ? data[0] : data) as { id: string } | string | null;
+  const tid = typeof row === "string" ? row : row?.id;
+  if (!tid) throw new Error("Could not start the conversation.");
+  return tid;
+}
+
 /**
- * Resolves (get_or_create_thread) a thread, loads its messages with realtime,
+ * Looks up an existing thread (read-only), loads its messages with realtime,
  * and tracks unread staff messages via a localStorage last-read marker.
- * Pass `null` to skip. `active` marks the thread read while true.
+ * If no thread exists yet, threadId stays null until `setThreadId` is called
+ * (the Composer creates the thread on first send). `active` marks it read.
  */
 export function useThread(target: ThreadTarget | null, active = false) {
   const { user } = useAuth();
   const [threadId, setThreadId] = useState<string | null>(null);
+  const [resolved, setResolved] = useState(false);
   const [messages, setMessages] = useState<ThreadMessage[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [lastRead, setLastRead] = useState<string | null>(null);
@@ -66,26 +100,18 @@ export function useThread(target: ThreadTarget | null, active = false) {
 
   useEffect(() => {
     setThreadId(null);
+    setResolved(false);
     setMessages(null);
     setErr(null);
     if (!user || !kind || !targetId) return;
     let cancelled = false;
-    void (async () => {
-      const { data, error } = await supabase.rpc("get_or_create_thread", {
-        p_client_request_id: kind === "request" ? targetId : null,
-        p_candidate_match_id: kind === "candidate" ? targetId : null,
-        p_client_id: kind === "general" ? targetId : null,
-      });
+    void findThreadId({ kind, id: targetId }).then(({ id, error }) => {
       if (cancelled) return;
-      if (error) {
-        setErr(error.message);
-        setMessages([]);
-        return;
-      }
-      const row = (Array.isArray(data) ? data[0] : data) as { id: string } | string | null;
-      const tid = typeof row === "string" ? row : row?.id;
-      if (tid) setThreadId(tid);
-    })();
+      setResolved(true);
+      if (error) setErr(error);
+      if (id) setThreadId(id);
+      else setMessages([]);
+    });
     return () => {
       cancelled = true;
     };
@@ -107,7 +133,11 @@ export function useThread(target: ThreadTarget | null, active = false) {
       .then(({ data, error }) => {
         if (cancelled) return;
         setErr(error ? error.message : null);
-        setMessages((data ?? []) as ThreadMessage[]);
+        setMessages((prev) => {
+          const fetched = (data ?? []) as ThreadMessage[];
+          const extra = (prev ?? []).filter((p) => !fetched.some((f) => f.id === p.id));
+          return [...fetched, ...extra];
+        });
       });
     const channel = supabase
       .channel(`thread-messages-${threadId}-${Math.random().toString(36).slice(2)}`)
@@ -141,7 +171,38 @@ export function useThread(target: ThreadTarget | null, active = false) {
   const addMessage = (m: ThreadMessage) =>
     setMessages((prev) => ((prev ?? []).some((x) => x.id === m.id) ? prev : [...(prev ?? []), m]));
 
-  return { threadId, messages, err, unread, latest, addMessage, userId: user?.id ?? null };
+  return { threadId, setThreadId, resolved, messages, err, unread, latest, addMessage, userId: user?.id ?? null };
+}
+
+/** Read-only unread count for a thread. Never creates a thread. */
+export function useThreadPreview(target: ThreadTarget | null) {
+  const { user } = useAuth();
+  const [unread, setUnread] = useState(0);
+  const kind = target?.kind ?? null;
+  const targetId = target?.id ?? null;
+
+  useEffect(() => {
+    setUnread(0);
+    if (!user || !kind || !targetId) return;
+    let cancelled = false;
+    void (async () => {
+      const { id } = await findThreadId({ kind, id: targetId });
+      if (cancelled || !id) return;
+      const { data } = await supabase
+        .from("thread_messages")
+        .select("sender_role,created_at")
+        .eq("thread_id", id)
+        .eq("sender_role", "staff");
+      if (cancelled) return;
+      const lastRead = window.localStorage.getItem(lastReadKey(user.id, id));
+      setUnread((data ?? []).filter((m) => !lastRead || new Date(m.created_at) > new Date(lastRead)).length);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [kind, targetId, user]);
+
+  return { unread };
 }
 
 function MessagesButton({
