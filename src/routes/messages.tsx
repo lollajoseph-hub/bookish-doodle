@@ -170,7 +170,7 @@ function MessagesPage() {
       enrich({
         key: `candidate:${m.id}`,
         target: { kind: "candidate", id: m.id },
-        title: displayName(m.candidate_pool_profile?.full_name, m.status),
+        title: `Inquiry about ${displayName(m.candidate_pool_profile?.full_name, m.status)}`,
         subtitle: roleById[m.client_request_id] ?? "Hiring request",
         matchStatus: m.status,
       })
