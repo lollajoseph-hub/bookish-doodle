@@ -81,6 +81,7 @@ const STATUS_ORDER: MatchStatus[] = [
 
 function RequestDetail() {
   const { id } = useParams({ from: "/requests/$id" });
+  const navigate = useNavigate();
   const [request, setRequest] = useState<RequestHeader | null>(null);
   const [matches, setMatches] = useState<MatchRow[] | null>(null);
   const [photos, setPhotos] = useState<Record<string, string | null>>({});
@@ -261,8 +262,15 @@ function RequestDetail() {
                   </Badge>
                 )}
               </div>
-              <div className="mt-3">
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                 <RequestMessages requestId={id} />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate({ to: "/new-request", search: { clone: id } })}
+                >
+                  <Copy className="mr-1.5 h-3.5 w-3.5" /> Clone request
+                </Button>
               </div>
 
               {request && (
