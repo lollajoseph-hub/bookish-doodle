@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Merge, Pencil, Search, Tag } from "lucide-react";
+import { Loader2, Merge, Pencil, Plus, Search, Tag } from "lucide-react";
 import { toast } from "sonner";
 import {
   createSkill,
@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/dialog";
 
 const ALL = "__all__";
+const SKILL_CATEGORY_OPTIONS = ["Software", "Customer Service", "Languages", OTHER_CATEGORY];
 
 export function SkillsPanel() {
   return (
@@ -64,6 +65,9 @@ function CatalogPanel() {
   const [editCategory, setEditCategory] = useState<string>(OTHER_CATEGORY);
   const [mergeOpen, setMergeOpen] = useState(false);
   const [mergeTarget, setMergeTarget] = useState<string>("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newCategory, setNewCategory] = useState<string>(OTHER_CATEGORY);
 
   const categories = useMemo(() => distinctCategories(skills), [skills]);
 
@@ -127,6 +131,32 @@ function CatalogPanel() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const create = useMutation({
+    mutationFn: async () => {
+      const name = newName.trim();
+      if (!name) throw new Error("Skill name is required");
+      const dupe = skills.some(
+        (s) =>
+          (s.category ?? OTHER_CATEGORY) === newCategory &&
+          s.name.trim().toLowerCase() === name.toLowerCase(),
+      );
+      if (dupe) {
+        throw new Error(
+          `"${name}" already exists in ${newCategory} — merge it if this is a duplicate.`,
+        );
+      }
+      await createSkill(name, newCategory);
+    },
+    onSuccess: () => {
+      toast.success("Skill added to the catalog");
+      setCreateOpen(false);
+      setNewName("");
+      setNewCategory(OTHER_CATEGORY);
+      refresh();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const toggle = (id: string) =>
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
@@ -136,15 +166,20 @@ function CatalogPanel() {
         <p className="text-sm text-muted-foreground">
           Clean up skill tags clients typed in — rename, recategorize, merge duplicates.
         </p>
-        <Button
-          disabled={selected.length < 2}
-          onClick={() => {
-            setMergeTarget(selected[0] ?? "");
-            setMergeOpen(true);
-          }}
-        >
-          <Merge className="mr-1 h-4 w-4" /> Merge selected ({selected.length})
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setCreateOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" /> Add skill
+          </Button>
+          <Button
+            disabled={selected.length < 2}
+            onClick={() => {
+              setMergeTarget(selected[0] ?? "");
+              setMergeOpen(true);
+            }}
+          >
+            <Merge className="mr-1 h-4 w-4" /> Merge selected ({selected.length})
+          </Button>
+        </div>
       </div>
 
       <div className="card-amber flex flex-wrap items-center gap-3 rounded-2xl border bg-card p-4">
@@ -226,6 +261,53 @@ function CatalogPanel() {
           </div>
         </div>
       ))}
+
+      {/* Add skill */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add a skill</DialogTitle>
+            <DialogDescription>
+              Adds the skill straight to the catalog — you can tag it to roles afterwards from the
+              Role skills tab.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-skill-name">Skill name *</Label>
+              <Input
+                id="new-skill-name"
+                value={newName}
+                placeholder="e.g. Salesforce"
+                onChange={(e) => setNewName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Category</Label>
+              <Select value={newCategory} onValueChange={setNewCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SKILL_CATEGORY_OPTIONS.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCreateOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => create.mutate()} disabled={create.isPending}>
+              {create.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Add skill
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit */}
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
