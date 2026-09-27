@@ -50,7 +50,7 @@ export function RequestMessages({ requestId }: { requestId: string }) {
   return (
     <ThreadPanel
       target={{ kind: "request", id: requestId }}
-      label="Messages"
+      label="Talk to us about this request"
       description="Chat with your ScaleSource recruiter about this request."
       actions={[]}
     />

@@ -107,7 +107,7 @@ function RequestDetail() {
       supabase
         .from("client_request_skills")
         .select("skills(name)")
-        .eq("client_request_id", id)
+        .eq("request_id", id)
         .eq("is_required", true),
     ]);
 
