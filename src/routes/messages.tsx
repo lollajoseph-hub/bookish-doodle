@@ -29,6 +29,7 @@ import {
   markRead,
   sendThreadMessage,
   threadTargetKey,
+  type CandidateInboxItem,
   type GeneralInboxItem,
   type InboxItem,
   type StructuredType,
@@ -121,6 +122,7 @@ function MessagesPage() {
   });
   const requestItems = inbox?.requests ?? [];
   const generalItems = inbox?.generals ?? [];
+  const candidateItems = inbox?.candidates ?? [];
 
   // Refresh inbox whenever any message lands anywhere
   useEffect(() => {
@@ -150,6 +152,14 @@ function MessagesPage() {
     () => (q ? generalItems.filter((g) => g.clientName.toLowerCase().includes(q)) : generalItems),
     [generalItems, q],
   );
+  const filteredCandidates = useMemo(() => {
+    if (!q) return candidateItems;
+    return candidateItems.filter((c) =>
+      [c.candidateName, c.clientName, c.requestTitle]
+        .filter(Boolean)
+        .some((s) => s!.toLowerCase().includes(q)),
+    );
+  }, [candidateItems, q]);
 
   const selectedRequest =
     selection?.kind === "request"
