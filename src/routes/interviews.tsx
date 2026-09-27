@@ -455,40 +455,15 @@ function InterviewsPage() {
   }
 
   const renderCard = (m: MatchRow) => {
+    const p = m.candidate_pool_profile;
+    const name = displayName(p?.full_name, m.status);
+    const when = formatDateTime(m.interview_scheduled_at);
+    const proposed = formatDateTime(m.interview_proposed_at);
+    const photo = photos[m.id] ?? null;
     return (
       <Card key={m.id} className="card-amber rounded-2xl">
         <CardContent className="space-y-3 p-5">
-
-      {err && (
-        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
-          {err}
-        </div>
-      )}
-
-      {rows === null ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      ) : rows.length === 0 ? (
-        <Card className="rounded-2xl border-dashed">
-          <CardContent className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <CalendarClock className="h-8 w-8 text-muted-foreground" />
-            <p className="font-medium">No interviews yet.</p>
-            <p className="text-sm text-muted-foreground">
-              Request an interview from a candidate&apos;s card and it will appear here.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-3">
-          {rows.map((m) => {
-            const p = m.candidate_pool_profile;
-            const name = displayName(p?.full_name, m.status);
-            const when = formatDateTime(m.interview_scheduled_at);
-            const proposed = formatDateTime(m.interview_proposed_at);
-            const photo = photos[m.id] ?? null;
-            return (
-              <Card key={m.id} className="card-amber rounded-2xl">
-                <CardContent className="space-y-3 p-5">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="flex min-w-0 items-start gap-3">
                       {photo ? (
                         <img src={photo} alt="" className="h-14 w-14 flex-none rounded-full object-cover ring-2 ring-primary/15" />
