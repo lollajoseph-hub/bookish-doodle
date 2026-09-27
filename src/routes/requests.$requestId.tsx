@@ -635,6 +635,7 @@ interface MatchScoreBreakdownRow {
   required_years_experience_min: number | null;
   experience_points: number | null;
   ai_rank_score: number | null;
+  ai_rank_score_breakdown: Record<string, number> | null;
   computed_total: number | null;
   stored_match_score: number | null;
 }
