@@ -1,18 +1,26 @@
-# Candidate reasoning and skill-gap display
+# Floating messaging widget
 
 ## What will change
-- Add a compact “Why this candidate” section to candidate cards when a match reason exists.
-- Load required request skills and each presented candidate’s recorded skills alongside the existing request and match data.
-- Show matched and missing required skills in both Cards and Compare views.
-- Keep the existing profile skills untouched; the new display will use the relational skill records for accurate request-to-candidate comparison.
+- Add a persistent “Talk to us” bubble to every signed-in page, with a total unread badge.
+- Open a compact bottom-right inbox panel without blocking or navigating away from the current page.
+- Support inbox and conversation states, including General, Requests, Candidates, unread markers, back, and close controls.
+- Keep `/messages` fully functional for direct and notification links, but remove its header navigation button.
+- Make request, candidate, and general message buttons open the widget directly in the relevant conversation.
 
 ## Implementation
-- Pass a request-level required-skill list and a candidate-id keyed skill lookup from the request detail page.
-- Add shared skill-gap types/calculation/display in the candidate card module so Cards and Compare use identical matching logic and badge treatment.
-- Match skill names case-insensitively while preserving the request skill names for display.
-- Hide the skill-match section when the request has no required skills; show matched and missing groups only when each has entries.
-- Preserve existing card ordering, actions, Review mode, profile dialog, and backend behavior.
+- Extract inbox loading, enrichment, sorting, relative dates, and unread totals into `useMessagesInbox`, preserving 20-second and focus/visibility refresh.
+- Share inbox row types and reusable list/chat pieces between the full Messages page and floating widget.
+- Add a widget provider that owns open/closed state and the selected thread target.
+- Mount the provider and widget once inside the authenticated app shell.
+- Preserve lazy thread creation: viewing a conversation stays read-only, and the first send creates the thread.
+- Keep deep-link search handling on `/messages` unchanged.
+
+## Technical details
+- Reuse the existing `ChatFeed`, `Composer`, `useThread`, and thread action rules.
+- Use existing semantic colors and button components; the panel will be responsive and capped near 80vh.
+- Update the project architecture note for the new shared inbox/widget boundary.
 
 ## Validation
-- Run the TypeScript typecheck and inspect the preview build.
-- Verify the default Cards view shows match reasons and skill gaps, while Compare shows the same matched/missing split.
+- Run the TypeScript typecheck and inspect the latest preview build result.
+- Verify the widget opens from the bubble and existing request/candidate triggers, switches between list and thread views, and closes cleanly.
+- Verify `/messages` still selects deep-linked conversations and that no conversation is created until the first message is sent.
