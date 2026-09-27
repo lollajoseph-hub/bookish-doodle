@@ -384,23 +384,6 @@ function InterviewsPage() {
     }
     setViews(viewsMap);
 
-    const [requestSkillsRes2, candidateSkillsRes2] = [requestSkillsRes, candidateSkillsRes];
-    void requestSkillsRes2;
-    void candidateSkillsRes2;
-    const [requestSkillsResUnused] = [null];
-    void requestSkillsResUnused;
-    const [requestSkillsResFinal, candidateSkillsResFinal] = [requestSkillsRes, candidateSkillsRes];
-    void requestSkillsResFinal;
-    void candidateSkillsResFinal;
-    const [requestSkillsResA, candidateSkillsResA] = [requestSkillsRes, candidateSkillsRes];
-      requestIds.length
-        ? supabase.from("client_request_skills").select("request_id,skills(name)").eq("is_required", true).in("request_id", requestIds)
-        : Promise.resolve({ data: [], error: null }),
-      candidateIds.length
-        ? supabase.from("candidate_skills").select("candidate_id,skills(name)").in("candidate_id", candidateIds)
-        : Promise.resolve({ data: [], error: null }),
-    ]);
-
     if (requestSkillsRes.error || candidateSkillsRes.error) {
       setErr(requestSkillsRes.error?.message ?? candidateSkillsRes.error?.message ?? "Unable to load skills");
     }
