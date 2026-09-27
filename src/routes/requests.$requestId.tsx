@@ -637,7 +637,6 @@ interface MatchScoreBreakdownRow {
   ai_rank_score: number | null;
   computed_total: number | null;
   stored_match_score: number | null;
-  is_stale: boolean | null;
 }
 
 function useMatchScoreBreakdown(matchId: string | undefined, enabled: boolean) {
@@ -654,29 +653,9 @@ function useMatchScoreBreakdown(matchId: string | undefined, enabled: boolean) {
   });
 }
 
-function useRefreshMatchScore(matchId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.rpc("refresh_match_score", { p_match_id: matchId });
-      if (error) throw new Error(error.message);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["match-score-breakdown", matchId] });
-      await queryClient.invalidateQueries({ queryKey: ["client-request"] });
-      await queryClient.invalidateQueries({ queryKey: ["client-requests"] });
-     },
-  });
-}
-
 function ScoreBadge({ matchId, score }: { matchId: string; score: number }) {
   const [open, setOpen] = useState(false);
   const { data, isLoading, error } = useMatchScoreBreakdown(matchId, open);
-  const refresh = useRefreshMatchScore(matchId);
-
-  const capturedAt = data?.match_created_at
-    ? new Date(data.match_created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
-    : null;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -718,22 +697,6 @@ function ScoreBadge({ matchId, score }: { matchId: string; score: number }) {
               </li>
               <li className="border-t pt-1 font-semibold">Total: {data.computed_total ?? 0} pts</li>
             </ul>
-            {data.is_stale && (
-              <div className="space-y-1.5">
-                <p className="text-xs text-muted-foreground">
-                  Card shows {data.stored_match_score ?? score} — captured {capturedAt ?? "earlier"}. Recalculated
-                  total reflects current data.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={refresh.isPending}
-                  onClick={() => refresh.mutate(undefined, { onError: (e: Error) => toast.error(e.message) })}
-                >
-                  {refresh.isPending ? "Refreshing…" : "Refresh score"}
-                </Button>
-              </div>
-            )}
           </div>
         )}
       </PopoverContent>
