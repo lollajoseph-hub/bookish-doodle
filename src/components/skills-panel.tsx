@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Merge, Pencil, Search, Tag } from "lucide-react";
 import { toast } from "sonner";
 import {
+  createSkill,
   distinctCategories,
   fetchSkillsWithUsage,
   mergeSkills,
