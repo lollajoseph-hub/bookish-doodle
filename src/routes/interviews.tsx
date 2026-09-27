@@ -18,7 +18,6 @@ import {
   formatDateTime,
   signedPhotoUrl,
   type MatchStatus,
-  type RejectionReason,
 } from "@/lib/matches";
 import { createThread, findThreadId } from "@/components/request-messages";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
