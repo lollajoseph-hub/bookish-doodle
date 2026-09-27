@@ -45,9 +45,21 @@ export interface GeneralInboxItem {
   sortAt: string;
 }
 
+export interface CandidateInboxItem {
+  matchId: string;
+  candidateName: string;
+  clientName: string | null;
+  requestTitle: string | null;
+  status: string;
+  thread: ThreadRow;
+  lastMessage: ThreadMessageRow | null;
+  sortAt: string;
+}
+
 export interface InboxData {
   requests: InboxItem[];
   generals: GeneralInboxItem[];
+  candidates: CandidateInboxItem[];
 }
 
 export type ThreadTarget =
@@ -67,7 +79,7 @@ export function threadTargetKey(t: ThreadTarget): string {
 export async function fetchInbox(): Promise<InboxData> {
   const [requests, threadsRes] = await Promise.all([
     fetchClientRequests(),
-    supabase.from("threads").select("*").in("kind", ["request", "general"]),
+    supabase.from("threads").select("*").in("kind", ["request", "general", "candidate"]),
   ]);
   if (threadsRes.error) throw threadsRes.error;
   const threads = (threadsRes.data ?? []) as ThreadRow[];
@@ -127,7 +139,76 @@ export async function fetchInbox(): Promise<InboxData> {
       if (!!a.lastMessage !== !!b.lastMessage) return a.lastMessage ? -1 : 1;
       return b.sortAt.localeCompare(a.sortAt);
     });
-  return { requests: requestItems, generals };
+
+  // Candidate-level threads (one per candidate_match)
+  const candidateThreads = threads.filter((t) => t.kind === "candidate" && t.candidate_match_id);
+  const matchIds = [...new Set(candidateThreads.map((t) => t.candidate_match_id!))];
+  const matchesById = new Map<
+    string,
+    { id: string; candidate_id: string; client_request_id: string; status: string }
+  >();
+  if (matchIds.length) {
+    const { data: mData, error: mErr } = await supabase
+      .from("candidate_matches")
+      .select("id, candidate_id, client_request_id, status")
+      .in("id", matchIds);
+    if (mErr) throw mErr;
+    for (const m of mData ?? []) matchesById.set(m.id, m);
+  }
+  const candIds = [...new Set([...matchesById.values()].map((m) => m.candidate_id))];
+  const reqIds = [...new Set([...matchesById.values()].map((m) => m.client_request_id))];
+  const candNames = new Map<string, string>();
+  if (candIds.length) {
+    const { data: cData, error: cErr } = await supabase
+      .from("candidates")
+      .select("id, full_name")
+      .in("id", candIds);
+    if (cErr) throw cErr;
+    for (const c of cData ?? []) candNames.set(c.id, c.full_name);
+  }
+  const reqInfo = new Map<string, { title: string | null; client_id: string }>();
+  if (reqIds.length) {
+    const { data: rData, error: rErr } = await supabase
+      .from("client_requests")
+      .select("id, title, client_id")
+      .in("id", reqIds);
+    if (rErr) throw rErr;
+    for (const r of rData ?? []) reqInfo.set(r.id, r);
+  }
+  const clientIds = [...new Set([...reqInfo.values()].map((r) => r.client_id))];
+  const clientNameById = new Map<string, string>();
+  if (clientIds.length) {
+    const { data: clData, error: clErr } = await supabase
+      .from("clients")
+      .select("id, name")
+      .in("id", clientIds);
+    if (clErr) throw clErr;
+    for (const c of clData ?? []) clientNameById.set(c.id, c.name);
+  }
+  const candidates: CandidateInboxItem[] = candidateThreads
+    .map((thread) => {
+      const match = matchesById.get(thread.candidate_match_id!);
+      if (!match) return null;
+      const req = reqInfo.get(match.client_request_id);
+      const lastMessage = latest.get(thread.id) ?? null;
+      return {
+        matchId: match.id,
+        candidateName: candNames.get(match.candidate_id) ?? "Candidate",
+        clientName: req ? (clientNameById.get(req.client_id) ?? null) : null,
+        requestTitle: req?.title ?? null,
+        status: match.status,
+        thread,
+        lastMessage,
+        sortAt: lastMessage?.created_at ?? thread.created_at,
+      };
+    })
+    .filter((i): i is CandidateInboxItem => i !== null)
+    .sort((a, b) => {
+      if (!!a.lastMessage !== !!b.lastMessage) return a.lastMessage ? -1 : 1;
+      return b.sortAt.localeCompare(a.sortAt);
+    });
+
+  return { requests: requestItems, generals, candidates };
 }
 
 export async function getOrCreateThread(target: ThreadTarget): Promise<ThreadRow> {

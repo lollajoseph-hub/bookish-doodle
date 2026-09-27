@@ -29,6 +29,7 @@ import {
   markRead,
   sendThreadMessage,
   threadTargetKey,
+  type CandidateInboxItem,
   type GeneralInboxItem,
   type InboxItem,
   type StructuredType,
@@ -121,6 +122,7 @@ function MessagesPage() {
   });
   const requestItems = inbox?.requests ?? [];
   const generalItems = inbox?.generals ?? [];
+  const candidateItems = inbox?.candidates ?? [];
 
   // Refresh inbox whenever any message lands anywhere
   useEffect(() => {
@@ -150,6 +152,14 @@ function MessagesPage() {
     () => (q ? generalItems.filter((g) => g.clientName.toLowerCase().includes(q)) : generalItems),
     [generalItems, q],
   );
+  const filteredCandidates = useMemo(() => {
+    if (!q) return candidateItems;
+    return candidateItems.filter((c) =>
+      [c.candidateName, c.clientName, c.requestTitle]
+        .filter(Boolean)
+        .some((s) => s!.toLowerCase().includes(q)),
+    );
+  }, [candidateItems, q]);
 
   const selectedRequest =
     selection?.kind === "request"
@@ -224,6 +234,29 @@ function MessagesPage() {
                         active={selection?.kind === "general" && selection.id === g.clientId}
                         readTick={readTick}
                         onClick={() => select({ kind: "general", id: g.clientId })}
+                      />
+                    ))}
+                  </>
+                )}
+                {filteredCandidates.length > 0 && (
+                  <>
+                    <div className="bg-muted/60 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Candidates
+                    </div>
+                    {filteredCandidates.map((c) => (
+                      <ThreadListRow
+                        key={`c-${c.matchId}`}
+                        icon={UserRound}
+                        title={c.candidateName}
+                        subtitle={
+                          [c.clientName, c.requestTitle].filter(Boolean).join(" — ") || "Candidate conversation"
+                        }
+                        thread={c.thread}
+                        lastMessage={c.lastMessage}
+                        userId={userId}
+                        active={selection?.kind === "candidate" && selection.id === c.matchId}
+                        readTick={readTick}
+                        onClick={() => select({ kind: "candidate", id: c.matchId })}
                       />
                     ))}
                   </>
