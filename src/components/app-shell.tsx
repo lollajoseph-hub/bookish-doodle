@@ -21,6 +21,7 @@ import {
   Activity,
   BarChart3,
   Bell,
+  MessageSquare,
   History,
   UserPlus,
   ListChecks,
@@ -83,6 +84,7 @@ const navGroups: Array<{ label: string; items: NavItem[]; adminOnly?: boolean }>
     label: "Pipeline",
     items: [
       { to: "/requests", label: "Client Requests", icon: ClipboardList },
+      { to: "/messages", label: "Messages", icon: MessageSquare },
       { to: "/interview-review", label: "Interview Review", icon: CalendarCheck },
       { to: "/offer-review", label: "Offer Review", icon: FileCheck },
       { to: "/placements", label: "Placements", icon: BriefcaseBusiness },
