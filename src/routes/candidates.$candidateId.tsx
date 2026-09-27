@@ -567,6 +567,7 @@ function CandidateDetailPage() {
                   recruiterSummary={aiProfile?.recruiter_summary ?? null}
                   approvedSummary={aiProfile?.approved_summary ?? null}
                   rankScore={aiProfile?.rank_score ?? null}
+                  highlights={(aiProfile?.highlights as string[] | null) ?? null}
                 />
 
                 <IntroVideoCard
@@ -822,12 +823,14 @@ function AiSummaryCard({
   recruiterSummary,
   approvedSummary,
   rankScore,
+  highlights,
 }: {
   candidateId: string;
   canEdit: boolean;
   recruiterSummary: string | null;
   approvedSummary: string | null;
   rankScore: number | null;
+  highlights: string[] | null;
 }) {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<string | null>(null);
@@ -880,6 +883,18 @@ function AiSummaryCard({
           </p>
         )}
       </div>
+      {highlights && highlights.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            Highlights (client-visible)
+          </p>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+            {highlights.map((h, i) => (
+              <li key={i}>{h}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </section>
   );
 }
