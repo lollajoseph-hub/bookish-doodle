@@ -27,6 +27,7 @@ import {
   fetchThreadMessages,
   getLastRead,
   getOrCreateThread,
+  findThreadId,
   markRead,
   sendThreadMessage,
   threadTargetKey,
@@ -702,7 +703,7 @@ function ThreadWorkspace({
                     key={type}
                     size="sm"
                     variant="outline"
-                    disabled={!threadId || send.isPending}
+                    disabled={threadLoading || send.isPending}
                     onClick={() => send.mutate({ body: a.body, type })}
                   >
                     <Icon className="mr-1 h-3.5 w-3.5" />
@@ -726,7 +727,7 @@ function ThreadWorkspace({
               }}
               className="min-h-[44px] resize-none"
             />
-            <Button onClick={submit} disabled={!threadId || !draft.trim() || send.isPending}>
+            <Button onClick={submit} disabled={threadLoading || !draft.trim() || send.isPending}>
               <Send className="mr-1 h-4 w-4" /> Send
             </Button>
           </div>
