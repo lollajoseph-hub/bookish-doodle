@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { CandidateCard, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { InterviewRequestDialog } from "@/components/interview-request-dialog";
+import { RequestMessages } from "@/components/request-messages";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, Sparkles, UsersRound } from "lucide-react";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
@@ -219,6 +220,9 @@ function RequestDetail() {
                     Hand-picked
                   </Badge>
                 )}
+              </div>
+              <div className="mt-3">
+                <RequestMessages requestId={id} />
               </div>
 
               {request && (
