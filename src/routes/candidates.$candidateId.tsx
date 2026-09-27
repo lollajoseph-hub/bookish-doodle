@@ -883,6 +883,18 @@ function AiSummaryCard({
           </p>
         )}
       </div>
+      {highlights && highlights.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            Highlights (client-visible)
+          </p>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+            {highlights.map((h, i) => (
+              <li key={i}>{h}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </section>
   );
 }
