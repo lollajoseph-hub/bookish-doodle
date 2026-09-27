@@ -849,7 +849,7 @@ function AiSummaryCard({
         <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
           Candidate summary
         </h2>
-        {rankScore != null && <Badge variant="secondary">Rank {rankScore}</Badge>}
+        {rankScore != null && <Badge variant="secondary">AI score {rankScore}/15</Badge>}
       </div>
       <div className="mt-3 space-y-1">
         <p className="text-xs uppercase tracking-wide text-muted-foreground">
