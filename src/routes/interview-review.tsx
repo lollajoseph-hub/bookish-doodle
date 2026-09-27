@@ -353,13 +353,14 @@ function InterviewReviewPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
+  <Dialog
         open={!!proposeFor}
         onOpenChange={(open) => {
           if (!open) {
             setProposeFor(null);
             setProposedTime("");
             setProposeNotes("");
+            setDeclineMode(false);
           }
         }}
       >
@@ -367,7 +368,9 @@ function InterviewReviewPage() {
           <DialogHeader>
             <DialogTitle>Propose different time</DialogTitle>
             <DialogDescription>
-              Propose a new interview time for {proposeFor?.name}. The client will be notified.
+              {declineMode
+                ? `You've declined that time — propose one that works for ${proposeFor?.name}. The client will be notified.`
+                : `Propose a new interview time for ${proposeFor?.name}. The client will be notified.`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
