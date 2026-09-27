@@ -1,3 +1,4 @@
+import { CandidateRating } from "@/components/candidate-rating";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -413,7 +414,14 @@ function RequestDetail() {
                     matchStatus={reviewMatch.status}
                   />
                   <Card className="rounded-lg">
-                    <CardContent className="p-4">
+                    <CardContent className="space-y-3 p-4">
+                      <CandidateRating
+                        matchId={reviewMatch.id}
+                        interviewCompletedAt={reviewMatch.interview_completed_at}
+                        rating={reviewMatch.client_rating}
+                        note={reviewMatch.client_rating_note}
+                        onSaved={() => void load()}
+                      />
                       <CandidateActions
                         key={reviewMatch.id}
                         match={reviewMatch}

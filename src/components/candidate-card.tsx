@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { CandidateRating } from "@/components/candidate-rating";
 import {
   BriefcaseBusiness,
   CalendarCheck,
@@ -79,6 +80,9 @@ export interface MatchRow {
   rejected_at: string | null;
   match_score: number | null;
   match_reason: string | null;
+  interview_completed_at: string | null;
+  client_rating: number | null;
+  client_rating_note: string | null;
   candidate_id: string;
   candidate_pool_profile: PoolProfile | null;
 }
@@ -89,7 +93,7 @@ export interface CandidateSkillGapProps {
 }
 
 export const MATCH_SELECT =
-  "id,status,client_request_id,interview_proposed_at,interview_proposed_by,interview_scheduled_at,meet_url,interview_notes,meeting_notes_text,meeting_notes_doc_url,meeting_notes_captured_at,recording_url,recording_captured_at,rejection_reason,rejection_reason_note,rejected_at,match_score,match_reason,candidate_id," +
+  "id,status,client_request_id,interview_proposed_at,interview_proposed_by,interview_scheduled_at,meet_url,interview_notes,meeting_notes_text,meeting_notes_doc_url,meeting_notes_captured_at,recording_url,recording_captured_at,rejection_reason,rejection_reason_note,rejected_at,match_score,match_reason,interview_completed_at,client_rating,client_rating_note,candidate_id," +
   "candidate_pool_profile(candidate_id,full_name,headline,availability,country,timezone,weekly_hours_available,preferred_shift,years_experience,earliest_start_date,approved_summary,highlights,skills,primary_role,secondary_roles,profile_photo_path)";
 
 export function statusTone(s: MatchStatus | string) {
@@ -355,6 +359,14 @@ export function CandidateCard({
         )}
 
         <CandidateSkillGap requiredSkills={requiredSkills} candidateSkills={candidateSkills} />
+
+        <CandidateRating
+          matchId={match.id}
+          interviewCompletedAt={match.interview_completed_at}
+          rating={match.client_rating}
+          note={match.client_rating_note}
+          onSaved={onInterviewTimeAccepted}
+        />
 
         {status === "interview_requested" &&
           (match.interview_proposed_by === "staff" ? (
