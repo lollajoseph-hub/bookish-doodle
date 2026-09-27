@@ -8,7 +8,8 @@ export interface ThreadRow {
   id: string;
   client_request_id: string;
   candidate_match_id: string | null;
-  kind: "request" | "candidate";
+  client_id?: string | null;
+  kind: "request" | "candidate" | "general";
   created_at: string;
 }
 
@@ -36,15 +37,46 @@ export interface InboxItem {
   sortAt: string;
 }
 
+export interface GeneralInboxItem {
+  clientId: string;
+  clientName: string;
+  thread: ThreadRow | null;
+  lastMessage: ThreadMessageRow | null;
+  sortAt: string;
+}
+
+export interface InboxData {
+  requests: InboxItem[];
+  generals: GeneralInboxItem[];
+}
+
+export type ThreadTarget =
+  | { kind: "request"; clientRequestId: string }
+  | { kind: "candidate"; candidateMatchId: string }
+  | { kind: "general"; clientId: string };
+
+export function threadTargetKey(t: ThreadTarget): string {
+  return t.kind === "request"
+    ? t.clientRequestId
+    : t.kind === "candidate"
+      ? t.candidateMatchId
+      : t.clientId;
+}
+
 /** Active requests (not closed) merged with their request-level threads + latest message. */
-export async function fetchInbox(): Promise<InboxItem[]> {
+export async function fetchInbox(): Promise<InboxData> {
   const [requests, threadsRes] = await Promise.all([
     fetchClientRequests(),
-    supabase.from("threads").select("*").eq("kind", "request"),
+    supabase.from("threads").select("*").in("kind", ["request", "general"]),
   ]);
   if (threadsRes.error) throw threadsRes.error;
   const threads = (threadsRes.data ?? []) as ThreadRow[];
-  const threadByRequest = new Map(threads.map((t) => [t.client_request_id, t]));
+  const threadByRequest = new Map(
+    threads.filter((t) => t.kind === "request").map((t) => [t.client_request_id, t]),
+  );
+  const threadByClient = new Map(
+    threads.filter((t) => t.kind === "general" && t.client_id).map((t) => [t.client_id!, t]),
+  );
 
   const latest = new Map<string, ThreadMessageRow>();
   if (threads.length) {
@@ -62,7 +94,23 @@ export async function fetchInbox(): Promise<InboxItem[]> {
     }
   }
 
-  return requests
+  const clientNames = new Map<string, string>();
+  for (const r of requests) {
+    if (r.client_id && !clientNames.has(r.client_id)) {
+      clientNames.set(r.client_id, r.clientName ?? "Client");
+    }
+  }
+  const generals: GeneralInboxItem[] = [...clientNames.entries()]
+    .map(([clientId, clientName]) => {
+      const thread = threadByClient.get(clientId) ?? null;
+      const lastMessage = thread ? (latest.get(thread.id) ?? null) : null;
+      return { clientId, clientName, thread, lastMessage, sortAt: lastMessage?.created_at ?? "" };
+    })
+    .sort((a, b) =>
+      a.sortAt !== b.sortAt ? b.sortAt.localeCompare(a.sortAt) : a.clientName.localeCompare(b.clientName),
+    );
+
+  const requestItems = requests
     .filter((r) => r.status !== "closed" || threadByRequest.has(r.id))
     .map((request) => {
       const thread = threadByRequest.get(request.id) ?? null;
@@ -79,13 +127,17 @@ export async function fetchInbox(): Promise<InboxItem[]> {
       if (!!a.lastMessage !== !!b.lastMessage) return a.lastMessage ? -1 : 1;
       return b.sortAt.localeCompare(a.sortAt);
     });
+  return { requests: requestItems, generals };
 }
 
-export async function getOrCreateThread(clientRequestId: string): Promise<ThreadRow> {
-  const { data, error } = await supabase.rpc("get_or_create_thread", {
-    p_client_request_id: clientRequestId,
-    p_candidate_match_id: null,
-  });
+export async function getOrCreateThread(target: ThreadTarget): Promise<ThreadRow> {
+  const args =
+    target.kind === "candidate"
+      ? { p_candidate_match_id: target.candidateMatchId }
+      : target.kind === "request"
+        ? { p_client_request_id: target.clientRequestId }
+        : { p_client_id: target.clientId };
+  const { data, error } = await supabase.rpc("get_or_create_thread", args as never);
   if (error) throw error;
   return (Array.isArray(data) ? data[0] : data) as ThreadRow;
 }
@@ -147,4 +199,49 @@ export function markRead(userId: string, threadId: string, at: string) {
   if (typeof window === "undefined") return;
   const prev = getLastRead(userId, threadId);
   if (!prev || prev < at) window.localStorage.setItem(readKey(userId, threadId), at);
+}
+
+export interface CandidateThreadContext {
+  matchId: string;
+  status: string;
+  candidateId: string;
+  candidateName: string;
+  clientRequestId: string;
+  requestTitle: string | null;
+  clientName: string | null;
+}
+
+export async function fetchCandidateThreadContext(matchId: string): Promise<CandidateThreadContext> {
+  const { data: m, error } = await supabase
+    .from("candidate_matches")
+    .select("id, status, candidate_id, client_request_id")
+    .eq("id", matchId)
+    .single();
+  if (error) throw error;
+  const [candRes, reqRes] = await Promise.all([
+    supabase.from("candidates").select("full_name").eq("id", m.candidate_id).maybeSingle(),
+    supabase
+      .from("client_requests")
+      .select("title, client_id")
+      .eq("id", m.client_request_id)
+      .maybeSingle(),
+  ]);
+  let clientName: string | null = null;
+  if (reqRes.data?.client_id) {
+    const { data: c } = await supabase
+      .from("clients")
+      .select("name")
+      .eq("id", reqRes.data.client_id)
+      .maybeSingle();
+    clientName = c?.name ?? null;
+  }
+  return {
+    matchId: m.id,
+    status: m.status as string,
+    candidateId: m.candidate_id,
+    candidateName: candRes.data?.full_name ?? "Candidate",
+    clientRequestId: m.client_request_id,
+    requestTitle: reqRes.data?.title ?? null,
+    clientName,
+  };
 }
