@@ -15,4 +15,4 @@
 - [x] Add and verify the Cards/Compare candidate view on request details
 
 - [x] Add and verify the inline Review candidate profile view
-- [ ] Add candidate-card match reasons and shared required-skill gap displays to Cards and Compare
+- [x] Add candidate-card match reasons and shared required-skill gap displays to Cards and Compare
