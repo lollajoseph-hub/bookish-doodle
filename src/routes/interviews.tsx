@@ -5,17 +5,28 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { CandidateSkillGap, MatchStatusIcon, statusTone, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { toast } from "sonner";
-import { CalendarClock, ChevronDown, Clock, ExternalLink, Loader2, StickyNote, UserSearch, Video } from "lucide-react";
+import { CalendarClock, ChevronDown, Clock, ExternalLink, Loader2, StickyNote, ThumbsDown, UserSearch, Video } from "lucide-react";
 import {
   MATCH_STATUS_LABELS,
+  REJECTION_REASONS,
   displayName,
   formatDateTime,
   signedPhotoUrl,
   type MatchStatus,
+  type RejectionReason,
 } from "@/lib/matches";
 import { createThread, findThreadId } from "@/components/request-messages";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
