@@ -63,7 +63,8 @@ type NavItem = {
     | "/notifications"
     | "/recruiter-activity"
     | "/skills"
-    | "/team";
+    | "/team"
+    | "/messages";
   label: string;
   icon: typeof LayoutDashboard;
   adminOnly?: boolean;
