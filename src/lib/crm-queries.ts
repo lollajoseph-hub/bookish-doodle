@@ -241,6 +241,7 @@ export async function fetchClientRequests(): Promise<ClientRequestListItem[]> {
 export interface MatchView extends CandidateMatchRow {
   candidateName: string | null;
   candidateHeadline: string | null;
+  candidateSkills: string[];
 }
 
 export interface ClientRequestDetail {
@@ -265,12 +266,35 @@ export async function fetchClientRequestDetail(id: string): Promise<ClientReques
   if (reqRes.error) throw reqRes.error;
   if (!reqRes.data) throw new Error("Request not found");
   const request = reqRes.data as ClientRequestRow;
+  const matchRows = (matchesRes.data ?? []) as CandidateMatchRow[];
 
   const [clientRes, roleRes, candidatesRes] = await Promise.all([
     supabase.from("clients").select("name").eq("id", request.client_id).maybeSingle(),
     supabase.from("job_roles").select("name").eq("id", request.role_id).maybeSingle(),
     supabase.from("candidates").select("id, full_name, headline"),
   ]);
+
+  // Each matched candidate's own skills, joined to skills(name).
+  const skillsByCandidate = new Map<string, string[]>();
+  const matchedCandidateIds = [...new Set(matchRows.map((m) => m.candidate_id))];
+  if (matchedCandidateIds.length) {
+    const { data: candSkillsRows, error: candSkillsError } = await supabase
+      .from("candidate_skills")
+      .select("candidate_id, skills(name)")
+      .in("candidate_id", matchedCandidateIds);
+    if (candSkillsError) throw candSkillsError;
+    for (const row of (candSkillsRows ?? []) as {
+      candidate_id: string;
+      skills: { name: string } | { name: string }[] | null;
+    }[]) {
+      const names = (Array.isArray(row.skills) ? row.skills : row.skills ? [row.skills] : [])
+        .map((s) => s?.name)
+        .filter((n): n is string => !!n);
+      const list = skillsByCandidate.get(row.candidate_id) ?? [];
+      list.push(...names);
+      skillsByCandidate.set(row.candidate_id, list);
+    }
+  }
 
   const skillById = new Map((skillsRes.data ?? []).map((s) => [s.id, s]));
   const candidateById = new Map((candidatesRes.data ?? []).map((c) => [c.id, c]));
@@ -285,10 +309,11 @@ export async function fetchClientRequestDetail(id: string): Promise<ClientReques
       category: skillById.get(s.skill_id)?.category ?? null,
       is_required: s.is_required,
     })),
-    matches: ((matchesRes.data ?? []) as CandidateMatchRow[]).map((m) => ({
+    matches: matchRows.map((m) => ({
       ...m,
       candidateName: candidateById.get(m.candidate_id)?.full_name ?? null,
       candidateHeadline: candidateById.get(m.candidate_id)?.headline ?? null,
+      candidateSkills: skillsByCandidate.get(m.candidate_id) ?? [],
     })),
   };
 }
