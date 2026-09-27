@@ -279,20 +279,20 @@ function RequestDetail() {
                 <LayoutGrid className="mr-1.5 h-4 w-4" /> Cards
               </Button>
               <Button
-                variant={candidateView === "compare" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => selectCandidateView("compare")}
-                aria-pressed={candidateView === "compare"}
-              >
-                <Columns3 className="mr-1.5 h-4 w-4" /> Compare
-              </Button>
-              <Button
                 variant={candidateView === "review" ? "secondary" : "ghost"}
                 size="sm"
                 onClick={() => selectCandidateView("review")}
                 aria-pressed={candidateView === "review"}
               >
                 <ScrollText className="mr-1.5 h-4 w-4" /> Review
+              </Button>
+              <Button
+                variant={candidateView === "compare" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => selectCandidateView("compare")}
+                aria-pressed={candidateView === "compare"}
+              >
+                <Columns3 className="mr-1.5 h-4 w-4" /> Compare
               </Button>
             </div>
           </div>
