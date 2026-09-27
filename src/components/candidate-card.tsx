@@ -132,7 +132,7 @@ export function MatchStatusIcon({ status }: { status: MatchStatus | string }) {
   }
 }
 
-function availabilityLabel(value: string | null | undefined) {
+export function availabilityLabel(value: string | null | undefined) {
   switch (value) {
     case "available":
       return "Available Immediately";
