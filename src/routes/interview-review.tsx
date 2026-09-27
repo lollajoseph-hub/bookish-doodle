@@ -16,8 +16,10 @@ import {
 import type { MatchStatus } from "@/lib/database.types";
 import {
   fetchScratchpad,
+  findThreadId,
   getOrCreateThread,
   updateScratchpad,
+  type ThreadTarget,
 } from "@/lib/messages-queries";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
