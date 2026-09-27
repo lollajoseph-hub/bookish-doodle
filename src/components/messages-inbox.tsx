@@ -65,7 +65,7 @@ export function ThreadListRow({ row, selected, onSelect }: { row: MessageInboxRo
 }
 
 export function ChatPane({ row, leadingAction, trailingAction }: { row: MessageInboxRow; leadingAction?: ReactNode; trailingAction?: ReactNode }) {
-  const { threadId, setThreadId, resolved, messages, err, latest, addMessage, userId } = useThread(row.target, true);
+  const { threadId, setThreadId, resolved, messages, senderProfiles, err, latest, addMessage, userId } = useThread(row.target, true);
   return (
     <>
       <header className="flex items-center gap-2 border-b px-3 py-3">
@@ -80,7 +80,7 @@ export function ChatPane({ row, leadingAction, trailingAction }: { row: MessageI
         {trailingAction}
       </header>
       {err && <p className="px-5 pt-3 text-xs text-destructive">{err}</p>}
-      <ChatFeed messages={messages} userId={userId} />
+      <ChatFeed messages={messages} userId={userId} senderProfiles={senderProfiles} />
       <Composer
         threadId={threadId}
         target={row.target}
