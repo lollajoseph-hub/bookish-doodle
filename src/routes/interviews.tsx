@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { CandidateSkillGap, MatchStatusIcon, statusTone, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { toast } from "sonner";
-import { CalendarClock, ChevronDown, Clock, ExternalLink, Loader2, StickyNote, ThumbsDown, Video } from "lucide-react";
+import { CalendarClock, ChevronDown, Clock, ExternalLink, Loader2, StickyNote, ThumbsDown, UserSearch, Video } from "lucide-react";
 import {
   MATCH_STATUS_LABELS,
   displayName,
