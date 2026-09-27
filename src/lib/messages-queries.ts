@@ -287,6 +287,47 @@ export async function updateScratchpad(
   return (Array.isArray(data) ? data[0] : data) as ThreadScratchpadRow;
 }
 
+export interface ThreadNoteRow {
+  id: string;
+  thread_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+}
+
+export interface ThreadNoteAuthor {
+  id: string;
+  full_name: string;
+  role: string;
+}
+
+export async function fetchThreadNotes(threadId: string): Promise<ThreadNoteRow[]> {
+  const { data, error } = await supabase
+    .from("thread_notes")
+    .select("*")
+    .eq("thread_id", threadId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as ThreadNoteRow[];
+}
+
+export async function addThreadNote(threadId: string, body: string): Promise<ThreadNoteRow> {
+  const { data, error } = await supabase.rpc("add_thread_note", {
+    p_thread_id: threadId,
+    p_body: body,
+  });
+  if (error) throw error;
+  return (Array.isArray(data) ? data[0] : data) as ThreadNoteRow;
+}
+
+export async function fetchThreadNoteAuthors(threadId: string): Promise<ThreadNoteAuthor[]> {
+  const { data, error } = await supabase.rpc("get_thread_note_authors", {
+    p_thread_id: threadId,
+  });
+  if (error) throw error;
+  return (data ?? []) as ThreadNoteAuthor[];
+}
+
 const readKey = (userId: string, threadId: string) => `msg-last-read:${userId}:${threadId}`;
 
 export function getLastRead(userId: string, threadId: string): string | null {
