@@ -236,7 +236,14 @@ function RequestDetailPage() {
             <div className="mt-4 space-y-3">
               {data.matches.length ? (
                 data.matches.map((m) => (
-                  <div key={m.id} className="rounded-xl border p-3 transition-colors hover:border-primary/50">
+                  <div
+                    key={m.id}
+                    className="cursor-pointer rounded-xl border p-3 transition-colors hover:border-primary/50"
+                    onClick={(e) => {
+                      if ((e.target as HTMLElement).closest("button, a, input, textarea, select, [role='button'], [role='dialog'], [data-no-card-click]")) return;
+                      navigate({ to: "/candidates/$candidateId", params: { candidateId: m.candidate_id } });
+                    }}
+                  >
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div className="min-w-0">
                         <Link

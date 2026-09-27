@@ -55,9 +55,7 @@ function CandidateTile({
   return (
     <button
       type="button"
-      onClick={onSelect}
-      onDoubleClick={onOpen}
-      aria-pressed={selected}
+      onClick={onOpen}
       className={`group text-left card-amber rounded-2xl border bg-card p-4 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-primary/60 ${
         selected ? "border-amber bg-amber-soft/40 ring-2 ring-amber shadow-md" : "border-border"
       }`}
@@ -108,27 +106,9 @@ function CandidateTile({
         )}
       </div>
 
-      <div
-        className={`mt-3 text-[11px] font-medium transition-all duration-300 ${
-          selected ? "text-amber-foreground opacity-100" : "text-primary opacity-0 group-hover:opacity-100"
-        }`}
-      >
-        {selected ? "Selected — open full profile" : "Click to select"}
+      <div className="mt-3 text-[11px] font-medium text-primary opacity-0 transition-all duration-300 group-hover:opacity-100">
+        Open full profile →
       </div>
-      {selected && (
-        <div className="mt-2">
-          <Button
-            size="sm"
-            className="w-full"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpen();
-            }}
-          >
-            Open profile
-          </Button>
-        </div>
-      )}
     </button>
   );
 }
@@ -232,7 +212,7 @@ function CandidatesPage() {
                   candidate={c}
                   roleNames={c.roleIds.map((id) => roleName.get(id) ?? "").filter(Boolean)}
                   selected={selectedId === c.id}
-                  onSelect={() => setSelectedId((cur) => (cur === c.id ? null : c.id))}
+                  onSelect={() => setSelectedId(c.id)}
                   onOpen={() =>
                     navigate({ to: "/candidates/$candidateId", params: { candidateId: c.id } })
                   }
