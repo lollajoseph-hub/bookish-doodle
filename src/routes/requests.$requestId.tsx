@@ -648,7 +648,7 @@ function useMatchScoreBreakdown(matchId: string | undefined, enabled: boolean) {
         .rpc("get_match_score_breakdown", { p_match_id: matchId! })
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return (data as MatchScoreBreakdownRow | null) ?? null;
     },
     enabled: enabled && !!matchId,
   });
