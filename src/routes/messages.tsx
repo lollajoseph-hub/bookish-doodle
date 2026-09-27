@@ -249,7 +249,7 @@ function MessagesPage() {
               <>
                 <TabsContent value="general" className="m-0">
                   {filteredGenerals.length === 0 ? <p className="p-4 text-sm text-muted-foreground">No conversations.</p> :
-                    {filteredGenerals.map((g) => (
+                    filteredGenerals.map((g) => (
                       <ThreadListRow
                         key={`g-${g.clientId}`}
                         icon={Building2}
@@ -262,11 +262,11 @@ function MessagesPage() {
                         readTick={readTick}
                         onClick={() => select({ kind: "general", id: g.clientId })}
                       />
-                    ))}}
+                    ))}
                 </TabsContent>
                 <TabsContent value="candidate" className="m-0">
                   {filteredCandidates.length === 0 ? <p className="p-4 text-sm text-muted-foreground">No conversations.</p> :
-                    {filteredCandidates.map((c) => (
+                    filteredCandidates.map((c) => (
                       <ThreadListRow
                         key={`c-${c.matchId}`}
                         icon={UserRound}
@@ -281,7 +281,7 @@ function MessagesPage() {
                         readTick={readTick}
                         onClick={() => select({ kind: "candidate", id: c.matchId })}
                       />
-                    ))}}
+                    ))}
                 </TabsContent>
                 <TabsContent value="request" className="m-0">
                 {filtered.length === 0 ? (
@@ -404,6 +404,7 @@ function RequestWorkspace({
       onRead={onRead}
       quickActions={[]}
       side={
+        <div className="space-y-4">
         <div className="card-amber rounded-2xl border bg-card p-5 text-sm">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="font-semibold">Request details</h3>
@@ -416,7 +417,6 @@ function RequestWorkspace({
             </Link>
           </div>
           <dl className="space-y-2">
-            <Detail label="Client" value={item.request.clientName ?? "—"} />
             <Detail label="Role" value={item.request.roleName ?? "—"} />
             {item.request.title && <Detail label="Title" value={item.request.title} />}
             <div className="flex items-center justify-between gap-2">
@@ -428,6 +428,8 @@ function RequestWorkspace({
             <Detail label="Candidates wanted" value={String(item.request.candidates_wanted)} />
             <Detail label="Matches" value={String(item.request.matchCount)} />
           </dl>
+        </div>
+        <CompanyCard clientId={item.request.client_id} clientName={item.request.clientName} />
         </div>
       }
     />
@@ -453,23 +455,7 @@ function GeneralWorkspace({
       onRead={onRead}
       quickActions={[]}
       side={
-        <div className="card-amber rounded-2xl border bg-card p-5 text-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 font-semibold">
-              <Building2 className="h-4 w-4 text-primary" /> Client
-            </h3>
-            <Link
-              to="/clients/$clientId"
-              params={{ clientId: item.clientId }}
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              Open
-            </Link>
-          </div>
-          <p className="text-muted-foreground">
-            General conversation with {item.clientName}, not tied to a specific request.
-          </p>
-        </div>
+        <CompanyCard clientId={item.clientId} clientName={item.clientName} />
       }
     />
   );
@@ -505,6 +491,7 @@ function CandidateWorkspace({
       onRead={onRead}
       quickActions={quickActions}
       side={
+        <div className="space-y-4">
         <div className="card-amber rounded-2xl border bg-card p-5 text-sm">
           <h3 className="mb-3 flex items-center gap-2 font-semibold">
             <UserRound className="h-4 w-4 text-primary" /> Candidate
@@ -523,7 +510,6 @@ function CandidateWorkspace({
                   </Link>
                 </dd>
               </div>
-              <Detail label="Client" value={ctx.clientName ?? "—"} />
               <div className="flex items-center justify-between gap-2">
                 <dt className="text-muted-foreground">Request</dt>
                 <dd>
@@ -547,8 +533,28 @@ function CandidateWorkspace({
             <p className="text-muted-foreground">Loading…</p>
           )}
         </div>
+        {ctx && <CompanyCard clientId={ctx.clientId} clientName={ctx.clientName} />}
+        </div>
       }
     />
+  );
+}
+
+function CompanyCard({ clientId, clientName }: { clientId: string | null | undefined; clientName: string | null | undefined }) {
+  return (
+    <div className="card-amber rounded-2xl border bg-card p-5 text-sm">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="flex items-center gap-2 font-semibold">
+          <Building2 className="h-4 w-4 text-primary" /> Company
+        </h3>
+        {clientId && (
+          <Link to="/clients/$clientId" params={{ clientId }} className="text-xs font-medium text-primary hover:underline">
+            Open
+          </Link>
+        )}
+      </div>
+      <p className="font-medium">{clientName ?? "—"}</p>
+    </div>
   );
 }
 
@@ -654,9 +660,8 @@ function ThreadWorkspace({
   };
 
   return (
-    <>
-      {/* Column 2: chat */}
-      <section className="card-amber flex min-h-0 flex-col rounded-2xl border bg-card lg:col-span-2">
+    <section className="flex min-h-0 flex-col gap-4 lg:col-span-3 lg:overflow-y-auto">
+      <div className="card-amber flex min-h-[400px] flex-1 flex-col rounded-2xl border bg-card">
         <div className="border-b px-5 py-3">
           <div className="font-semibold">{title}</div>
           {subtitle && <div className="text-xs text-muted-foreground">{subtitle}</div>}
@@ -713,13 +718,9 @@ function ThreadWorkspace({
             </Button>
           </div>
         </div>
-      </section>
-
-      {/* Column 3: context */}
-      <section className="flex min-h-0 flex-col gap-4 lg:col-span-1">
-        {side}
-      </section>
-    </>
+      </div>
+      <div className="shrink-0">{side}</div>
+    </section>
   );
 }
 
