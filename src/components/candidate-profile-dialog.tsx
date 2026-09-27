@@ -5,11 +5,17 @@ export function CandidateProfileDialog({
   candidateId,
   matchId,
   matchStatus,
+  matchReason,
+  requiredSkills,
+  candidateSkills,
   onClose,
 }: {
   candidateId: string | null;
   matchId?: string | null;
   matchStatus: string | null;
+  matchReason?: string | null;
+  requiredSkills?: string[];
+  candidateSkills?: string[];
   onClose: () => void;
 }) {
   return (
@@ -19,6 +25,9 @@ export function CandidateProfileDialog({
           candidateId={candidateId}
           matchId={matchId}
           matchStatus={matchStatus}
+          matchReason={matchReason}
+          requiredSkills={requiredSkills}
+          candidateSkills={candidateSkills}
           scrollable
         />
       </DialogContent>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowDown, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
-import { availabilityLabel } from "@/components/candidate-card";
+import { availabilityLabel, CandidateSkillGap } from "@/components/candidate-card";
 import { CandidateMessages } from "@/components/request-messages";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,10 +65,13 @@ function toEntries(value: unknown): Entry[] {
   });
 }
 
-export function CandidateFullProfileView({ candidateId, matchId, matchStatus, scrollable = false }: {
+export function CandidateFullProfileView({ candidateId, matchId, matchStatus, matchReason, requiredSkills, candidateSkills, scrollable = false }: {
   candidateId: string | null;
   matchId?: string | null;
   matchStatus: string | null;
+  matchReason?: string | null;
+  requiredSkills?: string[];
+  candidateSkills?: string[];
   scrollable?: boolean;
 }) {
   const [profile, setProfile] = useState<FullPoolProfile | null>(null);
@@ -149,6 +152,13 @@ export function CandidateFullProfileView({ candidateId, matchId, matchStatus, sc
               <section className="space-y-3"><h3 className="text-sm font-semibold tracking-tight">Availability</h3><dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
                 <Row label="Status" value={availabilityLabel(profile.availability)} /><Row label="Country" value={profile.country} /><Row label="Timezone" value={profile.timezone} /><Row label="Weekly hours" value={profile.weekly_hours_available ? `${profile.weekly_hours_available} hrs` : null} /><Row label="Preferred shift" value={profile.preferred_shift} /><Row label="Experience" value={profile.years_experience ? `${profile.years_experience} years` : null} /><Row label="Earliest start" value={formatDate(profile.earliest_start_date)} />
               </dl></section>
+               {matchReason?.trim() && (
+                 <div className="border-t border-border/70 pt-3">
+                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Why this candidate</p>
+                   <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{matchReason}</p>
+                 </div>
+               )}
+               <CandidateSkillGap requiredSkills={requiredSkills ?? []} candidateSkills={candidateSkills ?? []} />
               {video && <Section title="Introductory Video"><video src={video} controls className="w-full rounded-xl bg-foreground" preload="metadata" /></Section>}
               {roles.length > 0 && <Section title="Roles"><div className="flex flex-wrap gap-1.5">{roles.map((role, index) => <Badge key={`${role}-${index}`} variant="secondary" className={index === 0 ? "bg-primary/10 text-primary" : ""}>{role}</Badge>)}</div></Section>}
               {skills.length > 0 && <Section title="Skills"><div className="flex flex-wrap gap-1.5">{skills.map((skill, index) => <Badge key={`${skill}-${index}`} variant="outline">{skill}</Badge>)}</div></Section>}

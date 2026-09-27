@@ -60,6 +60,8 @@ function ShortlistedPage() {
   const [requests, setRequests] = useState<Record<string, string>>({});
   const [curatedRequests, setCuratedRequests] = useState<Set<string>>(new Set());
   const [photos, setPhotos] = useState<Record<string, string | null>>({});
+  const [requestSkills, setRequestSkills] = useState<Record<string, string[]>>({});
+  const [candidateSkillsMap, setCandidateSkillsMap] = useState<Record<string, string[]>>({});
   const [err, setErr] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
@@ -96,6 +98,36 @@ function ShortlistedPage() {
     }
 
     const raw = (matchRes.data ?? []) as unknown as MatchRow[];
+    const matchedRequestIds = [...new Set(raw.map((match) => match.client_request_id))];
+    const candidateIds = [...new Set(raw.map((match) => match.candidate_id))];
+    const [requestSkillsRes, candidateSkillsRes] = await Promise.all([
+      matchedRequestIds.length
+        ? supabase.from("client_request_skills").select("request_id,skills(name)").eq("is_required", true).in("request_id", matchedRequestIds)
+        : Promise.resolve({ data: [], error: null }),
+      candidateIds.length
+        ? supabase.from("candidate_skills").select("candidate_id,skills(name)").in("candidate_id", candidateIds)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    if (requestSkillsRes.error || candidateSkillsRes.error) {
+      if (loadTokenRef.current !== token) return;
+      setErr(requestSkillsRes.error?.message ?? candidateSkillsRes.error?.message ?? "Unable to load skills");
+    }
+
+    const byRequest: Record<string, string[]> = {};
+    for (const row of requestSkillsRes.data ?? []) {
+      const requestId = row.request_id;
+      const skillName = (row.skills as unknown as { name: string | null } | null)?.name?.trim();
+      if (!requestId || !skillName) continue;
+      byRequest[requestId] = [...(byRequest[requestId] ?? []), skillName];
+    }
+    const byCandidate: Record<string, string[]> = {};
+    for (const row of candidateSkillsRes.data ?? []) {
+      const candidateId = row.candidate_id;
+      const skillName = (row.skills as unknown as { name: string | null } | null)?.name?.trim();
+      if (!candidateId || !skillName) continue;
+      byCandidate[candidateId] = [...(byCandidate[candidateId] ?? []), skillName];
+    }
 
     let list: MatchRow[];
     if (!orderRef.current) {
@@ -116,6 +148,8 @@ function ShortlistedPage() {
     }
 
     if (loadTokenRef.current !== token) return;
+    setRequestSkills(byRequest);
+    setCandidateSkillsMap(byCandidate);
     setMatches(list);
 
     const entries = await Promise.all(
@@ -210,6 +244,8 @@ function ShortlistedPage() {
               busy={actingId === m.id}
               locked={actingId !== null && actingId !== m.id}
               curated={curatedRequests.has(m.client_request_id)}
+              requiredSkills={requestSkills[m.client_request_id] ?? []}
+              candidateSkills={candidateSkillsMap[m.candidate_id] ?? []}
               contextLabel={
                 <Link to="/requests/$id" params={{ id: m.client_request_id }} className="hover:text-foreground">
                   For: {requests[m.client_request_id] ?? "Hiring request"}
@@ -230,6 +266,9 @@ function ShortlistedPage() {
         candidateId={profileFor?.candidate_id ?? null}
         matchId={profileFor?.id ?? null}
         matchStatus={profileFor?.status ?? null}
+        matchReason={profileFor?.match_reason ?? null}
+        requiredSkills={profileFor ? (requestSkills[profileFor.client_request_id] ?? []) : []}
+        candidateSkills={profileFor ? (candidateSkillsMap[profileFor.candidate_id] ?? []) : []}
         onClose={() => setProfileFor(null)}
       />
 
