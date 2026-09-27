@@ -362,7 +362,37 @@ function InterviewsPage() {
     const raw = (matchRes.data ?? []) as unknown as MatchRow[];
     const requestIds = [...new Set(raw.map((match) => match.client_request_id))];
     const candidateIds = [...new Set(raw.map((match) => match.candidate_id))];
-    const [requestSkillsRes, candidateSkillsRes] = await Promise.all([
+    const matchIds = raw.map((match) => match.id);
+    const [requestSkillsRes, candidateSkillsRes, authRes, viewsRes] = await Promise.all([
+      requestIds.length
+        ? supabase.from("client_request_skills").select("request_id,skills(name)").eq("is_required", true).in("request_id", requestIds)
+        : Promise.resolve({ data: [], error: null }),
+      candidateIds.length
+        ? supabase.from("candidate_skills").select("candidate_id,skills(name)").in("candidate_id", candidateIds)
+        : Promise.resolve({ data: [], error: null }),
+      supabase.auth.getUser(),
+      matchIds.length
+        ? supabase.from("candidate_match_views" as never).select("*").in("candidate_match_id", matchIds)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    const uid = authRes.data.user?.id ?? null;
+    setProfileId(uid);
+    const viewsMap: Record<string, string> = {};
+    for (const v of (viewsRes.data ?? []) as unknown as { candidate_match_id: string; last_seen_status: string }[]) {
+      viewsMap[v.candidate_match_id] = v.last_seen_status;
+    }
+    setViews(viewsMap);
+
+    const [requestSkillsRes2, candidateSkillsRes2] = [requestSkillsRes, candidateSkillsRes];
+    void requestSkillsRes2;
+    void candidateSkillsRes2;
+    const [requestSkillsResUnused] = [null];
+    void requestSkillsResUnused;
+    const [requestSkillsResFinal, candidateSkillsResFinal] = [requestSkillsRes, candidateSkillsRes];
+    void requestSkillsResFinal;
+    void candidateSkillsResFinal;
+    const [requestSkillsResA, candidateSkillsResA] = [requestSkillsRes, candidateSkillsRes];
       requestIds.length
         ? supabase.from("client_request_skills").select("request_id,skills(name)").eq("is_required", true).in("request_id", requestIds)
         : Promise.resolve({ data: [], error: null }),
