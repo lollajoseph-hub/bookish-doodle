@@ -9,11 +9,13 @@ import {
   completeInterview,
   confirmInterview,
   fetchMatchesByStatus,
+  proposeInterviewTime,
   staffExtendOffer,
   updateMatchStatus,
 } from "@/lib/crm-queries";
 import type { MatchStatus } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -88,6 +90,22 @@ function InterviewReviewPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const proposeTime = useMutation({
+    mutationFn: ({ id, proposedAt, notes }: { id: string; proposedAt: string; notes?: string }) =>
+      proposeInterviewTime(id, proposedAt, notes),
+    onSuccess: () => {
+      toast.success("New time proposed to client");
+      setProposeFor(null);
+      setProposedTime("");
+      setProposeNotes("");
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      queryClient.invalidateQueries({ queryKey: ["all-matches"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
   const extendOffer = useMutation({
     mutationFn: (id: string) => staffExtendOffer(id),
     onSuccess: () => {
@@ -101,6 +119,9 @@ function InterviewReviewPage() {
 
   const [completeFor, setCompleteFor] = useState<{ id: string; name: string } | null>(null);
   const [interviewNotes, setInterviewNotes] = useState("");
+  const [proposeFor, setProposeFor] = useState<{ id: string; name: string } | null>(null);
+  const [proposedTime, setProposedTime] = useState("");
+  const [proposeNotes, setProposeNotes] = useState("");
 
   const complete = useMutation({
     mutationFn: ({ id, notes }: { id: string; notes: string }) => completeInterview(id, notes),
@@ -175,6 +196,18 @@ function InterviewReviewPage() {
                               Waiting on client to propose a time
                             </span>
                           )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={proposeTime.isPending}
+                            onClick={() => {
+                              setProposedTime("");
+                              setProposeNotes("");
+                              setProposeFor({ id: m.id, name: m.candidateName ?? "Candidate" });
+                            }}
+                          >
+                            Propose different time
+                          </Button>
                         </>
                       )}
                       {m.status === "hire_requested" && (
@@ -270,6 +303,74 @@ function InterviewReviewPage() {
               }}
             >
               Mark interview complete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!proposeFor}
+        onOpenChange={(open) => {
+          if (!open) {
+            setProposeFor(null);
+            setProposedTime("");
+            setProposeNotes("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Propose different time</DialogTitle>
+            <DialogDescription>
+              Propose a new interview time for {proposeFor?.name}. The client will be notified.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="proposed-time">
+              Proposed time <span className="text-amber">*</span>
+            </Label>
+            <Input
+              id="proposed-time"
+              type="datetime-local"
+              value={proposedTime}
+              onChange={(e) => setProposedTime(e.target.value)}
+            />
+            <Label htmlFor="propose-notes">Notes (optional)</Label>
+            <Textarea
+              id="propose-notes"
+              rows={4}
+              value={proposeNotes}
+              onChange={(e) => setProposeNotes(e.target.value)}
+              placeholder="Anything the client should know about this time…"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setProposeFor(null);
+                setProposedTime("");
+                setProposeNotes("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={
+                !proposedTime ||
+                new Date(proposedTime).getTime() <= Date.now() ||
+                proposeTime.isPending
+              }
+              onClick={() => {
+                if (!proposeFor || !proposedTime) return;
+                proposeTime.mutate({
+                  id: proposeFor.id,
+                  proposedAt: new Date(proposedTime).toISOString(),
+                  notes: proposeNotes.trim() || undefined,
+                });
+              }}
+            >
+              Submit
             </Button>
           </DialogFooter>
         </DialogContent>
