@@ -103,7 +103,7 @@ function NewRequest() {
         supabase
           .from("client_request_skills")
           .select("skills(id,name)")
-          .eq("client_request_id", clone)
+          .eq("request_id", clone)
           .eq("is_required", true),
       ]);
       if (cancelled) return;
