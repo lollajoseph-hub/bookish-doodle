@@ -131,6 +131,7 @@ function InterviewReviewPage() {
   const [proposeFor, setProposeFor] = useState<{ id: string; name: string } | null>(null);
   const [proposedTime, setProposedTime] = useState("");
   const [proposeNotes, setProposeNotes] = useState("");
+  const [declineMode, setDeclineMode] = useState(false);
   const [notesOpenFor, setNotesOpenFor] = useState<string | null>(null);
 
   const complete = useMutation({
@@ -214,6 +215,7 @@ function InterviewReviewPage() {
                             onClick={() => {
                               setProposedTime("");
                               setProposeNotes("");
+                              setDeclineMode(false);
                               setProposeFor({ id: m.id, name: m.candidateName ?? "Candidate" });
                             }}
                           >
@@ -246,14 +248,30 @@ function InterviewReviewPage() {
                           Move to next stage
                         </Button>
                       )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={advance.isPending}
-                        onClick={() => advance.mutate({ id: m.id, status: "rejected" })}
-                      >
-                        Reject
-                      </Button>
+                      {m.status === "interview_requested" ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={proposeTime.isPending}
+                          onClick={() => {
+                            setProposedTime("");
+                            setProposeNotes("");
+                            setDeclineMode(true);
+                            setProposeFor({ id: m.id, name: m.candidateName ?? "Candidate" });
+                          }}
+                        >
+                          Decline time
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={advance.isPending}
+                          onClick={() => advance.mutate({ id: m.id, status: "rejected" })}
+                        >
+                          Reject
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="ghost"
@@ -335,13 +353,14 @@ function InterviewReviewPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
+  <Dialog
         open={!!proposeFor}
         onOpenChange={(open) => {
           if (!open) {
             setProposeFor(null);
             setProposedTime("");
             setProposeNotes("");
+            setDeclineMode(false);
           }
         }}
       >
@@ -349,7 +368,9 @@ function InterviewReviewPage() {
           <DialogHeader>
             <DialogTitle>Propose different time</DialogTitle>
             <DialogDescription>
-              Propose a new interview time for {proposeFor?.name}. The client will be notified.
+              {declineMode
+                ? `You've declined that time — propose one that works for ${proposeFor?.name}. The client will be notified.`
+                : `Propose a new interview time for ${proposeFor?.name}. The client will be notified.`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
