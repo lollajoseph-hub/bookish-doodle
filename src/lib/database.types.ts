@@ -295,6 +295,10 @@ export interface CandidateMatchRow {
   meeting_notes_captured_at: string | null;
   recording_url: string | null;
   recording_captured_at: string | null;
+  client_rating: number | null;
+  client_rating_note: string | null;
+  client_rated_at: string | null;
+  interview_completed_at: string | null;
   created_at: string;
   updated_at: string | null;
 }

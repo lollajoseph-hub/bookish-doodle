@@ -284,6 +284,32 @@ function RequestDetailPage() {
                           </div>
                         );
                       })()}
+                    {m.client_rating != null && (
+                      <div className="mt-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Client rating
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <span className="text-sm tracking-wide text-amber-500">
+                            {"★".repeat(Math.min(5, Math.max(1, m.client_rating)))}
+                            <span className="text-muted-foreground/40">
+                              {"★".repeat(5 - Math.min(5, Math.max(1, m.client_rating)))}
+                            </span>
+                          </span>
+                          {m.client_rated_at && (
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(m.client_rated_at).toLocaleDateString(undefined, {
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </span>
+                          )}
+                        </div>
+                        {m.client_rating_note && (
+                          <p className="mt-1 text-xs text-muted-foreground">“{m.client_rating_note}”</p>
+                        )}
+                      </div>
+                    )}
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <Select
                         value={m.status}
