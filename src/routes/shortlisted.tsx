@@ -228,6 +228,7 @@ function ShortlistedPage() {
 
       <CandidateProfileDialog
         candidateId={profileFor?.candidate_id ?? null}
+        matchId={profileFor?.id ?? null}
         matchStatus={profileFor?.status ?? null}
         onClose={() => setProfileFor(null)}
       />

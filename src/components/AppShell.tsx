@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useMembership } from "@/lib/membership";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/notifications-bell";
+import { GeneralMessages } from "@/components/request-messages";
 import { LogOut, PlusCircle, ListChecks, CalendarClock, Star, UsersRound } from "lucide-react";
 import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
 
@@ -69,6 +70,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Link>
               </Button>
             )}
+            {membership?.client_id && <GeneralMessages clientId={membership.client_id} />}
             <NotificationsBell />
             <Button
               variant="outline"

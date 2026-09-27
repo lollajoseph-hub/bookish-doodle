@@ -21,17 +21,96 @@ interface ThreadMessage {
   created_at: string;
 }
 
-const QUICK_ACTIONS: { type: StructuredType; label: string; icon: typeof PhoneCall; tone: string }[] = [
-  { type: "reschedule_request", label: "Request Reschedule", icon: CalendarClock, tone: "bg-amber-100 text-amber-800 border-amber-300" },
-  { type: "call_me_asap", label: "Call Me ASAP", icon: PhoneCall, tone: "bg-destructive/10 text-destructive border-destructive/30" },
-  { type: "send_portfolio", label: "Send Portfolio", icon: FileText, tone: "bg-primary-soft text-primary border-primary/30" },
-];
+interface QuickAction {
+  type: StructuredType;
+  label: string;
+  /** Message body sent with the action. */
+  body: string;
+  icon: typeof PhoneCall;
+  tone: string;
+}
+
+/** Display metadata for every structured type (including legacy ones in old messages). */
+const ACTION_META: Record<StructuredType, QuickAction> = {
+  reschedule_request: { type: "reschedule_request", label: "Request Reschedule", body: "Request Reschedule", icon: CalendarClock, tone: "bg-amber-100 text-amber-800 border-amber-300" },
+  call_me_asap: { type: "call_me_asap", label: "Call Me ASAP", body: "Please call me as soon as possible.", icon: PhoneCall, tone: "bg-destructive/10 text-destructive border-destructive/30" },
+  send_portfolio: { type: "send_portfolio", label: "Send Portfolio", body: "Send Portfolio", icon: FileText, tone: "bg-primary-soft text-primary border-primary/30" },
+};
+
+type ThreadTarget =
+  | { kind: "request"; id: string }
+  | { kind: "candidate"; id: string }
+  | { kind: "general"; id: string };
 
 function lastReadKey(userId: string, threadId: string) {
   return `cp:thread-last-read:${userId}:${threadId}`;
 }
 
+/** Request-level thread: no quick actions, includes Hiring Huddle Notes. */
 export function RequestMessages({ requestId }: { requestId: string }) {
+  return (
+    <ThreadPanel
+      target={{ kind: "request", id: requestId }}
+      label="Messages"
+      description="Chat with your ScaleSource recruiter about this request."
+      actions={[]}
+      scratchpad
+    />
+  );
+}
+
+/** Client-wide general thread with the Call Me ASAP action. */
+export function GeneralMessages({ clientId }: { clientId: string }) {
+  return (
+    <ThreadPanel
+      target={{ kind: "general", id: clientId }}
+      label="Message ScaleSource"
+      title="Message ScaleSource"
+      description="A general conversation with your ScaleSource team — not tied to any request."
+      actions={[ACTION_META.call_me_asap]}
+      variant="ghost"
+    />
+  );
+}
+
+/** Candidate-level thread; Request Reschedule only while the interview is confirmed. */
+export function CandidateMessages({
+  matchId,
+  matchStatus,
+  candidateName,
+}: {
+  matchId: string;
+  matchStatus: string | null;
+  candidateName: string;
+}) {
+  return (
+    <ThreadPanel
+      target={{ kind: "candidate", id: matchId }}
+      label="Message about this candidate"
+      title={`About ${candidateName}`}
+      description={`Chat with your ScaleSource recruiter about ${candidateName}.`}
+      actions={matchStatus === "interview_confirmed" ? [ACTION_META.reschedule_request] : []}
+    />
+  );
+}
+
+function ThreadPanel({
+  target,
+  label,
+  title = "Messages",
+  description,
+  actions,
+  scratchpad = false,
+  variant = "outline",
+}: {
+  target: ThreadTarget;
+  label: string;
+  title?: string;
+  description: string;
+  actions: QuickAction[];
+  scratchpad?: boolean;
+  variant?: "outline" | "ghost";
+}) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
@@ -47,8 +126,9 @@ export function RequestMessages({ requestId }: { requestId: string }) {
     setMessages(null);
     void (async () => {
       const { data, error } = await supabase.rpc("get_or_create_thread", {
-        p_client_request_id: requestId,
-        p_candidate_match_id: null,
+        p_client_request_id: target.kind === "request" ? target.id : null,
+        p_candidate_match_id: target.kind === "candidate" ? target.id : null,
+        p_client_id: target.kind === "general" ? target.id : null,
       });
       if (cancelled) return;
       if (error) {
@@ -56,13 +136,14 @@ export function RequestMessages({ requestId }: { requestId: string }) {
         setMessages([]);
         return;
       }
-      const row = (Array.isArray(data) ? data[0] : data) as { id: string } | null;
-      if (row?.id) setThreadId(row.id);
+      const row = (Array.isArray(data) ? data[0] : data) as { id: string } | string | null;
+      const tid = typeof row === "string" ? row : row?.id;
+      if (tid) setThreadId(tid);
     })();
     return () => {
       cancelled = true;
     };
-  }, [requestId, user]);
+  }, [target.kind, target.id, user]);
 
   // Last-read from localStorage
   useEffect(() => {
@@ -117,9 +198,9 @@ export function RequestMessages({ requestId }: { requestId: string }) {
 
   return (
     <>
-      <Button variant="outline" size="sm" className="relative" onClick={() => setOpen(true)}>
+      <Button variant={variant} size="sm" className="relative" onClick={() => setOpen(true)}>
         <MessageSquare className="mr-1.5 h-4 w-4" />
-        Messages
+        {label}
         {unread > 0 && (
           <span className="absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white">
             {unread > 9 ? "9+" : unread}
@@ -130,17 +211,25 @@ export function RequestMessages({ requestId }: { requestId: string }) {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
           <SheetHeader className="border-b px-5 py-4 text-left">
-            <SheetTitle>Messages</SheetTitle>
-            <SheetDescription>Chat with your ScaleSource recruiter about this request.</SheetDescription>
+            <SheetTitle>{title}</SheetTitle>
+            <SheetDescription>{description}</SheetDescription>
           </SheetHeader>
 
           {err && <p className="px-5 pt-3 text-xs text-destructive">{err}</p>}
 
           <ChatFeed messages={messages} userId={user?.id ?? null} />
-          <Composer threadId={threadId} onSent={(m) => setMessages((prev) => (prev ?? []).some((x) => x.id === m.id) ? prev : [...(prev ?? []), m])} />
+          <Composer
+            threadId={threadId}
+            actions={actions}
+            onSent={(m) => setMessages((prev) => (prev ?? []).some((x) => x.id === m.id) ? prev : [...(prev ?? []), m])}
+          />
 
-          <Separator />
-          {threadId ? <HuddleNotes threadId={threadId} userId={user?.id ?? null} /> : null}
+          {scratchpad && threadId ? (
+            <>
+              <Separator />
+              <HuddleNotes threadId={threadId} userId={user?.id ?? null} />
+            </>
+          ) : null}
         </SheetContent>
       </Sheet>
     </>
@@ -163,7 +252,7 @@ function ChatFeed({ messages, userId }: { messages: ThreadMessage[] | null; user
         <ul className="space-y-3">
           {messages.map((m) => {
             const mine = m.sender_role === "client" && (!userId || !m.sender_id || m.sender_id === userId);
-            const action = m.structured_type ? QUICK_ACTIONS.find((a) => a.type === m.structured_type) : null;
+            const action = m.structured_type ? ACTION_META[m.structured_type] ?? null : null;
             return (
               <li key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
                 <span className="mb-1 text-xs text-muted-foreground">
@@ -176,7 +265,7 @@ function ChatFeed({ messages, userId }: { messages: ThreadMessage[] | null; user
                       <action.icon className="h-3.5 w-3.5 flex-none" />
                       {action.label}
                     </span>
-                    {m.body && m.body !== action.label && <span className="whitespace-pre-line">{m.body}</span>}
+                    {m.body && m.body !== action.label && m.body !== action.body && <span className="whitespace-pre-line">{m.body}</span>}
                   </div>
                 ) : (
                   <div
@@ -197,7 +286,15 @@ function ChatFeed({ messages, userId }: { messages: ThreadMessage[] | null; user
   );
 }
 
-function Composer({ threadId, onSent }: { threadId: string | null; onSent: (m: ThreadMessage) => void }) {
+function Composer({
+  threadId,
+  actions,
+  onSent,
+}: {
+  threadId: string | null;
+  actions: QuickAction[];
+  onSent: (m: ThreadMessage) => void;
+}) {
   const [body, setBody] = useState("");
   const [sending, setSending] = useState<string | null>(null);
 
@@ -230,13 +327,14 @@ function Composer({ threadId, onSent }: { threadId: string | null; onSent: (m: T
 
   return (
     <div className="space-y-2 border-t px-5 py-3">
+      {actions.length > 0 && (
       <div className="flex flex-wrap gap-1.5">
-        {QUICK_ACTIONS.map((a) => (
+        {actions.map((a) => (
           <button
             key={a.type}
             type="button"
             disabled={!threadId || sending !== null}
-            onClick={() => void send(a.label, a.type)}
+            onClick={() => void send(a.body, a.type)}
             className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-opacity hover:opacity-80 disabled:opacity-50 ${a.tone}`}
           >
             {sending === a.type ? <Loader2 className="h-3 w-3 animate-spin" /> : <a.icon className="h-3 w-3" />}
@@ -244,6 +342,7 @@ function Composer({ threadId, onSent }: { threadId: string | null; onSent: (m: T
           </button>
         ))}
       </div>
+      )}
       <div className="flex items-end gap-2">
         <Textarea
           value={body}
