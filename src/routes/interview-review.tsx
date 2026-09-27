@@ -196,6 +196,18 @@ function InterviewReviewPage() {
                               Waiting on client to propose a time
                             </span>
                           )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={proposeTime.isPending}
+                            onClick={() => {
+                              setProposedTime("");
+                              setProposeNotes("");
+                              setProposeFor({ id: m.id, name: m.candidateName ?? "Candidate" });
+                            }}
+                          >
+                            Propose different time
+                          </Button>
                         </>
                       )}
                       {m.status === "hire_requested" && (
