@@ -7,7 +7,6 @@ import { AppShell } from "@/components/app-shell";
 import { CuratedBadge, RequestStatusBadge } from "@/components/match-status";
 import {
   createClientRequest,
-  parseSkillNames,
   fetchClientRequests,
   fetchClients,
   labelize,

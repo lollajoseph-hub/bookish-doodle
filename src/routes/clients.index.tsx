@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Building2, Plus, Loader2, Search, Users, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
-import { fetchClients, parseSkillNames } from "@/lib/crm-queries";
+import { fetchClients } from "@/lib/crm-queries";
 import { fetchCandidates, fetchJobRoles, fetchSkills, LANGUAGE_CATEGORY } from "@/lib/queries";
 import { MultiSelect } from "@/components/multi-select";
 import { RoleSkillPicker } from "@/components/role-skill-picker";
