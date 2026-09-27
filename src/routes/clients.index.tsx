@@ -7,6 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { fetchClients, parseSkillNames } from "@/lib/crm-queries";
 import { fetchCandidates, fetchJobRoles, fetchSkills, LANGUAGE_CATEGORY } from "@/lib/queries";
 import { MultiSelect } from "@/components/multi-select";
+import { RoleSkillPicker } from "@/components/role-skill-picker";
 import { TimezoneSelect } from "@/components/timezone-select";
 import { FormSection } from "@/components/form-section";
 import { Textarea } from "@/components/ui/textarea";
@@ -134,7 +135,7 @@ function ClientsPage() {
   const [minYears, setMinYears] = useState("");
   const [startDate, setStartDate] = useState("");
   const [days, setDays] = useState<string[]>([]);
-  const [mustSkills, setMustSkills] = useState("");
+  const [mustSkillIds, setMustSkillIds] = useState<string[]>([]);
   const [langIds, setLangIds] = useState<string[]>([]);
   const { data: allSkills = [] } = useQuery({ queryKey: ["skills"], queryFn: fetchSkills });
   const languageOptions = useMemo(() => {
@@ -190,7 +191,7 @@ function ClientsPage() {
       } else {
         if (!hours.trim()) throw new Error("Hours needed is required");
         if (!langIds.length) throw new Error("Select at least one required language");
-        if (parseSkillNames(mustSkills).length === 0) throw new Error("Add at least one must-have skill");
+        if (mustSkillIds.length === 0) throw new Error("Add at least one must-have skill");
         if (!days.length) throw new Error("Select at least one day needed");
       }
       const request = isCustom
@@ -213,7 +214,7 @@ function ClientsPage() {
             years_experience_min: minYears.trim() ? Number(minYears) : null,
             desired_start_date: startDate || null,
             days_of_week_needed: days,
-            must_have_skill_names: parseSkillNames(mustSkills),
+            must_have_skill_ids: mustSkillIds,
             language_skill_ids: langIds,
             hires_needed: Number(hiresNeeded) || 1,
           };
@@ -279,7 +280,7 @@ function ClientsPage() {
       setMinYears("");
       setStartDate("");
       setDays([]);
-      setMustSkills("");
+      setMustSkillIds([]);
       setLangIds([]);
       setHiresNeeded("1");
       setCandidateIds([]);
@@ -521,7 +522,7 @@ function ClientsPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Role *</Label>
-                <Select value={roleId} onValueChange={setRoleId}>
+                <Select value={roleId} onValueChange={(v) => { setRoleId(v); setMustSkillIds([]); }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
@@ -603,13 +604,8 @@ function ClientsPage() {
                     />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="req-skills">Must-have skills *</Label>
-                    <Textarea
-                      id="req-skills"
-                      placeholder="Skills the client says are non-negotiable, e.g. Spanish, QuickBooks"
-                      value={mustSkills}
-                      onChange={(e) => setMustSkills(e.target.value)}
-                    />
+                    <Label>Must-have skills *</Label>
+<RoleSkillPicker roleId={roleId} selected={mustSkillIds} onChange={setMustSkillIds} />
                   </div>
                 </>
               ) : (

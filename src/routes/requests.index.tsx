@@ -14,6 +14,7 @@ import {
 } from "@/lib/crm-queries";
 import { fetchJobRoles, fetchSkills, LANGUAGE_CATEGORY } from "@/lib/queries";
 import { MultiSelect } from "@/components/multi-select";
+import { RoleSkillPicker } from "@/components/role-skill-picker";
 import { TimezoneSelect } from "@/components/timezone-select";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -131,7 +132,7 @@ function RequestsPage() {
   const [minYears, setMinYears] = useState("");
   const [startDate, setStartDate] = useState("");
   const [days, setDays] = useState<string[]>([]);
-  const [mustSkills, setMustSkills] = useState("");
+  const [mustSkillIds, setMustSkillIds] = useState<string[]>([]);
   const [langIds, setLangIds] = useState<string[]>([]);
   const { data: allSkills = [] } = useQuery({ queryKey: ["skills"], queryFn: fetchSkills });
   const languageOptions = useMemo(() => {
@@ -171,7 +172,7 @@ function RequestsPage() {
       if (!roleId) throw new Error("Pick a role");
       if (!hours.trim()) throw new Error("Hours needed is required");
       if (!langIds.length) throw new Error("Select at least one required language");
-      if (parseSkillNames(mustSkills).length === 0) throw new Error("Add at least one must-have skill");
+      if (mustSkillIds.length === 0) throw new Error("Add at least one must-have skill");
       if (!days.length) throw new Error("Select at least one day needed");
       const hires = Number(hiresNeeded) || 1;
       return createClientRequest({
@@ -187,7 +188,7 @@ function RequestsPage() {
         desired_start_date: startDate || null,
         days_of_week_needed: days,
         notes,
-        must_have_skill_names: parseSkillNames(mustSkills),
+        must_have_skill_ids: mustSkillIds,
         language_skill_ids: langIds,
         created_by: profile?.id ?? null,
       });
@@ -196,7 +197,7 @@ function RequestsPage() {
       toast.success("Request created");
       setOpen(false);
       setNotes("");
-      setMustSkills("");
+      setMustSkillIds([]);
       setLangIds([]);
       setDays([]);
       queryClient.invalidateQueries({ queryKey: ["client-requests"] });
@@ -355,7 +356,7 @@ function RequestsPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Role *</Label>
-                <Select value={roleId} onValueChange={setRoleId}>
+                <Select value={roleId} onValueChange={(v) => { setRoleId(v); setMustSkillIds([]); }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
@@ -436,16 +437,8 @@ function RequestsPage() {
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="must-skills">Must-have skills *</Label>
-                <Textarea
-                  id="must-skills"
-                  placeholder="Skills the client says are non-negotiable, e.g. Spanish, QuickBooks, Monday-Friday availability"
-                  value={mustSkills}
-                  onChange={(e) => setMustSkills(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Comma or newline separated. Each skill is used for matching.
-                </p>
+                <Label>Must-have skills *</Label>
+<RoleSkillPicker roleId={roleId} selected={mustSkillIds} onChange={setMustSkillIds} />
               </div>
             </div>
           </FormSection>
