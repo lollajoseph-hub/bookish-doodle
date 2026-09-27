@@ -308,7 +308,6 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
               disabled={proposingBusy}
               onClick={() => {
                 setProposing(false);
-                setDeclinedTime(false);
                 setProposedAt("");
               }}
             >
