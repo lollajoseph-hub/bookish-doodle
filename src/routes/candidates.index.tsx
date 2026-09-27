@@ -56,7 +56,6 @@ function CandidateTile({
     <button
       type="button"
       onClick={onOpen}
-      onMouseEnter={onSelect}
       className={`group text-left card-amber rounded-2xl border bg-card p-4 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-primary/60 ${
         selected ? "border-amber bg-amber-soft/40 ring-2 ring-amber shadow-md" : "border-border"
       }`}
