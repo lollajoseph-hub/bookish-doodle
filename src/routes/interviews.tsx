@@ -669,11 +669,22 @@ function InterviewsPage() {
           </CardContent>
         </Card>
       ) : (
-        <Tabs defaultValue="requested" className="space-y-3">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => {
+            setActiveTab(v);
+            const tab = STAGE_TABS.find((t) => t.value === v);
+            if (tab && rows) void markStageSeen(tab.status, rows.filter((m) => m.status === tab.status));
+          }}
+          className="space-y-3"
+        >
           <TabsList>
             {STAGE_TABS.map((tab) => (
               <TabsTrigger key={tab.value} value={tab.value}>
                 {tab.label}
+                {rows.some((m) => m.status === tab.status && isUnseen(m)) && (
+                  <span className="ml-1.5 h-2 w-2 rounded-full bg-amber" />
+                )}
               </TabsTrigger>
             ))}
           </TabsList>
