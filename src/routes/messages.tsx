@@ -644,6 +644,7 @@ function CandidateWorkspace({
 
 const AVAILABILITY_LABELS: Record<string, string> = {
   available_now: "Available Immediately",
+  open_to_offers: "Open to offers",
   available_from: "Available from a future date",
   interviewing: "Currently interviewing",
   closing_next_week: "Closing next week",
