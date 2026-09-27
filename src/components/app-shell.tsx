@@ -85,7 +85,6 @@ const navGroups: Array<{ label: string; items: NavItem[]; adminOnly?: boolean }>
     label: "Pipeline",
     items: [
       { to: "/requests", label: "Client Requests", icon: ClipboardList },
-      { to: "/messages", label: "Messages", icon: MessageSquare },
       { to: "/interview-review", label: "Interview Review", icon: CalendarCheck },
       { to: "/offer-review", label: "Offer Review", icon: FileCheck },
       { to: "/placements", label: "Placements", icon: BriefcaseBusiness },
@@ -107,6 +106,7 @@ const navGroups: Array<{ label: string; items: NavItem[]; adminOnly?: boolean }>
   {
     label: "Activity",
     items: [
+      { to: "/messages", label: "Inbox", icon: MessageSquare },
       { to: "/notifications", label: "Notifications", icon: Bell },
       { to: "/audit-logs", label: "Activity Log", icon: ScrollText },
       { to: "/recruiter-activity", label: "Recruiter Activity", icon: History, adminOnly: true },
