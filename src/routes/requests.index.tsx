@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Users, ArrowRight, Sparkles } from "lucide-react";
-import { REQUEST_STATUS_LABELS, requestStatusTone, formatDate } from "@/lib/matches";
+import { REQUEST_STATUS_LABELS, REQUEST_PRIORITY_LABELS, requestStatusTone, requestPriorityTone, formatDate } from "@/lib/matches";
 import { ENGAGEMENT_TYPES } from "@/lib/catalog";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 
@@ -32,6 +32,7 @@ interface RequestRow {
   id: string;
   status: string | null;
   source: string | null;
+  priority: string | null;
   engagement_type: string | null;
   hires_needed: number | null;
   created_at: string;
@@ -46,7 +47,7 @@ function RequestsList() {
   const load = useCallback(async () => {
     const { data, error } = await supabase
       .from("client_requests")
-      .select("id,status,source,engagement_type,hires_needed,created_at,job_roles(name),candidate_matches(count)")
+      .select("id,status,source,priority,engagement_type,hires_needed,created_at,job_roles(name),candidate_matches(count)")
       .order("created_at", { ascending: false });
     if (error) setErr(error.message);
     else setRows((data ?? []) as unknown as RequestRow[]);
@@ -114,6 +115,11 @@ function RequestsList() {
                           <Badge className="bg-primary-soft text-primary" variant="secondary">
                             <Sparkles className="mr-1 h-3 w-3" />
                             Hand-picked
+                          </Badge>
+                        )}
+                        {r.priority && r.priority !== "normal" && (
+                          <Badge className={requestPriorityTone(r.priority)} variant="secondary">
+                            {REQUEST_PRIORITY_LABELS[r.priority] ?? r.priority}
                           </Badge>
                         )}
                       </div>
