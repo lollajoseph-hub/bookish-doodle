@@ -165,10 +165,17 @@ export function CandidateFilesCard({
             <input
               ref={inputRef}
               type="file"
+              accept={fileType === "intro_video" ? "video/mp4,video/webm,video/quicktime,video/ogg" : undefined}
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
-                if (f) upload.mutate(f);
+                if (f) {
+                  if (fileType === "intro_video" && !f.type.startsWith("video/")) {
+                    toast.error("Please select a video file");
+                  } else {
+                    upload.mutate(f);
+                  }
+                }
                 e.target.value = "";
               }}
             />
