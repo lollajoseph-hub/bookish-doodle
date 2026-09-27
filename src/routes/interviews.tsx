@@ -5,17 +5,28 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
 import { CandidateSkillGap, MatchStatusIcon, statusTone, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
 import { toast } from "sonner";
-import { CalendarClock, ChevronDown, Clock, ExternalLink, Loader2, StickyNote, UserSearch, Video } from "lucide-react";
+import { CalendarClock, ChevronDown, Clock, ExternalLink, Loader2, StickyNote, ThumbsDown, UserSearch, Video } from "lucide-react";
 import {
   MATCH_STATUS_LABELS,
+  REJECTION_REASONS,
   displayName,
   formatDateTime,
   signedPhotoUrl,
   type MatchStatus,
+  type RejectionReason,
 } from "@/lib/matches";
 import { createThread, findThreadId } from "@/components/request-messages";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
@@ -229,6 +240,174 @@ function InterviewReason({ reason }: { reason: string }) {
         </button>
       )}
     </div>
+  );
+}
+
+/**
+ * Client-side parity with staff when ScaleSource counter-proposes an interview
+ * time: accept (handled by the page), propose a different time, or reject.
+ */
+function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: string; locked: boolean; onRefresh: () => void }) {
+  const [proposing, setProposing] = useState(false);
+  const [proposedAt, setProposedAt] = useState("");
+  const [proposingBusy, setProposingBusy] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [rejectReason, setRejectReason] = useState<RejectionReason | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
+  const [rejectBusy, setRejectBusy] = useState(false);
+
+  async function submitPropose() {
+    if (!proposedAt || proposingBusy) return;
+    const when = new Date(proposedAt);
+    if (Number.isNaN(when.getTime()) || when.getTime() <= Date.now()) {
+      toast.error("Pick a date and time in the future.");
+      return;
+    }
+    setProposingBusy(true);
+    const { error } = await supabase.rpc("client_propose_interview_time", {
+      p_match_id: matchId,
+      p_proposed_at: when.toISOString(),
+    });
+    setProposingBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("New time proposed — ScaleSource will confirm.");
+    setProposing(false);
+    setProposedAt("");
+    onRefresh();
+  }
+
+  async function submitRejection() {
+    if (!rejectReason || rejectBusy) return;
+    setRejectBusy(true);
+    const { error } = await supabase.rpc("reject_candidate_match", {
+      p_match_id: matchId,
+      p_reason: rejectReason,
+      p_note: rejectNote.trim() ? rejectNote.trim() : null,
+      p_rejected_by: "client",
+    });
+    setRejectBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Feedback sent — thanks");
+    setRejecting(false);
+    setRejectReason(null);
+    setRejectNote("");
+    onRefresh();
+  }
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={locked || proposingBusy || rejectBusy}
+        onClick={() => {
+          setProposing((v) => !v);
+          setRejecting(false);
+        }}
+      >
+        <CalendarClock className="mr-1.5 h-4 w-4" />
+        Propose a different time
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        disabled={locked || proposingBusy || rejectBusy}
+        onClick={() => {
+          setRejecting((v) => !v);
+          setProposing(false);
+        }}
+        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+      >
+        <ThumbsDown className="mr-1.5 h-4 w-4" />
+        Reject
+      </Button>
+
+      {proposing && (
+        <div className="w-full space-y-2 rounded-lg border border-border bg-background/60 p-3">
+          <Label htmlFor={`propose-when-${matchId}`}>Your preferred time</Label>
+          <Input
+            id={`propose-when-${matchId}`}
+            type="datetime-local"
+            value={proposedAt}
+            onChange={(e) => setProposedAt(e.target.value)}
+            className="bg-background"
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={proposingBusy}
+              onClick={() => {
+                setProposing(false);
+                setProposedAt("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button size="sm" disabled={!proposedAt || proposingBusy} onClick={() => void submitPropose()}>
+              {proposingBusy && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+              Send proposal
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {rejecting && (
+        <div className="w-full space-y-3 rounded-lg border border-border bg-muted/40 p-3">
+          <p className="text-sm font-medium">Not a fit — tell us why so we can find better matches.</p>
+          <div className="space-y-1.5">
+            <Label>Reason</Label>
+            <Select value={rejectReason ?? undefined} onValueChange={(v) => setRejectReason(v as RejectionReason)}>
+              <SelectTrigger className="w-full bg-background">
+                <SelectValue placeholder="Select a reason" />
+              </SelectTrigger>
+              <SelectContent>
+                {REJECTION_REASONS.map((r) => (
+                  <SelectItem key={r.value} value={r.value}>
+                    {r.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`reject-note-${matchId}`}>Additional notes (optional)</Label>
+            <Textarea
+              id={`reject-note-${matchId}`}
+              value={rejectNote}
+              onChange={(e) => setRejectNote(e.target.value)}
+              rows={3}
+              placeholder="Anything else we should know?"
+              className="bg-background"
+            />
+          </div>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={rejectBusy}
+              onClick={() => {
+                setRejecting(false);
+                setRejectReason(null);
+                setRejectNote("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button variant="destructive" size="sm" disabled={!rejectReason || rejectBusy} onClick={() => void submitRejection()}>
+              {rejectBusy && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+              Submit
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -446,10 +625,13 @@ function InterviewsPage() {
                           <Clock className="h-4 w-4 flex-none" />
                           ScaleSource proposed a new time: {formatDateTime(m.interview_proposed_at)}
                         </p>
-                        <Button size="sm" disabled={acceptingId === m.id} onClick={() => acceptInterviewTime(m.id)}>
-                          {acceptingId === m.id && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
-                          Accept this time
-                        </Button>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Button size="sm" disabled={acceptingId === m.id} onClick={() => acceptInterviewTime(m.id)}>
+                            {acceptingId === m.id && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                            Accept this time
+                          </Button>
+                          <CounterProposalActions matchId={m.id} locked={acceptingId === m.id} onRefresh={() => void load()} />
+                        </div>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary">
