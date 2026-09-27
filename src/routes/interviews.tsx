@@ -487,10 +487,6 @@ function InterviewsPage() {
                     </div>
 
                     <div className="flex flex-none flex-wrap items-center gap-2">
-                      <Button variant="secondary" size="sm" onClick={() => setProfileFor(m)}>
-                        <UserSearch className="mr-1.5 h-4 w-4" />
-                        View full profile
-                      </Button>
                       {m.status === "interview_confirmed" && m.meet_url && (
                         <Button asChild size="sm">
                           <a href={m.meet_url} target="_blank" rel="noreferrer">
