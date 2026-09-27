@@ -594,6 +594,8 @@ export function CandidateCard({
 }
 
 export function CandidateSkillGap({ requiredSkills, candidateSkills }: CandidateSkillGapProps) {
+  const [expanded, setExpanded] = useState(false);
+
   if (requiredSkills.length === 0) return null;
 
   const actual = new Set(candidateSkills.map((skill) => skill.trim().toLocaleLowerCase()).filter(Boolean));
@@ -603,29 +605,41 @@ export function CandidateSkillGap({ requiredSkills, candidateSkills }: Candidate
   return (
     <div className="space-y-2 border-t border-border/70 pt-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Skill match</p>
-      {matched.length > 0 && (
-        <div className="space-y-1.5">
-          <p className="text-xs text-muted-foreground">Matched</p>
-          <div className="flex flex-wrap gap-1.5">
-            {matched.map((skill) => (
-              <Badge key={skill} variant="secondary" className="bg-success text-success-foreground">
-                {skill}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
-      {missing.length > 0 && (
-        <div className="space-y-1.5">
-          <p className="text-xs text-muted-foreground">Missing</p>
-          <div className="flex flex-wrap gap-1.5">
-            {missing.map((skill) => (
-              <Badge key={skill} variant="outline" className="text-muted-foreground">
-                {skill}
-              </Badge>
-            ))}
-          </div>
-        </div>
+      <div className="flex flex-wrap items-center gap-x-2">
+        <p className="text-xs text-muted-foreground">
+          {matched.length} of {requiredSkills.length} required skills matched
+        </p>
+        <button type="button" onClick={() => setExpanded((v) => !v)} className="text-xs font-medium text-primary">
+          {expanded ? "Hide details" : "Show details"}
+        </button>
+      </div>
+      {expanded && (
+        <>
+          {matched.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-xs text-muted-foreground">Matched</p>
+              <div className="flex flex-wrap gap-1.5">
+                {matched.map((skill) => (
+                  <Badge key={skill} variant="secondary" className="bg-success text-success-foreground">
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          {missing.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-xs text-muted-foreground">Missing</p>
+              <div className="flex flex-wrap gap-1.5">
+                {missing.map((skill) => (
+                  <Badge key={skill} variant="outline" className="text-muted-foreground">
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
