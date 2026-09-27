@@ -46,7 +46,7 @@ function emptyForm(recruiterId: string | null): CandidateFormInput {
     headline: "",
     years_experience: null,
     country: "",
-    availability: "available",
+    availability: "available_now",
     timezone: null,
     weekly_hours_available: null,
     preferred_shift: null,
@@ -99,7 +99,7 @@ export function CandidateForm({
         headline: detail.candidate.headline ?? "",
         years_experience: detail.candidate.years_experience ?? null,
         country: detail.candidate.country ?? "",
-        availability: detail.candidate.availability ?? "available",
+        availability: detail.candidate.availability ?? "available_now",
         timezone: detail.candidate.timezone ?? null,
         weekly_hours_available: detail.candidate.weekly_hours_available ?? null,
         preferred_shift: detail.candidate.preferred_shift ?? null,
@@ -278,7 +278,7 @@ export function CandidateForm({
           <div className="space-y-2">
             <Label htmlFor="availability">Schedule</Label>
             <Select
-              value={form.availability ?? "available"}
+              value={form.availability ?? "available_now"}
               onValueChange={(v: string) =>
                 set("availability", v as CandidateFormInput["availability"])
               }
@@ -287,9 +287,13 @@ export function CandidateForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="available">Available</SelectItem>
+                <SelectItem value="available_now">Available now</SelectItem>
                 <SelectItem value="open_to_offers">Open to offers</SelectItem>
-                <SelectItem value="not_available">Not available</SelectItem>
+                <SelectItem value="off_market">Off the market</SelectItem>
+                <SelectItem value="available_from">Available from (date)</SelectItem>
+                <SelectItem value="interviewing">Interviewing</SelectItem>
+                <SelectItem value="closing_next_week">Closing next week</SelectItem>
+                <SelectItem value="exploring">Exploring options</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -328,10 +332,26 @@ export function CandidateForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="earliest_start">Earliest start date</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label
+                htmlFor="earliest_start"
+                className={form.availability === "available_from" ? "text-primary" : undefined}
+              >
+                Earliest start date
+              </Label>
+              {form.availability === "available_from" && (
+                <span className="text-[11px] font-medium text-primary">
+                  Required when availability is "Available from"
+                </span>
+              )}
+            </div>
             <Input
               id="earliest_start"
               type="date"
+              required={form.availability === "available_from"}
+              className={
+                form.availability === "available_from" ? "border-primary ring-1 ring-primary/40" : undefined
+              }
               value={form.earliest_start_date ?? ""}
               onChange={(e) => set("earliest_start_date", e.target.value || null)}
             />

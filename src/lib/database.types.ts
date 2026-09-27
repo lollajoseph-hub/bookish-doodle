@@ -34,7 +34,14 @@ export interface JobRoleRow {
   updated_at: string | null;
 }
 
-export type CandidateAvailability = "available" | "open_to_offers" | "not_available";
+export type CandidateAvailability =
+  | "available_now"
+  | "open_to_offers"
+  | "off_market"
+  | "available_from"
+  | "interviewing"
+  | "closing_next_week"
+  | "exploring";
 
 export interface CandidateRow {
   id: string;
