@@ -9,11 +9,13 @@ import {
   completeInterview,
   confirmInterview,
   fetchMatchesByStatus,
+  labelize,
   proposeInterviewTime,
+  REJECTION_REASONS,
   staffExtendOffer,
   updateMatchStatus,
 } from "@/lib/crm-queries";
-import type { MatchStatus } from "@/lib/database.types";
+import type { MatchStatus, RejectionReason } from "@/lib/database.types";
 import {
   addThreadNote,
   fetchThreadNoteAuthors,
@@ -27,6 +29,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -50,6 +54,13 @@ const STAGES: MatchStatus[] = [
   "interview_completed",
   "hire_requested",
 ];
+
+const STAGE_LABELS: Record<string, string> = {
+  interview_requested: "Requested",
+  interview_confirmed: "Confirmed",
+  interview_completed: "Completed",
+  hire_requested: "Hire requested",
+};
 
 const NEXT_STAGE: Partial<Record<MatchStatus, MatchStatus>> = {
   interview_confirmed: "interview_completed",
@@ -133,6 +144,26 @@ function InterviewReviewPage() {
   const [proposeNotes, setProposeNotes] = useState("");
   const [declineMode, setDeclineMode] = useState(false);
   const [notesOpenFor, setNotesOpenFor] = useState<string | null>(null);
+  const [rejectFor, setRejectFor] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState<RejectionReason>("skill_mismatch");
+  const [rejectNote, setRejectNote] = useState("");
+
+  const reject = useMutation({
+    mutationFn: ({ id, reason, note }: { id: string; reason: RejectionReason; note: string }) =>
+      updateMatchStatus(id, "rejected", {
+        rejection_reason: reason,
+        rejection_reason_note: note || null,
+      }),
+    onSuccess: () => {
+      toast.success("Candidate rejected");
+      setRejectFor(null);
+      setRejectNote("");
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      queryClient.invalidateQueries({ queryKey: ["all-matches"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const complete = useMutation({
     mutationFn: ({ id, notes }: { id: string; notes: string }) => completeInterview(id, notes),
@@ -151,6 +182,14 @@ function InterviewReviewPage() {
   return (
     <AppShell title="Interview review" description="Candidates in the interview stages">
       {isLoading && <p className="text-sm text-muted-foreground">Loading interviews…</p>}
+      <Tabs defaultValue="interview_requested">
+        <TabsList className="h-auto max-w-full flex-wrap justify-start">
+          {STAGES.map((stage) => (
+            <TabsTrigger key={stage} value={stage}>{STAGE_LABELS[stage]}</TabsTrigger>
+          ))}
+        </TabsList>
+        {STAGES.map((stage) => (
+          <TabsContent key={stage} value={stage}>
       <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
         <Table>
           <TableHeader>
@@ -163,7 +202,7 @@ function InterviewReviewPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {matches.map((m) => {
+            {matches.filter((m) => m.status === stage).map((m) => {
               const next = NEXT_STAGE[m.status];
               return (
                 <Fragment key={m.id}>
@@ -262,6 +301,18 @@ function InterviewReviewPage() {
                         >
                           Decline time
                         </Button>
+                      ) : m.status === "interview_completed" ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setRejectReason("skill_mismatch");
+                            setRejectNote("");
+                            setRejectFor(m.id);
+                          }}
+                        >
+                          Reject
+                        </Button>
                       ) : (
                         <Button
                           size="sm"
@@ -296,11 +347,14 @@ function InterviewReviewPage() {
           </TableBody>
         </Table>
       </div>
-      {!isLoading && !matches.length && (
+      {!isLoading && !matches.some((m) => m.status === stage) && (
         <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
-          <CalendarCheck className="h-4 w-4" /> No candidates are in an interview stage right now.
+          <CalendarCheck className="h-4 w-4" /> No candidates in this stage right now.
         </p>
       )}
+          </TabsContent>
+        ))}
+      </Tabs>
 
       <Dialog
         open={!!completeFor}
@@ -348,6 +402,43 @@ function InterviewReviewPage() {
               }}
             >
               Mark interview complete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!rejectFor} onOpenChange={(open) => !open && setRejectFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject candidate</DialogTitle>
+            <DialogDescription>Record why this candidate didn't fit.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Reason</Label>
+              <Select value={rejectReason} onValueChange={(value) => setRejectReason(value as RejectionReason)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {REJECTION_REASONS.map((reason) => (
+                    <SelectItem key={reason} value={reason}>{labelize(reason)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="reject-note">Note</Label>
+              <Textarea id="reject-note" value={rejectNote} onChange={(e) => setRejectNote(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRejectFor(null)}>Cancel</Button>
+            <Button
+              disabled={reject.isPending}
+              onClick={() => {
+                if (rejectFor) reject.mutate({ id: rejectFor, reason: rejectReason, note: rejectNote });
+              }}
+            >
+              Reject
             </Button>
           </DialogFooter>
         </DialogContent>
