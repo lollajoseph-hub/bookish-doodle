@@ -16,8 +16,10 @@ import {
 import type { MatchStatus } from "@/lib/database.types";
 import {
   fetchScratchpad,
+  findThreadId,
   getOrCreateThread,
   updateScratchpad,
+  type ThreadTarget,
 } from "@/lib/messages-queries";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -408,22 +410,29 @@ function InterviewPrepNotes({ matchId }: { matchId: string }) {
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
   const dirtyRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const target: ThreadTarget = { kind: "candidate", candidateMatchId: matchId };
 
-  const { data: thread, error: threadError } = useQuery({
+  // Read-only lookup — opening the panel must never create a thread.
+  const { data: foundThreadId, error: threadError } = useQuery({
     queryKey: ["thread", "candidate", matchId],
-    queryFn: () => getOrCreateThread({ kind: "candidate", candidateMatchId: matchId }),
+    queryFn: () => findThreadId(target),
     staleTime: Infinity,
   });
-  const threadId = thread?.id;
+  const [createdThreadId, setCreatedThreadId] = useState<string | null>(null);
+  const threadId = createdThreadId ?? foundThreadId ?? null;
 
   useEffect(() => {
     if (threadError) toast.error((threadError as Error).message);
   }, [threadError]);
 
   useEffect(() => {
-    if (!threadId) return;
+    if (foundThreadId === undefined) return; // lookup still in flight
+    if (!foundThreadId) {
+      setLoaded(true); // no thread yet — start with an empty pad
+      return;
+    }
     let cancelled = false;
-    fetchScratchpad(threadId)
+    fetchScratchpad(foundThreadId)
       .then((row) => {
         if (cancelled || dirtyRef.current) return;
         setContent(row?.content ?? "");
@@ -433,7 +442,7 @@ function InterviewPrepNotes({ matchId }: { matchId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [threadId]);
+  }, [foundThreadId]);
 
   useEffect(() => {
     return () => {
@@ -442,10 +451,16 @@ function InterviewPrepNotes({ matchId }: { matchId: string }) {
   }, []);
 
   const save = async (value: string) => {
-    if (!threadId) return;
     setStatus("saving");
     try {
-      await updateScratchpad(threadId, value);
+      // Create the thread only now — at the moment a note is actually saved.
+      let id = threadId;
+      if (!id) {
+        const thread = await getOrCreateThread(target);
+        id = thread.id;
+        setCreatedThreadId(id);
+      }
+      await updateScratchpad(id, value);
       dirtyRef.current = false;
       setStatus("saved");
     } catch (e) {
