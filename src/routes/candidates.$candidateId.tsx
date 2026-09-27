@@ -567,6 +567,7 @@ function CandidateDetailPage() {
                   recruiterSummary={aiProfile?.recruiter_summary ?? null}
                   approvedSummary={aiProfile?.approved_summary ?? null}
                   rankScore={aiProfile?.rank_score ?? null}
+                  highlights={aiProfile?.highlights ?? null}
                 />
 
                 <IntroVideoCard
