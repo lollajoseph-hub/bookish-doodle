@@ -83,10 +83,11 @@ export function CandidateMessages({
   matchStatus: string | null;
   candidateName: string;
 }) {
+  const firstName = candidateName.split(" ")[0] || candidateName;
   return (
     <ThreadPanel
       target={{ kind: "candidate", id: matchId }}
-      label="Message about this candidate"
+      label={`Talk to us about ${firstName}`}
       title={`About ${candidateName}`}
       description={`Chat with your ScaleSource recruiter about ${candidateName}.`}
       actions={matchStatus === "interview_confirmed" ? [ACTION_META.reschedule_request] : []}
