@@ -87,6 +87,14 @@ export function CandidateFullProfileView({ candidateId, matchId, matchStatus, sc
       return;
     }
     setVisibleWorkCount(5); setProfile(null); setErr(null); setLoading(true);
+    // Analytics: record that the client opened this candidate's full profile.
+    // Fire-and-forget — never block or break the viewing experience.
+    if (matchId) {
+      supabase.rpc("log_match_view", { p_match_id: matchId }).then(
+        ({ error }) => { if (error) console.warn("log_match_view failed:", error.message); },
+        () => {},
+      );
+    }
     let cancelled = false;
     void (async () => {
       const { data, error } = await supabase.from("candidate_pool_profile").select(PROFILE_SELECT).eq("candidate_id", candidateId).maybeSingle();
