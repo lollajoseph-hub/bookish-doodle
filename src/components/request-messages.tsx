@@ -45,6 +45,11 @@ function lastReadKey(userId: string, threadId: string) {
   return `cp:thread-last-read:${userId}:${threadId}`;
 }
 
+/** Stored last-read timestamp for a thread, or null if never read. */
+export function getLastRead(userId: string, threadId: string): string | null {
+  return window.localStorage.getItem(lastReadKey(userId, threadId));
+}
+
 /**
  * Resolves (get_or_create_thread) a thread, loads its messages with realtime,
  * and tracks unread staff messages via a localStorage last-read marker.

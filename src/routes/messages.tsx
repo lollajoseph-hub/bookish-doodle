@@ -3,8 +3,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { useMembership } from "@/lib/membership";
+import { useAuth } from "@/lib/auth";
 import { MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
-import { ChatFeed, Composer, actionsFor, useThread, type ThreadTarget } from "@/components/request-messages";
+import { ChatFeed, Composer, actionsFor, getLastRead, useThread, type ThreadTarget } from "@/components/request-messages";
 import { displayName, formatDateTime } from "@/lib/matches";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 import { MessageSquare } from "lucide-react";
@@ -44,12 +45,21 @@ interface RequestItem {
   job_roles: { name: string | null } | null;
 }
 
+interface LastMessage {
+  body: string;
+  created_at: string;
+  sender_role: "staff" | "client";
+}
+
 interface Row {
   key: string;
   target: ThreadTarget;
   title: string;
   subtitle: string;
   matchStatus?: string | null;
+  threadId: string | null;
+  lastMessage: LastMessage | null;
+  unread: boolean;
 }
 
 function statusText(s: string | null | undefined) {
@@ -57,23 +67,67 @@ function statusText(s: string | null | undefined) {
   return s.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 }
 
+function formatRelative(iso: string) {
+  const then = new Date(iso).getTime();
+  const diff = Date.now() - then;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d`;
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 function MessagesPage() {
   const { membership } = useMembership();
+  const { user } = useAuth();
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/messages" });
   const [requests, setRequests] = useState<RequestItem[] | null>(null);
   const [matches, setMatches] = useState<MatchRow[] | null>(null);
+  const [threadByTarget, setThreadByTarget] = useState<Record<string, string>>({});
+  const [lastByThread, setLastByThread] = useState<Record<string, LastMessage>>({});
   const [err, setErr] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const [reqRes, matchRes] = await Promise.all([
+    const [reqRes, matchRes, threadRes] = await Promise.all([
       supabase.from("client_requests").select("id,status,job_roles(name)").order("created_at", { ascending: false }),
       supabase.from("candidate_matches").select(MATCH_SELECT).neq("status", "rejected"),
+      supabase.from("threads").select("id,client_request_id,candidate_match_id,client_id,kind"),
     ]);
-    if (reqRes.error || matchRes.error) setErr((reqRes.error ?? matchRes.error)!.message);
+    if (reqRes.error || matchRes.error || threadRes.error) setErr((reqRes.error ?? matchRes.error ?? threadRes.error)!.message);
     else setErr(null);
     setRequests((reqRes.data ?? []) as unknown as RequestItem[]);
     setMatches((matchRes.data ?? []) as unknown as MatchRow[]);
+
+    const targetMap: Record<string, string> = {};
+    const threadIds: string[] = [];
+    for (const t of threadRes.data ?? []) {
+      const targetId = t.kind === "request" ? t.client_request_id : t.kind === "candidate" ? t.candidate_match_id : t.client_id;
+      if (!targetId) continue;
+      targetMap[`${t.kind}:${targetId}`] = t.id;
+      threadIds.push(t.id);
+    }
+    setThreadByTarget(targetMap);
+
+    if (threadIds.length === 0) {
+      setLastByThread({});
+      return;
+    }
+    const msgRes = await supabase
+      .from("thread_messages")
+      .select("thread_id,sender_id,sender_role,body,created_at")
+      .in("thread_id", threadIds)
+      .order("created_at", { ascending: false });
+    const latest: Record<string, LastMessage> = {};
+    for (const m of msgRes.data ?? []) {
+      if (!latest[m.thread_id]) {
+        latest[m.thread_id] = { body: m.body, created_at: m.created_at, sender_role: m.sender_role as "staff" | "client" };
+      }
+    }
+    setLastByThread(latest);
   }, []);
 
   useEffect(() => {
@@ -87,22 +141,41 @@ function MessagesPage() {
     return m;
   }, [requests]);
 
+  const enrich = useCallback(
+    (base: Omit<Row, "threadId" | "lastMessage" | "unread">): Row => {
+      const threadId = threadByTarget[base.key] ?? null;
+      const lastMessage = threadId ? (lastByThread[threadId] ?? null) : null;
+      const lastRead = threadId && user ? getLastRead(user.id, threadId) : null;
+      const unread = !!lastMessage && lastMessage.sender_role === "staff" && (!lastRead || new Date(lastMessage.created_at) > new Date(lastRead));
+      return { ...base, threadId, lastMessage, unread };
+    },
+    [threadByTarget, lastByThread, user]
+  );
+
   const general: Row | null = membership?.client_id
-    ? { key: `general:${membership.client_id}`, target: { kind: "general", id: membership.client_id }, title: "ScaleSource team", subtitle: "General conversation" }
+    ? enrich({ key: `general:${membership.client_id}`, target: { kind: "general", id: membership.client_id }, title: "ScaleSource team", subtitle: "General conversation" })
     : null;
-  const requestRows: Row[] = (requests ?? []).map((r) => ({
-    key: `request:${r.id}`,
-    target: { kind: "request", id: r.id },
-    title: r.job_roles?.name ?? "Hiring request",
-    subtitle: statusText(r.status),
-  }));
-  const candidateRows: Row[] = (matches ?? []).map((m) => ({
-    key: `candidate:${m.id}`,
-    target: { kind: "candidate", id: m.id },
-    title: displayName(m.candidate_pool_profile?.full_name, m.status),
-    subtitle: roleById[m.client_request_id] ?? "Hiring request",
-    matchStatus: m.status,
-  }));
+  const requestRows: Row[] = (requests ?? [])
+    .map((r) =>
+      enrich({
+        key: `request:${r.id}`,
+        target: { kind: "request", id: r.id },
+        title: r.job_roles?.name ?? "Hiring request",
+        subtitle: statusText(r.status),
+      })
+    )
+    .sort(byRecent);
+  const candidateRows: Row[] = (matches ?? [])
+    .map((m) =>
+      enrich({
+        key: `candidate:${m.id}`,
+        target: { kind: "candidate", id: m.id },
+        title: displayName(m.candidate_pool_profile?.full_name, m.status),
+        subtitle: roleById[m.client_request_id] ?? "Hiring request",
+        matchStatus: m.status,
+      })
+    )
+    .sort(byRecent);
 
   const selectedKey = search.candidate
     ? `candidate:${search.candidate}`
@@ -143,6 +216,16 @@ function MessagesPage() {
       </div>
     </div>
   );
+}
+
+/** Rows with a message first, most recent first; the rest keep their order. */
+function byRecent(a: Row, b: Row) {
+  const ta = a.lastMessage?.created_at ?? null;
+  const tb = b.lastMessage?.created_at ?? null;
+  if (ta && tb) return tb.localeCompare(ta);
+  if (ta) return -1;
+  if (tb) return 1;
+  return 0;
 }
 
 function Section({
@@ -187,9 +270,21 @@ function ThreadListRow({ row, selected, onSelect }: { row: Row; selected: boolea
       >
         <MessageSquare className="mt-0.5 h-4 w-4 flex-none opacity-70" />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium">{row.title}</span>
+          <span className="flex items-baseline justify-between gap-2">
+            <span className="truncate text-sm font-medium">{row.title}</span>
+            {row.lastMessage && (
+              <span className="flex-none text-[11px] text-muted-foreground">{formatRelative(row.lastMessage.created_at)}</span>
+            )}
+          </span>
           {row.subtitle && <span className="block truncate text-xs text-muted-foreground">{row.subtitle}</span>}
+          {row.lastMessage && (
+            <span className="block truncate text-xs text-muted-foreground">
+              {row.lastMessage.sender_role === "client" ? "You: " : ""}
+              {row.lastMessage.body}
+            </span>
+          )}
         </span>
+        {row.unread && <span className="mt-1.5 h-2 w-2 flex-none rounded-full bg-amber-500" aria-label="Unread messages" />}
       </button>
     </li>
   );
