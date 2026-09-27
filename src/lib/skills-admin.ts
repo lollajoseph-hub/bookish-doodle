@@ -66,22 +66,6 @@ export async function updateSkill(
   }
 }
 
-export async function deleteSkill(id: string): Promise<void> {
-  const [candRes, reqRes] = await Promise.all([
-    supabase.from("candidate_skills").select("skill_id").eq("skill_id", id).limit(1),
-    supabase.from("client_request_skills").select("skill_id").eq("skill_id", id).limit(1),
-  ]);
-  if (candRes.error) throw candRes.error;
-  if (reqRes.error) throw reqRes.error;
-  if ((candRes.data ?? []).length > 0 || (reqRes.data ?? []).length > 0) {
-    throw new Error(
-      "This skill is still linked to candidates or requests. Merge it into another skill instead of deleting it.",
-    );
-  }
-  const { error } = await supabase.from("skills").delete().eq("id", id);
-  if (error) throw error;
-}
-
 export async function mergeSkills(sourceIds: string[], targetId: string): Promise<void> {
   const sources = sourceIds.filter((id) => id !== targetId);
   if (sources.length === 0) throw new Error("Pick at least one other skill to merge in");
@@ -97,4 +81,32 @@ export async function mergeSkills(sourceIds: string[], targetId: string): Promis
     }
     throw error;
   }
+}
+
+export type RoleSkill = { skill_id: string; name: string; category: string | null };
+
+export async function fetchJobRoles(): Promise<Array<{ id: string; name: string }>> {
+  const { data, error } = await supabase.from("job_roles").select("id, name").order("name");
+  if (error) throw error;
+  return (data ?? []) as Array<{ id: string; name: string }>;
+}
+
+export async function fetchRoleSkills(roleId: string): Promise<RoleSkill[]> {
+  const { data, error } = await (supabase.rpc as any)("get_role_skills", { p_role_id: roleId });
+  if (error) throw error;
+  return ((data ?? []) as RoleSkill[]).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function addSkillToRole(roleId: string, name: string, category: string | null): Promise<void> {
+  const { error } = await (supabase.rpc as any)("add_or_get_skill_for_role", {
+    p_role_id: roleId,
+    p_skill_name: name,
+    p_category: category,
+  });
+  if (error) throw error;
+}
+
+export async function removeSkillFromRole(roleId: string, skillId: string): Promise<void> {
+  const { error } = await supabase.from("role_skills").delete().match({ role_id: roleId, skill_id: skillId });
+  if (error) throw error;
 }
