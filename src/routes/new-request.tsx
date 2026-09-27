@@ -20,8 +20,8 @@ import { buildRequestRecap, RequestRecap } from "@/components/request-recap";
 import { SuccessFlourish } from "@/components/success-flourish";
 
 export const Route = createFileRoute("/new-request")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    clone: typeof search.clone === "string" ? search.clone : undefined,
+  validateSearch: (search: Record<string, unknown>): { clone?: string } => ({
+    ...(typeof search.clone === "string" && search.clone ? { clone: search.clone } : {}),
   }),
   head: () => ({
     meta: [
