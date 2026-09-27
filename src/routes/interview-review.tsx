@@ -407,11 +407,8 @@ function InterviewReviewPage() {
 }
 
 function InterviewPrepNotes({ matchId }: { matchId: string }) {
-  const [content, setContent] = useState("");
-  const [loaded, setLoaded] = useState(false);
-  const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const dirtyRef = useRef(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queryClient = useQueryClient();
+  const [draft, setDraft] = useState("");
   const target: ThreadTarget = { kind: "candidate", candidateMatchId: matchId };
 
   // Read-only lookup — opening the panel must never create a thread.
@@ -423,38 +420,43 @@ function InterviewPrepNotes({ matchId }: { matchId: string }) {
   const [createdThreadId, setCreatedThreadId] = useState<string | null>(null);
   const threadId = createdThreadId ?? foundThreadId ?? null;
 
+  const { data: me } = useQuery({
+    queryKey: ["auth-user-id"],
+    queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? null,
+    staleTime: Infinity,
+  });
+
   useEffect(() => {
     if (threadError) toast.error((threadError as Error).message);
   }, [threadError]);
 
-  useEffect(() => {
-    if (foundThreadId === undefined) return; // lookup still in flight
-    if (!foundThreadId) {
-      setLoaded(true); // no thread yet — start with an empty pad
-      return;
-    }
-    let cancelled = false;
-    fetchScratchpad(foundThreadId)
-      .then((row) => {
-        if (cancelled || dirtyRef.current) return;
-        setContent(row?.content ?? "");
-        setLoaded(true);
-      })
-      .catch((e: Error) => toast.error(e.message));
-    return () => {
-      cancelled = true;
-    };
-  }, [foundThreadId]);
+  const { data: notes = [], error: notesError } = useQuery({
+    queryKey: ["thread-notes", threadId],
+    queryFn: () => fetchThreadNotes(threadId!),
+    enabled: !!threadId,
+  });
+  const { data: authors = [] } = useQuery({
+    queryKey: ["thread-note-authors", threadId],
+    queryFn: () => fetchThreadNoteAuthors(threadId!),
+    enabled: !!threadId,
+  });
 
   useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
+    if (notesError) toast.error((notesError as Error).message);
+  }, [notesError]);
 
-  const save = async (value: string) => {
-    setStatus("saving");
-    try {
+  const authorById = new Map(authors.map((a) => [a.id, a]));
+  const authorLabel = (authorId: string) => {
+    if (me && authorId === me) return "You";
+    const a = authorById.get(authorId);
+    if (!a) return "Unknown";
+    const first = a.full_name.split(" ")[0];
+    const role = a.role.charAt(0).toUpperCase() + a.role.slice(1);
+    return `${first} (${role})`;
+  };
+
+  const addNote = useMutation({
+    mutationFn: async (body: string) => {
       // Create the thread only now — at the moment a note is actually saved.
       let id = threadId;
       if (!id) {
@@ -462,42 +464,62 @@ function InterviewPrepNotes({ matchId }: { matchId: string }) {
         id = thread.id;
         setCreatedThreadId(id);
       }
-      await updateScratchpad(id, value);
-      dirtyRef.current = false;
-      setStatus("saved");
-    } catch (e) {
-      toast.error((e as Error).message);
-      setStatus("idle");
-    }
-  };
-
-  const onChange = (v: string) => {
-    setContent(v);
-    dirtyRef.current = true;
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => save(v), 800);
-  };
+      return addThreadNote(id, body);
+    },
+    onSuccess: () => {
+      setDraft("");
+      queryClient.invalidateQueries({ queryKey: ["thread-notes", threadId] });
+      queryClient.invalidateQueries({ queryKey: ["thread-note-authors", threadId] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
 
   return (
     <div className="py-1">
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-semibold">Interview Prep Notes</h3>
-          <p className="text-xs text-muted-foreground">
-            Shared prep notes for this candidate's interview.
-          </p>
-        </div>
-        <span className="text-[11px] text-muted-foreground">
-          {status === "saving" ? "Saving…" : status === "saved" ? "Saved" : ""}
-        </span>
+      <div className="mb-2">
+        <h3 className="text-sm font-semibold">Interview Prep Notes</h3>
+        <p className="text-xs text-muted-foreground">
+          Shared prep notes for this candidate's interview.
+        </p>
       </div>
-      <Textarea
-        value={content}
-        disabled={!threadId || !loaded}
-        placeholder="Talking points, questions to ask, things to highlight…"
-        onChange={(e) => onChange(e.target.value)}
-        className="min-h-[100px] resize-none bg-card"
-      />
+      {threadId && notes.length > 0 && (
+        <div className="mb-3 space-y-2">
+          {notes.map((n) => (
+            <div key={n.id} className="rounded-lg border bg-card p-2">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-xs font-medium">{authorLabel(n.author_id)}</span>
+                <span className="text-[11px] text-muted-foreground">
+                  {new Date(n.created_at).toLocaleString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+              <p className="mt-0.5 whitespace-pre-wrap text-xs">{n.body}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      {threadId && notes.length === 0 && (
+        <p className="mb-3 text-xs text-muted-foreground">No notes yet.</p>
+      )}
+      <div className="flex items-start gap-2">
+        <Textarea
+          value={draft}
+          placeholder="Talking points, questions to ask, things to highlight…"
+          onChange={(e) => setDraft(e.target.value)}
+          className="min-h-[60px] flex-1 resize-none bg-card"
+        />
+        <Button
+          size="sm"
+          disabled={!draft.trim() || addNote.isPending}
+          onClick={() => addNote.mutate(draft.trim())}
+        >
+          Add note
+        </Button>
+      </div>
     </div>
   );
 }
