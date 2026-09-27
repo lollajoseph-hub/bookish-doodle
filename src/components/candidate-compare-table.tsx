@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import {
   displayName,
@@ -239,6 +240,9 @@ export function CandidateActions({
   const [rejectNote, setRejectNote] = useState("");
   const [rejectBusy, setRejectBusy] = useState(false);
   const [acceptingTime, setAcceptingTime] = useState(false);
+  const [proposing, setProposing] = useState(false);
+  const [proposedAt, setProposedAt] = useState("");
+  const [proposeBusy, setProposeBusy] = useState(false);
   const canAct = match.status === "recommended" || match.status === "shortlisted";
   const canReject = canAct || match.status === "interview_completed";
 
