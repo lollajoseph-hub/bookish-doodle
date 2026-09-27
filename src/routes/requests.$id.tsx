@@ -83,6 +83,8 @@ function RequestDetail() {
   const [request, setRequest] = useState<RequestHeader | null>(null);
   const [matches, setMatches] = useState<MatchRow[] | null>(null);
   const [photos, setPhotos] = useState<Record<string, string | null>>({});
+  const [requiredSkills, setRequiredSkills] = useState<string[]>([]);
+  const [candidateSkills, setCandidateSkills] = useState<Record<string, string[]>>({});
   const [err, setErr] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
   const [profileFor, setProfileFor] = useState<MatchRow | null>(null);
@@ -97,9 +99,14 @@ function RequestDetail() {
 
   const load = useCallback(async () => {
     const token = ++loadTokenRef.current;
-    const [reqRes, matchRes] = await Promise.all([
+    const [reqRes, matchRes, requiredSkillsRes] = await Promise.all([
       supabase.from("client_requests").select(REQUEST_SELECT).eq("id", id).maybeSingle(),
       supabase.from("candidate_matches").select(MATCH_SELECT).eq("client_request_id", id),
+      supabase
+        .from("client_request_skills")
+        .select("skills(name)")
+        .eq("client_request_id", id)
+        .eq("is_required", true),
     ]);
 
     if (reqRes.error) setErr(reqRes.error.message);
@@ -113,6 +120,15 @@ function RequestDetail() {
     }
 
     const raw = (matchRes.data ?? []) as unknown as MatchRow[];
+    const candidateIds = [...new Set(raw.map((match) => match.candidate_id))];
+    const candidateSkillsRes = candidateIds.length
+      ? await supabase.from("candidate_skills").select("candidate_id,skills(name)").in("candidate_id", candidateIds)
+      : { data: [], error: null };
+
+    if (requiredSkillsRes.error || candidateSkillsRes.error) {
+      if (loadTokenRef.current !== token) return null;
+      setErr(requiredSkillsRes.error?.message ?? candidateSkillsRes.error?.message ?? "Unable to load skills");
+    }
 
     let list: MatchRow[];
     if (!orderRef.current || orderRef.current.requestId !== id) {
@@ -133,6 +149,18 @@ function RequestDetail() {
     }
 
     if (loadTokenRef.current !== token) return null;
+    const required = (requiredSkillsRes.data ?? [])
+      .map((row) => (row.skills as unknown as { name: string | null } | null)?.name?.trim())
+      .filter((name): name is string => !!name);
+    const byCandidate: Record<string, string[]> = {};
+    for (const row of candidateSkillsRes.data ?? []) {
+      const candidateId = row.candidate_id;
+      const skillName = (row.skills as unknown as { name: string | null } | null)?.name?.trim();
+      if (!candidateId || !skillName) continue;
+      byCandidate[candidateId] = [...(byCandidate[candidateId] ?? []), skillName];
+    }
+    setRequiredSkills(required);
+    setCandidateSkills(byCandidate);
     setMatches(list);
 
     const entries = await Promise.all(
@@ -317,6 +345,8 @@ function RequestDetail() {
                       busy={actingId === m.id}
                       locked={actingId !== null && actingId !== m.id}
                       curated={request?.source === "staff_curated"}
+                      requiredSkills={requiredSkills}
+                      candidateSkills={candidateSkills[m.candidate_id] ?? []}
                       onViewProfile={() => setProfileFor(m)}
                       onShortlist={() =>
                         callRpc(
@@ -338,6 +368,8 @@ function RequestDetail() {
                   photos={photos}
                   actingId={actingId}
                   curated={request?.source === "staff_curated"}
+                  requiredSkills={requiredSkills}
+                  candidateSkills={candidateSkills}
                   onViewProfile={setProfileFor}
                   onShortlist={(m) =>
                     callRpc(

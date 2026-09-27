@@ -82,6 +82,11 @@ export interface MatchRow {
   candidate_pool_profile: PoolProfile | null;
 }
 
+export interface CandidateSkillGapProps {
+  requiredSkills: string[];
+  candidateSkills: string[];
+}
+
 export const MATCH_SELECT =
   "id,status,client_request_id,interview_proposed_at,interview_proposed_by,interview_scheduled_at,meet_url,interview_notes,meeting_notes_text,meeting_notes_doc_url,meeting_notes_captured_at,recording_url,recording_captured_at,rejection_reason,rejection_reason_note,rejected_at,match_score,match_reason,candidate_id," +
   "candidate_pool_profile(candidate_id,full_name,headline,availability,country,timezone,weekly_hours_available,preferred_shift,years_experience,earliest_start_date,approved_summary,highlights,skills,primary_role,secondary_roles,profile_photo_path)";
@@ -151,6 +156,8 @@ export function CandidateCard({
   busy,
   locked,
   curated,
+  requiredSkills = [],
+  candidateSkills = [],
   contextLabel,
   onShortlist,
   onRequestInterview,
@@ -167,6 +174,8 @@ export function CandidateCard({
   locked?: boolean;
   /** Staff-curated request: this candidate was hand-picked, not algorithmically matched. */
   curated?: boolean;
+  requiredSkills?: string[];
+  candidateSkills?: string[];
   /** e.g. the request this match belongs to, on cross-request views. */
   contextLabel?: React.ReactNode;
   onShortlist?: () => void;
@@ -310,6 +319,15 @@ export function CandidateCard({
           )}
         </div>
         {contextLabel && <div className="text-xs text-muted-foreground">{contextLabel}</div>}
+
+        {match.match_reason?.trim() && (
+          <div className="border-t border-border/70 pt-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Why this candidate</p>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{match.match_reason}</p>
+          </div>
+        )}
+
+        <CandidateSkillGap requiredSkills={requiredSkills} candidateSkills={candidateSkills} />
 
         {status === "interview_requested" &&
           (match.interview_proposed_by === "staff" ? (
@@ -527,5 +545,43 @@ export function CandidateCard({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+export function CandidateSkillGap({ requiredSkills, candidateSkills }: CandidateSkillGapProps) {
+  if (requiredSkills.length === 0) return null;
+
+  const actual = new Set(candidateSkills.map((skill) => skill.trim().toLocaleLowerCase()).filter(Boolean));
+  const matched = requiredSkills.filter((skill) => actual.has(skill.trim().toLocaleLowerCase()));
+  const missing = requiredSkills.filter((skill) => !actual.has(skill.trim().toLocaleLowerCase()));
+
+  return (
+    <div className="space-y-2 border-t border-border/70 pt-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Skill match</p>
+      {matched.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-xs text-muted-foreground">Matched</p>
+          <div className="flex flex-wrap gap-1.5">
+            {matched.map((skill) => (
+              <Badge key={skill} variant="secondary" className="bg-success text-success-foreground">
+                {skill}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+      {missing.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-xs text-muted-foreground">Missing</p>
+          <div className="flex flex-wrap gap-1.5">
+            {missing.map((skill) => (
+              <Badge key={skill} variant="outline" className="text-muted-foreground">
+                {skill}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 import {
   availabilityLabel,
+  CandidateSkillGap,
   MatchStatusIcon,
   statusTone,
   type MatchRow,
@@ -43,6 +44,8 @@ interface CandidateCompareTableProps {
   photos: Record<string, string | null>;
   actingId: string | null;
   curated?: boolean;
+  requiredSkills: string[];
+  candidateSkills: Record<string, string[]>;
   onShortlist: (match: MatchRow) => void;
   onRequestInterview: (match: MatchRow) => void;
   onRequestHire: (match: MatchRow) => void;
@@ -56,6 +59,8 @@ export function CandidateCompareTable({
   photos,
   actingId,
   curated,
+  requiredSkills,
+  candidateSkills,
   onShortlist,
   onRequestInterview,
   onRequestHire,
@@ -137,20 +142,18 @@ export function CandidateCompareTable({
             ))}
           </CompareRow>
 
-          <CompareRow label="Skills">
-            {matches.map((match) => {
-              const skills = toStringList(match.candidate_pool_profile?.skills);
-              return (
+          {requiredSkills.length > 0 && (
+            <CompareRow label="Skill match">
+              {matches.map((match) => (
                 <CompareCell key={match.id} className="align-top">
-                  {skills.length ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      {skills.map((skill) => <Badge key={skill} variant="secondary">{skill}</Badge>)}
-                    </div>
-                  ) : "—"}
+                  <CandidateSkillGap
+                    requiredSkills={requiredSkills}
+                    candidateSkills={candidateSkills[match.candidate_id] ?? []}
+                  />
                 </CompareCell>
-              );
-            })}
-          </CompareRow>
+              ))}
+            </CompareRow>
+          )}
 
           <CompareRow label="Work history">
             {matches.map((match) => {
