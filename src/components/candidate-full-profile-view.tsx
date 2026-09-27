@@ -163,7 +163,7 @@ export function CandidateFullProfileView({ candidateId, matchId, matchStatus, ma
                  </div>
                )}
                <CandidateSkillGap requiredSkills={requiredSkills ?? []} candidateSkills={candidateSkills ?? []} />
-              {video && <Section title="Introductory Video"><video src={video} controls className="w-full rounded-xl bg-foreground" preload="metadata" /></Section>}
+              {(video || profile.intro_video_url) && <Section title="Introductory Video">{video ? <video src={video} controls className="w-full rounded-xl bg-foreground" preload="metadata" /> : <LinkedVideo url={profile.intro_video_url!} />}</Section>}
               {roles.length > 0 && <Section title="Roles"><div className="flex flex-wrap gap-1.5">{roles.map((role, index) => <Badge key={`${role}-${index}`} variant="secondary" className={index === 0 ? "bg-primary/10 text-primary" : ""}>{role}</Badge>)}</div></Section>}
               {skills.length > 0 && <Section title="Skills"><div className="flex flex-wrap gap-1.5">{skills.map((skill, index) => <Badge key={`${skill}-${index}`} variant="outline">{skill}</Badge>)}</div></Section>}
               {work.length > 0 && <Section title="Work history"><EntryList entries={work.slice(0, visibleWorkCount)} />{visibleWorkCount < work.length && <Button type="button" variant="ghost" size="sm" className="mx-auto flex text-primary" onClick={() => setVisibleWorkCount((count) => Math.min(count + 5, work.length))}>See more <ArrowDown className="h-4 w-4" /></Button>}</Section>}
@@ -181,6 +181,59 @@ export function CandidateFullProfileView({ candidateId, matchId, matchStatus, ma
 function Row({ label, value }: { label: string; value: string | null | undefined }) {
   if (!value) return null;
   return <div><dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt><dd className="font-medium">{value}</dd></div>;
+}
+
+function youTubeVideoId(url: string): string | null {
+  const match = url.match(/(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|shorts\/)|youtu\.be\/)([\w-]+)/i);
+  return match?.[1] ?? null;
+}
+
+function vimeoVideoId(url: string): string | null {
+  const match = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+  return match?.[1] ?? null;
+}
+
+function loomVideoId(url: string): string | null {
+  const match = url.match(/loom\.com\/share\/([a-f0-9]+)/i);
+  return match?.[1] ?? null;
+}
+
+const DIRECT_VIDEO_EXTENSION = /\.(mp4|webm|mov|ogg)(\?.*)?(#.*)?$/i;
+
+function LinkedVideo({ url }: { url: string }) {
+  const trimmed = url.trim();
+  const youTubeId = youTubeVideoId(trimmed);
+  if (youTubeId) {
+    return (
+      <div className="aspect-video w-full overflow-hidden rounded-xl bg-foreground">
+        <iframe src={`https://www.youtube.com/embed/${youTubeId}`} title="Introductory video" allow="fullscreen; picture-in-picture" allowFullScreen className="h-full w-full" />
+      </div>
+    );
+  }
+  const vimeoId = vimeoVideoId(trimmed);
+  if (vimeoId) {
+    return (
+      <div className="aspect-video w-full overflow-hidden rounded-xl bg-foreground">
+        <iframe src={`https://player.vimeo.com/video/${vimeoId}`} title="Introductory video" allow="fullscreen; picture-in-picture" allowFullScreen className="h-full w-full" />
+      </div>
+    );
+  }
+  const loomId = loomVideoId(trimmed);
+  if (loomId) {
+    return (
+      <div className="aspect-video w-full overflow-hidden rounded-xl bg-foreground">
+        <iframe src={`https://www.loom.com/embed/${loomId}`} title="Introductory video" allow="fullscreen" allowFullScreen className="h-full w-full" />
+      </div>
+    );
+  }
+  if (DIRECT_VIDEO_EXTENSION.test(trimmed)) {
+    return <video src={trimmed} controls className="w-full rounded-xl bg-foreground" preload="metadata" />;
+  }
+  return (
+    <a href={trimmed} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+      Watch the introductory video <span aria-hidden="true">↗</span>
+    </a>
+  );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
