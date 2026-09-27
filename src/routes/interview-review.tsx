@@ -131,6 +131,7 @@ function InterviewReviewPage() {
   const [proposeFor, setProposeFor] = useState<{ id: string; name: string } | null>(null);
   const [proposedTime, setProposedTime] = useState("");
   const [proposeNotes, setProposeNotes] = useState("");
+  const [declineMode, setDeclineMode] = useState(false);
   const [notesOpenFor, setNotesOpenFor] = useState<string | null>(null);
 
   const complete = useMutation({
@@ -214,6 +215,7 @@ function InterviewReviewPage() {
                             onClick={() => {
                               setProposedTime("");
                               setProposeNotes("");
+                              setDeclineMode(false);
                               setProposeFor({ id: m.id, name: m.candidateName ?? "Candidate" });
                             }}
                           >
