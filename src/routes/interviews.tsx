@@ -1,3 +1,4 @@
+import { CandidateRating } from "@/components/candidate-rating";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -380,6 +381,14 @@ function InterviewsPage() {
                   )}
 
                   <PrepNotes matchId={m.id} />
+
+                  <CandidateRating
+                    matchId={m.id}
+                    interviewCompletedAt={m.interview_completed_at}
+                    rating={m.client_rating}
+                    note={m.client_rating_note}
+                    onSaved={() => void load()}
+                  />
 
                   {m.status === "hire_requested" && (
                     <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
