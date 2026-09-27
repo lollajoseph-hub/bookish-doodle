@@ -9,11 +9,13 @@ import {
   completeInterview,
   confirmInterview,
   fetchMatchesByStatus,
+  proposeInterviewTime,
   staffExtendOffer,
   updateMatchStatus,
 } from "@/lib/crm-queries";
 import type { MatchStatus } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -88,6 +90,22 @@ function InterviewReviewPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const proposeTime = useMutation({
+    mutationFn: ({ id, proposedAt, notes }: { id: string; proposedAt: string; notes?: string }) =>
+      proposeInterviewTime(id, proposedAt, notes),
+    onSuccess: () => {
+      toast.success("New time proposed to client");
+      setProposeFor(null);
+      setProposedTime("");
+      setProposeNotes("");
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      queryClient.invalidateQueries({ queryKey: ["all-matches"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
   const extendOffer = useMutation({
     mutationFn: (id: string) => staffExtendOffer(id),
     onSuccess: () => {
@@ -101,6 +119,9 @@ function InterviewReviewPage() {
 
   const [completeFor, setCompleteFor] = useState<{ id: string; name: string } | null>(null);
   const [interviewNotes, setInterviewNotes] = useState("");
+  const [proposeFor, setProposeFor] = useState<{ id: string; name: string } | null>(null);
+  const [proposedTime, setProposedTime] = useState("");
+  const [proposeNotes, setProposeNotes] = useState("");
 
   const complete = useMutation({
     mutationFn: ({ id, notes }: { id: string; notes: string }) => completeInterview(id, notes),

@@ -410,7 +410,24 @@ export async function confirmInterview(matchId: string, notes?: string): Promise
   if (error) throw error;
 }
 
-export async function completeInterview(matchId: string, notes: string): Promise<void> {
+/**
+ * Staff counter-proposal for the interview time. The RPC requires the match
+ * to be in interview_requested, sets interview_proposed_at / proposed_by
+ * = 'staff' and notifies the client.
+ */
+export async function proposeInterviewTime(
+  matchId: string,
+  proposedAt: string,
+  notes?: string,
+): Promise<void> {
+  const { error } = await supabase.rpc("admin_propose_interview_time", {
+    p_match_id: matchId,
+    p_proposed_at: proposedAt,
+    p_notes: notes ?? null,
+  });
+  if (error) throw error;
+}
+
   const { error } = await supabase.rpc("complete_interview", {
     p_match_id: matchId,
     p_notes: notes,
