@@ -30,24 +30,8 @@ export const Route = createFileRoute("/shortlisted")({
   ),
 });
 
-/** Shortlisted and everything after it, but not hired and not rejected. */
-const ACTIVE_STATUSES: MatchStatus[] = [
-  "shortlisted",
-  "interview_requested",
-  "interview_confirmed",
-  "interview_completed",
-  "hire_requested",
-  "offer_extended",
-];
-
-const ORDER: MatchStatus[] = [
-  "interview_completed",
-  "hire_requested",
-  "offer_extended",
-  "interview_confirmed",
-  "interview_requested",
-  "shortlisted",
-];
+/** Only still-pending shortlists live here; anything past "shortlisted" belongs to Interviews. */
+const ACTIVE_STATUSES: MatchStatus[] = ["shortlisted"];
 
 interface RequestMeta {
   id: string;
