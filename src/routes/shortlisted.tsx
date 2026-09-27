@@ -30,24 +30,8 @@ export const Route = createFileRoute("/shortlisted")({
   ),
 });
 
-/** Shortlisted and everything after it, but not hired and not rejected. */
-const ACTIVE_STATUSES: MatchStatus[] = [
-  "shortlisted",
-  "interview_requested",
-  "interview_confirmed",
-  "interview_completed",
-  "hire_requested",
-  "offer_extended",
-];
-
-const ORDER: MatchStatus[] = [
-  "interview_completed",
-  "hire_requested",
-  "offer_extended",
-  "interview_confirmed",
-  "interview_requested",
-  "shortlisted",
-];
+/** Only still-pending shortlists live here; anything past "shortlisted" belongs to Interviews. */
+const ACTIVE_STATUSES: MatchStatus[] = ["shortlisted"];
 
 interface RequestMeta {
   id: string;
@@ -131,12 +115,8 @@ function ShortlistedPage() {
 
     let list: MatchRow[];
     if (!orderRef.current) {
-      // First load: sort by status/score and capture that order.
-      list = raw.slice().sort((a, b) => {
-        const rank = ORDER.indexOf(a.status) - ORDER.indexOf(b.status);
-        if (rank !== 0) return rank;
-        return (b.match_score ?? 0) - (a.match_score ?? 0);
-      });
+      // First load: sort by match score and capture that order.
+      list = raw.slice().sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0));
       orderRef.current = list.map((m) => m.id);
     } else {
       // Subsequent loads: keep every card in its captured slot so the grid never reshuffles.
