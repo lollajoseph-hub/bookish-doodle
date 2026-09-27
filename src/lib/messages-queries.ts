@@ -223,6 +223,28 @@ export async function getOrCreateThread(target: ThreadTarget): Promise<ThreadRow
   return (Array.isArray(data) ? data[0] : data) as ThreadRow;
 }
 
+/** Atomic: creates/finds the thread AND inserts the first message in one transaction. */
+export async function sendThreadMessageEnsuringThread(
+  target: ThreadTarget,
+  body: string,
+  structuredType: StructuredType | null = null,
+): Promise<{ thread: ThreadRow; message: ThreadMessageRow }> {
+  const args = {
+    p_client_request_id: target.kind === "request" ? target.clientRequestId : null,
+    p_candidate_match_id: target.kind === "candidate" ? target.candidateMatchId : null,
+    p_client_id: target.kind === "general" ? target.clientId : null,
+    p_body: body,
+    p_structured_type: structuredType,
+  };
+  const { data, error } = await supabase.rpc("send_thread_message_ensuring_thread", args as never);
+  if (error) throw error;
+  const result = (Array.isArray(data) ? data[0] : data) as {
+    thread: ThreadRow;
+    message: ThreadMessageRow;
+  };
+  return result;
+}
+
 /** Read-only lookup — never creates a thread. */
 export async function findThreadId(target: ThreadTarget): Promise<string | null> {
   const [col, val] =
