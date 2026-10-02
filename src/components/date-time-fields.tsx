@@ -195,3 +195,57 @@ export function DateTimePicker({
     </Popover>
   );
 }
+
+/**
+ * Replaces <input type="date">. value / onChange use "yyyy-MM-dd" like the native input ("" when empty).
+ * Past dates stay selectable unless disablePast is set, matching the native input's behaviour.
+ */
+export function DatePicker({
+  id,
+  value,
+  onChange,
+  disabled,
+  disablePast,
+  className,
+}: {
+  id?: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  disablePast?: boolean;
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = splitDateTime(value ? `${value}T00:00` : "").date;
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button id={id} type="button" variant="outline" disabled={disabled} data-empty={!selected} className={cn(triggerClass, className)}>
+          <CalendarClock className="h-4 w-4 text-primary" />
+          <span className="truncate">{selected ? format(selected, "EEE, MMM d, yyyy") : "Pick a date"}</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-auto rounded-3xl p-3">
+        <Calendar
+          mode="single"
+          selected={selected}
+          defaultMonth={selected}
+          onSelect={(d) => {
+            onChange(d ? format(d, "yyyy-MM-dd") : "");
+            setOpen(false);
+          }}
+          disabled={disablePast ? { before: startOfDay(new Date()) } : undefined}
+          initialFocus
+          className="p-1"
+        />
+        {value && (
+          <div className="mt-2 flex justify-end border-t border-border pt-2">
+            <Button type="button" variant="ghost" size="sm" className="h-8 px-3 text-xs" onClick={() => { onChange(""); setOpen(false); }}>
+              Clear date
+            </Button>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
