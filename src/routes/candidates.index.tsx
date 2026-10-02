@@ -8,6 +8,7 @@ import { fetchCandidates, fetchJobRoles, type CandidateListItem } from "@/lib/qu
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const candidateSearchSchema = z.object({ role: z.string().optional() });
 
@@ -39,6 +40,23 @@ function initials(name: string) {
   return name.slice(0, 2).toUpperCase();
 }
 
+function statusTone(status: string) {
+  switch (status) {
+    case "hired":
+    case "placed":
+      return "bg-[#e9f2ea] text-[#2f5f35]";
+    case "shortlisted":
+      return "bg-amber-soft text-gold-ink";
+    case "available":
+    case "interviewed":
+      return "bg-primary-soft text-primary";
+    case "rejected":
+      return "bg-destructive/10 text-destructive";
+    default:
+      return "bg-foreground/[0.06] text-secondary-foreground";
+  }
+}
+
 function CandidateTile({
   candidate,
   roleNames,
@@ -56,22 +74,22 @@ function CandidateTile({
     <button
       type="button"
       onClick={onOpen}
-      className={`group text-left card-amber rounded-2xl border bg-card p-4 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-primary/60 ${
-        selected ? "border-amber bg-amber-soft/40 ring-2 ring-amber shadow-md" : "border-border"
+      className={`group text-left card-amber rounded-3xl p-5 transition-[box-shadow,border-color] duration-300 hover:border-[rgb(122_89_163/0.25)] hover:shadow-[0_22px_44px_-24px_rgb(46_16_73/0.5)] ${
+        selected ? "ring-2 ring-amber" : ""
       }`}
     >
       <div className="flex items-start gap-3">
-        <div className="h-10 w-10 shrink-0 rounded-xl bg-primary text-primary-foreground grid place-items-center text-sm font-semibold">
+        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#ebddf7] to-[#d6c2ea] text-sm font-semibold text-primary">
           {initials(candidate.full_name)}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="font-semibold truncate">{candidate.full_name}</div>
+          <div className="truncate font-display text-xl font-semibold leading-tight">{candidate.full_name}</div>
           <div className="text-xs text-muted-foreground truncate">
             {candidate.headline || roleNames[0] || "No headline"}
           </div>
         </div>
         {candidate.status && (
-          <Badge variant="secondary" className="capitalize shrink-0">
+          <Badge variant="secondary" className={`h-6 shrink-0 rounded-full border-0 px-2.5 text-[11.5px] font-semibold capitalize ${statusTone(candidate.status)}`}>
             {candidate.status}
           </Badge>
         )}
@@ -95,18 +113,18 @@ function CandidateTile({
 
       <div className="mt-3 flex flex-wrap gap-1">
         {roleNames.slice(0, 3).map((r) => (
-          <span key={r} className="rounded-full bg-primary-soft px-2 py-0.5 text-[11px] text-primary">
+          <span key={r} className="rounded-full bg-primary-soft px-2.5 py-0.5 text-[11px] font-semibold text-primary">
             {r}
           </span>
         ))}
         {candidate.skillCount > 0 && (
-          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+          <span className="rounded-full bg-foreground/[0.06] px-2.5 py-0.5 text-[11px] font-semibold tabular-nums text-secondary-foreground">
             {candidate.skillCount} skills
           </span>
         )}
       </div>
 
-      <div className="mt-3 text-[11px] font-medium text-primary opacity-0 transition-all duration-300 group-hover:opacity-100">
+      <div className="mt-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary opacity-0 transition-opacity duration-300 group-hover:opacity-100">
         Open full profile →
       </div>
     </button>
@@ -168,44 +186,52 @@ function CandidatesPage() {
           <div className="relative w-full sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              className="pl-9"
+              className="rounded-full bg-white/70 pl-9 backdrop-blur-md"
               placeholder="Search name, email, headline"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm tabular-nums text-muted-foreground">
             {filtered.length} of {candidates.length} candidates
           </div>
         </div>
 
-        {isLoading && <p className="text-sm text-muted-foreground">Loading candidates…</p>}
+        {isLoading && (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-busy="true" aria-label="Loading">
+            <Skeleton className="h-[188px] rounded-3xl bg-white/70" />
+            <Skeleton className="h-[188px] rounded-3xl bg-white/70" />
+            <Skeleton className="h-[188px] rounded-3xl bg-white/70" />
+          </div>
+        )}
 
         {!isLoading && !groups.length && (
-          <div className="card-amber rounded-2xl border bg-card p-10 text-center">
-            <Users className="mx-auto h-8 w-8 text-primary" />
-            <p className="mt-3 font-medium">No candidates to show</p>
-            <p className="text-sm text-muted-foreground">
+          <div className="card-amber rounded-3xl border-dashed p-10 text-center">
+            <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft text-primary">
+              <Users className="h-7 w-7" />
+            </div>
+            <p className="mt-4 font-display text-3xl font-medium">No candidates to show</p>
+            <p className="mt-1 text-sm text-muted-foreground">
               Add your first candidate to start building the pool.
             </p>
-            <Button className="mt-4" onClick={() => navigate({ to: "/candidates/new" })}>
+            <Button className="mt-5" onClick={() => navigate({ to: "/candidates/new" })}>
               <Plus className="h-4 w-4 mr-1" /> Add candidate
             </Button>
           </div>
         )}
 
         {groups.map((group) => (
-          <section key={group.id} className="space-y-3">
+          <section key={group.id} className="space-y-4">
             <div className="flex items-center gap-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+              <h2 className="font-display text-[32px] font-semibold leading-none">
                 {group.name}
               </h2>
-              <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary">
+              <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-[11.5px] font-semibold tabular-nums text-primary">
                 {group.items.length}
               </span>
-              <div className="h-px flex-1 bg-border" />
+              <div className="h-px flex-1 bg-[rgb(26_19_32/0.08)]" />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {group.items.map((c) => (
                 <CandidateTile
                   key={`${group.id}-${c.id}`}

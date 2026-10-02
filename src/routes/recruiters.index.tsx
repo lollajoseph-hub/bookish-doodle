@@ -8,6 +8,7 @@ import { fetchCandidates, fetchStaffProfiles } from "@/lib/queries";
 import { labelize } from "@/lib/crm-queries";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -107,8 +108,14 @@ function TeamPage() {
           </Button>
         </div>
       )}
-      {isLoading && <p className="text-sm text-muted-foreground">Loading team…</p>}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {isLoading && (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-busy="true" aria-label="Loading">
+          <Skeleton className="h-[180px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[180px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[180px] rounded-3xl bg-white/70" />
+        </div>
+      )}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {staff
           .filter((s) => s.role === "recruiter")
           .map((s) => {
@@ -124,12 +131,12 @@ function TeamPage() {
               key={s.id}
               to="/recruiters/$staffId"
               params={{ staffId: s.id }}
-              className="card-amber block rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-amber hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber"
+              className="card-amber block rounded-3xl p-5 transition-[box-shadow,border-color] duration-300 hover:border-[rgb(122_89_163/0.25)] hover:shadow-[0_22px_44px_-24px_rgb(46_16_73/0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <div className="font-semibold">{s.full_name || s.email}</div>
-                  <Badge variant="secondary" className="mt-1 capitalize">
+                  <div className="font-display text-2xl font-semibold leading-tight">{s.full_name || s.email}</div>
+                  <Badge variant="secondary" className="mt-1.5 h-6 rounded-full border-transparent px-2.5 text-[11.5px] font-semibold bg-primary-soft text-primary capitalize">
                     {s.role}
                   </Badge>
                 </div>
@@ -138,7 +145,7 @@ function TeamPage() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8"
+                      className="h-8 w-8 rounded-full text-primary hover:bg-primary-soft"
                       aria-label="Resend invite"
                       title="Resend invite"
                       disabled={resend.isPending}
@@ -156,14 +163,14 @@ function TeamPage() {
                     </Button>
                   )}
                   <div className="text-right">
-                    <div className="text-2xl font-semibold text-primary-dark">{owned}</div>
-                    <div className="text-[11px] text-muted-foreground">candidates</div>
+                    <div className="font-display text-4xl font-semibold leading-none tabular-nums text-primary">{owned}</div>
+                    <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">candidates</div>
                   </div>
                 </div>
               </div>
-              <div className="mt-3 flex flex-wrap gap-1.5">
+              <div className="mt-4 flex flex-wrap gap-1.5">
                 {breakdown.map((b) => (
-                  <Badge key={b.status} variant="outline" className="text-[11px] font-normal">
+                  <Badge key={b.status} variant="outline" className="h-6 rounded-full border-transparent px-2.5 text-[11.5px] font-semibold bg-foreground/[0.06] text-secondary-foreground">
                     {b.count} {labelize(b.status).toLowerCase()}
                   </Badge>
                 ))}
@@ -171,7 +178,7 @@ function TeamPage() {
                   <span className="text-xs text-muted-foreground">No candidates assigned yet.</span>
                 )}
               </div>
-              <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+              <div className="mt-4 space-y-1 border-t border-foreground/[0.06] pt-3 text-xs text-muted-foreground">
                 {s.email && (
                   <div className="flex items-center gap-1.5 truncate">
                     <Mail className="h-3.5 w-3.5" /> {s.email}

@@ -58,9 +58,9 @@ function ResetPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/40 to-accent/40 px-4">
-      <div className="w-full max-w-md card-amber rounded-2xl border bg-card shadow-xl p-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Set a new password</h1>
+    <div className="flex min-h-screen items-center justify-center bg-stone px-4">
+      <div className="card-amber w-full max-w-md rounded-[30px] p-8 sm:p-10">
+        <h1 className="font-display text-4xl font-semibold leading-none">Set a new password</h1>
         {!ready ? (
           <p className="mt-4 text-sm text-muted-foreground">
             Waiting for recovery session… open this page from the email link.
@@ -89,7 +89,7 @@ function ResetPage() {
                 onChange={(e) => setPw2(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={submitting}>
+            <Button type="submit" className="w-full rounded-full" disabled={submitting}>
               {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Update password
             </Button>

@@ -23,10 +23,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TimePicker } from "@/components/date-time-fields";
 import {
   Dialog,
   DialogContent,
@@ -187,15 +188,18 @@ function RequestDetailPage() {
   if (isLoading) {
     return (
       <AppShell title="Request">
-        <p className="text-sm text-muted-foreground">Loading request…</p>
+        <div className="grid gap-6 lg:grid-cols-3" aria-busy="true" aria-label="Loading">
+          <Skeleton className="h-[420px] rounded-3xl bg-white/70 lg:col-span-2" />
+          <Skeleton className="h-[320px] rounded-3xl bg-white/70" />
+        </div>
       </AppShell>
     );
   }
   if (error || !data) {
     return (
       <AppShell title="Request">
-        <div className="card-amber rounded-2xl border bg-card p-8 text-center">
-          <p className="font-medium">Request not found</p>
+        <div className="card-amber rounded-3xl border-dashed p-10 text-center">
+          <p className="font-display text-3xl font-medium">Request not found</p>
           <Button className="mt-4" onClick={() => navigate({ to: "/requests" })}>
             Back to requests
           </Button>
@@ -238,12 +242,12 @@ function RequestDetailPage() {
         </Link>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <section className="card-amber rounded-2xl border bg-card p-5 lg:col-span-2">
+          <section className="card-amber rounded-3xl p-6 lg:col-span-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+              <h2 className="font-display text-2xl font-semibold leading-tight">
                 Pipeline
               </h2>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground tabular-nums">
                 {data.matches.length}/{r.candidates_wanted} in batch · {hired}/{r.hires_needed} hired
               </span>
             </div>
@@ -254,7 +258,7 @@ function RequestDetailPage() {
                 data.matches.map((m) => (
                   <div
                     key={m.id}
-                    className="cursor-pointer rounded-xl border p-3 transition-colors hover:border-primary/50"
+                    className="cursor-pointer rounded-2xl border border-transparent bg-stone/90 p-4 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] transition-[box-shadow,border-color] duration-300 hover:border-[rgb(122_89_163/0.25)] hover:shadow-[0_22px_44px_-24px_rgb(46_16_73/0.5)]"
                     onClick={(e) => {
                       if ((e.target as HTMLElement).closest("button, a, input, textarea, select, [role='button'], [role='dialog'], [data-no-card-click]")) return;
                       navigate({ to: "/candidates/$candidateId", params: { candidateId: m.candidate_id } });
@@ -265,7 +269,7 @@ function RequestDetailPage() {
                         <Link
                           to="/candidates/$candidateId"
                           params={{ candidateId: m.candidate_id }}
-                          className="font-medium text-primary hover:underline"
+                          className="font-display text-xl font-semibold leading-tight text-primary hover:underline"
                         >
                           {m.candidateName || "Candidate"}
                         </Link>
@@ -295,17 +299,17 @@ function RequestDetailPage() {
                         const { has, missing } = skillMatchFor(m.candidateSkills ?? []);
                         return (
                           <div className="mt-2 space-y-1">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                               Skill match
                             </p>
                             <div className="flex flex-wrap gap-1.5">
                               {has.length > 0 && (
-                                <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300">
+                                <Badge variant="outline" className="h-[25px] whitespace-nowrap rounded-full border-transparent px-2.5 py-0 text-[11.5px] font-semibold h-auto min-h-[25px] whitespace-normal bg-[#e9f2ea] text-[#2f5f35]">
                                   Has: {has.join(", ")}
                                 </Badge>
                               )}
                               {missing.length > 0 && (
-                                <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
+                                <Badge variant="outline" className="h-[25px] whitespace-nowrap rounded-full border-transparent px-2.5 py-0 text-[11.5px] font-semibold h-auto min-h-[25px] whitespace-normal bg-foreground/[0.06] text-secondary-foreground">
                                   Missing: {missing.join(", ")}
                                 </Badge>
                               )}
@@ -315,18 +319,18 @@ function RequestDetailPage() {
                       })()}
                     {m.client_rating != null && (
                       <div className="mt-2">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                           Client rating
                         </p>
                         <div className="mt-1 flex flex-wrap items-center gap-2">
-                          <span className="text-sm tracking-wide text-amber-500">
+                          <span className="text-sm tracking-wide text-[#e0a43a]">
                             {"★".repeat(Math.min(5, Math.max(1, m.client_rating)))}
                             <span className="text-muted-foreground/40">
                               {"★".repeat(5 - Math.min(5, Math.max(1, m.client_rating)))}
                             </span>
                           </span>
                           {m.client_rated_at && (
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-muted-foreground tabular-nums">
                               {new Date(m.client_rated_at).toLocaleDateString(undefined, {
                                 month: "short",
                                 day: "numeric",
@@ -354,7 +358,7 @@ function RequestDetailPage() {
                           setStatus.mutate({ id: m.id, status: v as MatchStatus });
                         }}
                       >
-                        <SelectTrigger className="h-8 w-56">
+                        <SelectTrigger className="h-9 w-56 rounded-full bg-white/90">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -366,14 +370,14 @@ function RequestDetailPage() {
                         </SelectContent>
                       </Select>
                       {m.interview_at && (
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground tabular-nums">
                           Interview {new Date(m.interview_at).toLocaleString()}
                         </span>
                       )}
                     </div>
                     {(m.meeting_notes_text || m.recording_url) && (
-                      <div className="mt-2 space-y-1.5 rounded-xl border border-amber/60 bg-primary-soft/60 px-3 py-2">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-primary">Meeting notes &amp; recording</p>
+                      <div className="mt-3 space-y-1.5 rounded-2xl bg-primary/[0.06] px-4 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">Meeting notes &amp; recording</p>
                         {m.meeting_notes_text && (
                           <p className="whitespace-pre-line text-sm text-muted-foreground">{m.meeting_notes_text}</p>
                         )}
@@ -394,14 +398,16 @@ function RequestDetailPage() {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground">No candidates in this batch yet.</p>
+                <div className="rounded-3xl border border-dashed border-foreground/15 px-6 py-10 text-center">
+                  <p className="font-display text-3xl font-medium">No candidates in this batch yet.</p>
+                </div>
               )}
             </div>
           </section>
 
           <div className="space-y-6">
-            <section className="card-amber rounded-2xl border bg-card p-5 text-sm">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+            <section className="card-amber rounded-3xl p-6 text-sm">
+              <h2 className="font-display text-2xl font-semibold leading-tight">
                 Request
               </h2>
               <div className="mt-3 space-y-2">
@@ -413,7 +419,7 @@ function RequestDetailPage() {
                   </div>
                 </div>
                 <Select value={r.status} onValueChange={(v: string) => requestStatus.mutate(v)}>
-                  <SelectTrigger className="h-8">
+                  <SelectTrigger className="h-9 rounded-full bg-white/90">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -432,7 +438,7 @@ function RequestDetailPage() {
                   value={r.priority ?? "normal"}
                   onValueChange={(v: string) => setPriority.mutate(v as RequestPriority)}
                 >
-                  <SelectTrigger className="h-8">
+                  <SelectTrigger className="h-9 rounded-full bg-white/90">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -451,7 +457,7 @@ function RequestDetailPage() {
                   Min experience: {r.years_experience_min != null ? `${r.years_experience_min} yrs` : "—"}
                 </p>
                 <p className="text-muted-foreground">Start: {r.desired_start_date || "—"}</p>
-                {r.notes && <p className="rounded-xl bg-primary-soft/60 p-3 text-foreground">{r.notes}</p>}
+                {r.notes && <p className="rounded-2xl bg-stone/90 p-4 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] text-foreground">{r.notes}</p>}
               </div>
               <Link
                 to="/clients/$clientId"
@@ -462,8 +468,8 @@ function RequestDetailPage() {
               </Link>
             </section>
 
-            <section className="card-amber rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+            <section className="card-amber rounded-3xl p-6">
+              <h2 className="font-display text-2xl font-semibold leading-tight">
                 Skills wanted
               </h2>
               {[
@@ -471,11 +477,11 @@ function RequestDetailPage() {
                 { label: "Required languages", items: data.requiredSkills.filter((s) => s.is_required && s.category === LANGUAGE_CATEGORY) },
               ].map((g) => (
                 <div key={g.label} className="mt-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{g.label}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{g.label}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {g.items.length ? (
                       g.items.map((s) => (
-                        <Badge key={s.skill_id} variant="outline">
+                        <Badge key={s.skill_id} variant="outline" className="h-[25px] whitespace-nowrap rounded-full border-transparent px-2.5 py-0 text-[11.5px] font-semibold bg-primary-soft text-primary">
                           {s.name}
                         </Badge>
                       ))
@@ -547,11 +553,11 @@ function RequestDetailPage() {
           </DialogHeader>
           <div className="space-y-5">
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
                 Accept as proposed
               </p>
               {confirmFor?.proposedAt ? (
-                <p className="rounded-xl bg-primary-soft/60 p-3 text-sm">
+                <p className="rounded-2xl bg-primary/[0.06] p-4 text-sm text-primary">
                   Client proposed{" "}
                   <span className="font-medium">
                     {new Date(confirmFor.proposedAt).toLocaleString()}
@@ -559,7 +565,7 @@ function RequestDetailPage() {
                   . Confirming locks this in as the scheduled interview time.
                 </p>
               ) : (
-                <p className="rounded-xl bg-primary-soft/60 p-3 text-sm">
+                <p className="rounded-2xl bg-primary/[0.06] p-4 text-sm text-primary">
                   The client hasn't proposed a time for this interview yet — confirmation will
                   fail until they do.
                 </p>
@@ -572,8 +578,8 @@ function RequestDetailPage() {
               </Button>
             </div>
 
-            <div className="space-y-3 border-t border-amber/60 pt-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+            <div className="space-y-3 border-t border-foreground/[0.08] pt-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
                 Propose a different time instead
               </p>
               <div className="flex flex-wrap items-start gap-4">
@@ -581,17 +587,13 @@ function RequestDetailPage() {
                   mode="single"
                   selected={proposeDate}
                   onSelect={setProposeDate}
-                  className="pointer-events-auto rounded-xl border p-3"
+                  className="pointer-events-auto rounded-2xl bg-white/90 p-3 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]"
                 />
                 <div className="space-y-2">
                   <Label htmlFor="propose-time">Time</Label>
-                  <Input
-                    id="propose-time"
-                    type="time"
-                    value={proposeTime}
-                    onChange={(e) => setProposeTime(e.target.value)}
-                    className="w-32"
-                  />
+                  <div className="w-40">
+                    <TimePicker id="propose-time" value={proposeTime} onChange={setProposeTime} />
+                  </div>
                   <Button
                     variant="outline"
                     onClick={() => propose.mutate()}
@@ -702,18 +704,18 @@ function ScoreBadge({ matchId, score }: { matchId: string; score: number }) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button type="button" aria-label="Show match score breakdown" className="rounded-full outline-none">
-          <Badge variant="secondary">{score}</Badge>
+          <Badge variant="secondary" className="h-[25px] whitespace-nowrap rounded-full border-transparent px-2.5 py-0 text-[11.5px] font-semibold bg-primary-soft text-primary tabular-nums">{score}</Badge>
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80">
+      <PopoverContent align="end" className="w-80 rounded-3xl">
         {isLoading && <p className="text-xs text-muted-foreground">Loading breakdown…</p>}
         {!isLoading && (error || !data) && (
           <p className="text-xs text-muted-foreground">Couldn&apos;t load breakdown</p>
         )}
         {!isLoading && data && (
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Score breakdown</p>
-            <ul className="space-y-1 text-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Score breakdown</p>
+            <ul className="space-y-1 text-sm tabular-nums">
               <li>
                 Role fit ({data.role_name ?? "—"}, {data.is_primary_role ? "primary" : "secondary"}):{" "}
                 <span className="font-medium">{data.role_fit_points ?? 0} pts</span>
@@ -744,7 +746,7 @@ function ScoreBadge({ matchId, score }: { matchId: string; score: number }) {
                   </ul>
                 )}
               </li>
-              <li className="border-t pt-1 font-semibold">Total: {data.computed_total ?? 0} pts</li>
+              <li className="border-t border-foreground/[0.08] pt-1 font-semibold">Total: {data.computed_total ?? 0} pts</li>
             </ul>
           </div>
         )}

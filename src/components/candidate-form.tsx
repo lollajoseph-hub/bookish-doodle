@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormSection } from "@/components/form-section";
+import { DatePicker } from "@/components/date-time-fields";
 import { TimezoneSelect } from "@/components/timezone-select";
 import { MultiSelect } from "@/components/multi-select";
 import {
@@ -253,7 +254,7 @@ export function CandidateForm({
                 </SelectContent>
               </Select>
             ) : (
-              <div className="flex h-9 items-center rounded-md border bg-muted px-3 text-sm text-muted-foreground">
+              <div className="flex h-10 items-center rounded-2xl bg-stone/90 px-4 text-sm text-muted-foreground shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
                 {staff.find((s) => s.id === form.recruiter_id)?.full_name || profile?.full_name || "You"}
                 <span className="ml-2 text-xs">(admins can reassign)</span>
               </div>
@@ -345,15 +346,13 @@ export function CandidateForm({
                 </span>
               )}
             </div>
-            <Input
+            <DatePicker
               id="earliest_start"
-              type="date"
-              required={form.availability === "available_from"}
               className={
                 form.availability === "available_from" ? "border-primary ring-1 ring-primary/40" : undefined
               }
               value={form.earliest_start_date ?? ""}
-              onChange={(e) => set("earliest_start_date", e.target.value || null)}
+              onChange={(v) => set("earliest_start_date", v || null)}
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
@@ -387,15 +386,15 @@ export function CandidateForm({
               Upload a short intro clip, or paste a link to one (YouTube, Loom, Drive…).
             </p>
           </div>
-          <div className="inline-flex rounded-full border bg-card p-0.5 text-xs">
+          <div className="inline-flex rounded-full bg-white/70 p-1 text-xs shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] backdrop-blur-md">
             {(["link", "upload"] as const).map((mode) => (
               <button
                 key={mode}
                 type="button"
                 onClick={() => setVideoMode(mode)}
-                className={`rounded-full px-3 py-1 transition-all ${
+                className={`rounded-full px-3.5 py-1.5 font-medium transition-[background-color,color,box-shadow] duration-300 ${
                   videoMode === mode
-                    ? "bg-primary text-primary-foreground font-medium"
+                    ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:text-primary"
                 }`}
               >
@@ -411,7 +410,7 @@ export function CandidateForm({
               onChange={(e) => set("intro_video_url", e.target.value || null)}
             />
           ) : (
-            <div className="space-y-1.5 rounded-xl border bg-primary-soft/40 p-3">
+            <div className="space-y-1.5 rounded-2xl bg-stone/90 p-4 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
               <Input
                 type="file"
                 accept="video/mp4,video/webm,video/quicktime,video/ogg"
@@ -428,7 +427,7 @@ export function CandidateForm({
         {!candidateId && (
           <div className="grid gap-3 sm:grid-cols-2">
             {UPLOAD_FIELDS.map((f) => (
-              <div key={f.key} className="space-y-1.5 rounded-xl border p-3 bg-primary-soft/40">
+              <div key={f.key} className="space-y-1.5 rounded-2xl bg-stone/90 p-4 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
                 <Label htmlFor={`file-${f.key}`} className="text-xs">
                   {f.label}
                 </Label>
@@ -448,7 +447,7 @@ export function CandidateForm({
         )}
       </FormSection>
 
-      <div className="mt-6 flex justify-end gap-2 border-t border-primary/25 pt-4">
+      <div className="mt-8 flex justify-end gap-2 border-t border-[rgb(26_19_32/0.08)] pt-5">
         {onCancel && (
           <Button variant="ghost" onClick={onCancel}>
             Cancel

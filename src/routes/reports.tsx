@@ -50,12 +50,13 @@ function downloadCsv(name: string, rows: [string, number][]) {
 function ReportCard({ title, rows }: { title: string; rows: [string, number][] }) {
   const total = rows.reduce((s, [, v]) => s + v, 0) || 1;
   return (
-    <div className="card-amber rounded-2xl border bg-card p-5">
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold">{title}</h2>
+    <div className="card-amber rounded-3xl p-6">
+      <div className="mb-5 flex items-center justify-between gap-2">
+        <h2 className="font-display text-2xl font-semibold leading-tight">{title}</h2>
         <Button
           size="sm"
           variant="ghost"
+          className="shrink-0 text-primary hover:bg-primary-soft"
           onClick={() => downloadCsv(title.toLowerCase().replace(/\s+/g, "-"), rows)}
         >
           <Download className="mr-1 h-3.5 w-3.5" /> CSV
@@ -66,10 +67,10 @@ function ReportCard({ title, rows }: { title: string; rows: [string, number][] }
           <div key={label}>
             <div className="flex items-center justify-between text-sm">
               <span>{labelize(label)}</span>
-              <span className="text-muted-foreground">{count}</span>
+              <span className="font-semibold tabular-nums text-muted-foreground">{count}</span>
             </div>
-            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
-              <div className="h-full bg-primary" style={{ width: `${(count / total) * 100}%` }} />
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-primary-soft">
+              <div className="h-full rounded-full bg-gradient-to-r from-primary to-[#7a59a3]" style={{ width: `${(count / total) * 100}%` }} />
             </div>
           </div>
         ))}
@@ -129,26 +130,26 @@ function ReportsPage() {
 
   return (
     <AppShell title="Reports" description="Pipeline summary you can print or export">
-      <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <div className="card-amber rounded-2xl border bg-card p-4">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">Placements this month</div>
-          <div className="mt-1 text-2xl font-semibold">{placedThisMonth}</div>
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="card-amber rounded-3xl p-5">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Placements this month</div>
+          <div className="mt-3 font-display text-4xl font-semibold leading-none tabular-nums">{placedThisMonth}</div>
         </div>
-        <div className="card-amber rounded-2xl border bg-card p-4">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">Placements last month</div>
-          <div className="mt-1 text-2xl font-semibold">{placedLastMonth}</div>
+        <div className="card-amber rounded-3xl p-5">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Placements last month</div>
+          <div className="mt-3 font-display text-4xl font-semibold leading-none tabular-nums">{placedLastMonth}</div>
         </div>
-        <div className="card-amber rounded-2xl border bg-card p-4">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">Total candidates</div>
-          <div className="mt-1 text-2xl font-semibold">{candidates.length}</div>
+        <div className="card-amber rounded-3xl p-5">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Total candidates</div>
+          <div className="mt-3 font-display text-4xl font-semibold leading-none tabular-nums">{candidates.length}</div>
         </div>
-        <div className="card-amber rounded-2xl border bg-card p-4">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">Total requests</div>
-          <div className="mt-1 text-2xl font-semibold">{requests.length}</div>
+        <div className="card-amber rounded-3xl p-5">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Total requests</div>
+          <div className="mt-3 font-display text-4xl font-semibold leading-none tabular-nums">{requests.length}</div>
         </div>
-        <div className="card-amber rounded-2xl border bg-card p-4">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">Total clients</div>
-          <div className="mt-1 text-2xl font-semibold">{clients.length}</div>
+        <div className="card-amber rounded-3xl p-5">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Total clients</div>
+          <div className="mt-3 font-display text-4xl font-semibold leading-none tabular-nums">{clients.length}</div>
         </div>
       </div>
 

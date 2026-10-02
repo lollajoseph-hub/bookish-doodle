@@ -104,7 +104,10 @@ export function TimezoneSelect({
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
-          className={cn("w-full justify-between font-normal", className)}
+          className={cn(
+            "h-10 w-full justify-between rounded-xl border-input bg-white/90 px-3.5 text-sm font-normal shadow-none hover:bg-white/90 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10",
+            className,
+          )}
         >
           <span className={cn("truncate", !current && "text-muted-foreground")}>
             {current
@@ -114,7 +117,7 @@ export function TimezoneSelect({
           <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0 w-[--radix-popover-trigger-width] min-w-[260px]" align="start">
+      <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[260px] overflow-hidden rounded-2xl p-0" align="start">
         <Command>
           <CommandInput placeholder="Search timezones…" />
           <CommandList className="max-h-72 overflow-y-auto">
@@ -132,12 +135,12 @@ export function TimezoneSelect({
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === item.zone ? "opacity-100" : "opacity-0",
+                      value === item.zone ? "text-primary opacity-100" : "opacity-0",
                     )}
                   />
                   <span className="flex-1 truncate">{item.label}</span>
                   {item.offset && (
-                    <span className="ml-2 text-xs text-muted-foreground">{item.offset}</span>
+                    <span className="ml-2 text-xs tabular-nums text-muted-foreground">{item.offset}</span>
                   )}
                 </CommandItem>
               ))}

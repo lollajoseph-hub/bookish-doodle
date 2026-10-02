@@ -196,10 +196,10 @@ function SidebarNav({ onNav, isAdmin }: { onNav?: () => void; isAdmin: boolean }
           to={item.to}
           search={item.to === "/candidates" ? {} : undefined}
           onClick={onNav}
-          className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all ${
+          className={`flex items-center gap-3 rounded-full px-3.5 py-2 text-[13.5px] transition-[background-color,color,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber ${
             active
-              ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-amber/70"
-              : "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:translate-x-0.5"
+              ? "bg-white/[0.12] font-semibold text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.14),0_8px_20px_-10px_rgb(0_0_0/0.5)] [&_svg]:text-amber"
+              : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-white"
           }`}
         >
           <Icon className="h-4 w-4" />
@@ -230,7 +230,7 @@ function SidebarNav({ onNav, isAdmin }: { onNav?: () => void; isAdmin: boolean }
           .filter((group) => !group.adminOnly || isAdmin)
           .map((group) => (
             <div key={group.label} className="mt-3 border-t border-sidebar-border pt-3">
-              <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+              <div className="px-3.5 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-amber/80">
                 {group.label}
               </div>
               <div className="space-y-1">
@@ -267,13 +267,13 @@ function Brand({ role }: { role?: string | null }) {
   const subtitle =
     role === "admin" ? "Admin workspace" : role === "recruiter" ? "Recruiter workspace" : "Staff workspace";
   return (
-    <div className="border-b border-sidebar-border px-5 py-5">
+    <div className="border-b border-sidebar-border px-6 py-6">
       <img
         src={whiteBrandLogo.url}
         alt="ScaleSource"
         className="h-auto w-full max-w-[190px] object-contain object-left drop-shadow-sm"
       />
-      <div className="mt-2 text-[11px] uppercase tracking-wider text-sidebar-foreground/70">{subtitle}</div>
+      <div className="font-display mt-2 text-lg italic leading-none text-sidebar-foreground/80">{subtitle}</div>
     </div>
   );
 }
@@ -309,9 +309,9 @@ export function AppShell({
   if (!isStaff(profile)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="max-w-md text-center card-amber rounded-2xl border bg-card p-8 shadow-sm">
+        <div className="max-w-md text-center card-amber rounded-[30px] p-8">
           <ShieldCheck className="mx-auto h-10 w-10 text-primary" />
-          <h1 className="mt-4 text-xl font-semibold">Access restricted</h1>
+          <h1 className="font-display mt-4 text-3xl font-semibold leading-none">Access restricted</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             The Candidate Review Dashboard is for ScaleSource staff (admins and recruiters). Your
             account doesn't have access.
@@ -331,7 +331,7 @@ export function AppShell({
   }
 
   const sidebar = (
-    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
+    <div className="grain relative flex h-full flex-col overflow-hidden bg-sidebar text-sidebar-foreground [&>*]:relative [&>*]:z-[1]">
       <Brand role={profile?.role} />
       <SidebarNav onNav={() => setMobileOpen(false)} isAdmin={isAdmin} />
       <div className="px-5 py-4 border-t border-sidebar-border text-[11px] text-sidebar-foreground/60">
@@ -342,7 +342,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen flex bg-background">
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col lg:flex">{sidebar}</aside>
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col p-3 pr-0 lg:flex"><div className="h-full overflow-hidden rounded-[28px] shadow-[0_30px_70px_-30px_rgb(29_10_46/0.7)]">{sidebar}</div></aside>
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="p-0 w-72 bg-sidebar border-sidebar-border">
@@ -352,7 +352,7 @@ export function AppShell({
       </Sheet>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b bg-card/80 backdrop-blur px-4 lg:px-8 h-16">
+        <header className="sticky top-3 z-20 mx-3 mt-3 flex h-16 items-center justify-between gap-3 rounded-full bg-white/65 px-3 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.85),0_0_0_1px_rgb(26_19_32/0.06),0_10px_40px_-16px_rgb(46_16_73/0.35)] backdrop-blur-xl lg:mx-6 lg:px-5">
           <div className="flex items-center gap-2 min-w-0">
             <Button
               variant="ghost"
@@ -364,9 +364,9 @@ export function AppShell({
               <Menu className="h-5 w-5" />
             </Button>
             <div className="min-w-0">
-              <h1 className="text-lg font-semibold truncate">{title}</h1>
+              <h1 className="font-display truncate text-[26px] font-semibold leading-none">{title}</h1>
               {description && (
-                <p className="text-xs text-muted-foreground truncate">{description}</p>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">{description}</p>
               )}
             </div>
           </div>
@@ -375,7 +375,7 @@ export function AppShell({
             <NotificationsBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="gap-2 px-2">
+                <Button variant="ghost" className="h-11 gap-2 rounded-full px-2 pr-3">
                   <Avatar className="h-8 w-8">
                     {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
                     <AvatarFallback className="bg-primary text-primary-foreground text-xs">
@@ -411,7 +411,7 @@ export function AppShell({
             </DropdownMenu>
           </div>
         </header>
-        <main className="flex-1 px-4 lg:px-8 py-6">{children}</main>
+        <main className="flex-1 px-4 py-6 lg:px-8 lg:py-8">{children}</main>
       </div>
     </div>
   );

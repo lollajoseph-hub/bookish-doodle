@@ -16,6 +16,7 @@ import { RoleSkillsPanel } from "@/components/role-skills-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -182,7 +183,7 @@ function CatalogPanel() {
         </div>
       </div>
 
-      <div className="card-amber flex flex-wrap items-center gap-3 rounded-2xl border bg-card p-4">
+      <div className="card-amber flex flex-wrap items-center gap-3 rounded-3xl p-4">
         <div className="relative min-w-[220px] flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -207,27 +208,32 @@ function CatalogPanel() {
         </Select>
       </div>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading skills…</p>}
+      {isLoading && (
+        <div className="space-y-4" aria-busy="true" aria-label="Loading">
+          <Skeleton className="h-[220px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[160px] rounded-3xl bg-white/70" />
+        </div>
+      )}
       {!isLoading && visible.length === 0 && (
-        <p className="text-sm text-muted-foreground">No skills match this filter.</p>
+        <p className="card-amber rounded-3xl border-dashed p-8 text-center font-display text-3xl font-medium">No skills match this filter.</p>
       )}
 
       {grouped.map(([cat, rows]) => (
-        <div key={cat} className="card-amber overflow-hidden rounded-2xl border bg-card">
-          <div className="flex items-center justify-between border-b px-4 py-3">
-            <div className="flex items-center gap-2">
-              <div className="grid h-8 w-8 place-items-center rounded-xl bg-primary-soft">
+        <div key={cat} className="card-amber overflow-hidden rounded-3xl">
+          <div className="flex items-center justify-between border-b border-foreground/[0.06] px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft">
                 <Tag className="h-4 w-4 text-primary" />
               </div>
-              <span className="text-sm font-semibold">{cat}</span>
+              <span className="font-display text-2xl font-semibold leading-tight">{cat}</span>
             </div>
-            <Badge variant="secondary">{rows.length}</Badge>
+            <Badge variant="secondary" className="h-6 rounded-full border-transparent px-2.5 text-[11.5px] font-semibold bg-primary-soft tabular-nums text-primary">{rows.length}</Badge>
           </div>
-          <div className="divide-y">
+          <div className="divide-y divide-foreground/[0.06]">
             {rows.map((s) => (
               <div
                 key={s.id}
-                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-amber/5"
+                className="flex items-center gap-3 px-5 py-3 transition-colors duration-300 hover:bg-primary/[0.03]"
               >
                 <Checkbox
                   checked={selected.includes(s.id)}
@@ -236,17 +242,21 @@ function CatalogPanel() {
                 />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium">{s.name}</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs tabular-nums text-muted-foreground">
                     {s.candidateCount} candidate{s.candidateCount === 1 ? "" : "s"} ·{" "}
                     {s.requestCount} request{s.requestCount === 1 ? "" : "s"}
                   </div>
                 </div>
-                <Badge variant={s.usageCount === 0 ? "outline" : "secondary"}>
+                <Badge
+                  variant={s.usageCount === 0 ? "outline" : "secondary"}
+                  className={`h-6 rounded-full border-transparent px-2.5 text-[11.5px] font-semibold tabular-nums ${s.usageCount === 0 ? "bg-foreground/[0.06] text-secondary-foreground" : "bg-primary-soft text-primary"}`}
+                >
                   {s.usageCount} use{s.usageCount === 1 ? "" : "s"}
                 </Badge>
                 <Button
                   variant="ghost"
                   size="icon"
+                  className="h-8 w-8 rounded-full text-primary hover:bg-primary-soft"
                   aria-label={`Edit ${s.name}`}
                   onClick={() => {
                     setEditing(s);

@@ -20,12 +20,12 @@ export function FormSection({
     <section className={cn("space-y-4", !first && "mt-6")}>
       {!first && (
         <div className="mb-6" aria-hidden>
-          <div className="h-px bg-amber/70" />
+          <div className="h-px bg-gradient-to-r from-transparent via-[rgb(122_89_163/0.25)] to-transparent" />
         </div>
       )}
       <div>
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">{title}</h3>
-        {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">{title}</h3>
+        {description && <p className="mt-1 text-xs text-muted-foreground">{description}</p>}
       </div>
       {children}
     </section>

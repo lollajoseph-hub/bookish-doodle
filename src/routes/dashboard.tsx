@@ -59,10 +59,10 @@ export const Route = createFileRoute("/dashboard")({
 type Tone = "default" | "primary" | "success" | "warning";
 
 const TONES: Record<Tone, { wrap: string; icon: string; value: string }> = {
-  default: { wrap: "bg-primary-soft", icon: "text-primary", value: "text-primary-dark" },
-  primary: { wrap: "bg-primary", icon: "text-primary-foreground", value: "text-primary-dark" },
-  success: { wrap: "bg-emerald-100", icon: "text-emerald-700", value: "text-emerald-700" },
-  warning: { wrap: "bg-amber-soft", icon: "text-amber-foreground", value: "text-amber-foreground" },
+  default: { wrap: "bg-gradient-to-br from-primary-soft to-amber-soft", icon: "text-primary", value: "text-foreground" },
+  primary: { wrap: "bg-primary", icon: "text-primary-foreground", value: "text-primary" },
+  success: { wrap: "bg-[#e9f2ea]", icon: "text-[#2f5f35]", value: "text-[#2f5f35]" },
+  warning: { wrap: "bg-amber-soft", icon: "text-gold-ink", value: "text-gold-ink" },
 };
 
 function StatCard({
@@ -82,27 +82,27 @@ function StatCard({
 }) {
   const t = TONES[tone];
   return (
-    <div className="card-amber rounded-2xl border bg-card p-5 transition-all hover:-translate-y-0.5 hover:shadow-md">
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">{label}</span>
-        <div className={`grid h-9 w-9 place-items-center rounded-xl ${t.wrap}`}>
+    <div className="card-amber rounded-3xl p-5">
+      <div className="flex items-start justify-between gap-3">
+        <span className="pt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
+        <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ${t.wrap}`}>
           <Icon className={`h-4 w-4 ${t.icon}`} />
         </div>
       </div>
       {loading ? (
-        <div className="mt-3 h-8 w-16 animate-pulse rounded-md bg-muted" />
+        <div className="mt-4 h-9 w-16 animate-pulse rounded-xl bg-primary/10" />
       ) : (
-        <div className={`mt-3 text-3xl font-semibold ${t.value}`}>{value}</div>
+        <div className={`mt-4 font-display text-4xl font-semibold leading-none tabular-nums ${t.value}`}>{value}</div>
       )}
-      {hint && !loading && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
+      {hint && !loading && <p className="mt-2 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
 
 function SectionTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">{children}</h2>
+    <div className="flex items-center justify-between gap-3">
+      <h2 className="font-display text-2xl font-semibold leading-tight">{children}</h2>
       {action}
     </div>
   );
@@ -234,15 +234,15 @@ function DashboardPage() {
           <div>
             {isAdmin ? (
               <>
-                <h1 className="text-xl font-semibold text-primary-dark">Operations overview</h1>
-                <p className="text-sm text-muted-foreground">
+                <h1 className="font-display text-[32px] font-semibold leading-none">Operations overview</h1>
+                <p className="mt-2 text-sm text-muted-foreground">
                   Live snapshot of the candidate pool, client demand and placements.
                 </p>
               </>
             ) : (
               <>
-                <h1 className="text-xl font-semibold text-primary-dark">My pipeline overview</h1>
-                <p className="text-sm text-muted-foreground">
+                <h1 className="font-display text-[32px] font-semibold leading-none">My pipeline overview</h1>
+                <p className="mt-2 text-sm text-muted-foreground">
                   Your assigned candidates, pipeline and today's snapshot.
                 </p>
               </>
@@ -258,7 +258,7 @@ function DashboardPage() {
           <section className="space-y-3">
             <SectionTitle
               action={
-                <Link to="/candidates" className="text-sm text-primary hover:underline">
+                <Link to="/candidates" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
                   View candidates
                 </Link>
               }
@@ -324,7 +324,7 @@ function DashboardPage() {
           <section className="space-y-3">
             <SectionTitle
               action={
-                <Link to="/candidates" className="text-sm text-primary hover:underline">
+                <Link to="/candidates" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
                   View candidates
                 </Link>
               }
@@ -398,7 +398,7 @@ function DashboardPage() {
           <section className="space-y-3">
             <SectionTitle
               action={
-                <Link to="/requests" className="text-sm text-primary hover:underline">
+                <Link to="/requests" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
                   View requests
                 </Link>
               }
@@ -465,7 +465,7 @@ function DashboardPage() {
           <section className="space-y-3">
             <SectionTitle
               action={
-                <Link to="/requests" className="text-sm text-primary hover:underline">
+                <Link to="/requests" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
                   View requests
                 </Link>
               }
@@ -540,7 +540,7 @@ function DashboardPage() {
               <StatCard label="Team members" value={staff.length} icon={Users} loading={staffQ.isLoading} />
               <StatCard label="Total roles" value={roles.length} icon={Briefcase} loading={rolesQ.isLoading} />
             </div>
-            <div className="card-amber rounded-2xl border bg-card p-5">
+            <div className="card-amber rounded-3xl p-5 sm:p-6">
               <SectionTitle>
                 <span className="flex items-center gap-2">
                   <Activity className="h-4 w-4 text-primary" /> Recent activity
@@ -551,7 +551,7 @@ function DashboardPage() {
                 {auditLogs.slice(0, 10).map((log) => (
                   <div
                     key={log.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3 text-sm"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-stone/90 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] px-4 py-3 text-sm"
                   >
                     <div className="min-w-0">
                       <span className="font-medium">{log.userName ?? "System"}</span>{" "}
@@ -559,7 +559,7 @@ function DashboardPage() {
                         {labelize(log.action).toLowerCase()} · {labelize(log.entity_type)}
                       </span>
                     </div>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs tabular-nums text-muted-foreground">
                       {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
                     </span>
                   </div>
@@ -584,7 +584,7 @@ function DashboardPage() {
               />
               <StatCard label="Total roles" value={roles.length} icon={Briefcase} loading={rolesQ.isLoading} />
             </div>
-            <div className="card-amber rounded-2xl border bg-card p-5">
+            <div className="card-amber rounded-3xl p-5 sm:p-6">
               <SectionTitle>
                 <span className="flex items-center gap-2">
                   <Activity className="h-4 w-4 text-primary" /> Recent activity
@@ -595,13 +595,13 @@ function DashboardPage() {
                 {myCandidates.slice(0, 10).map((c) => (
                   <div
                     key={c.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3 text-sm"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-stone/90 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] px-4 py-3 text-sm"
                   >
                     <div className="min-w-0">
                       <span className="font-medium">{c.full_name}</span>{" "}
                       <span className="text-muted-foreground">· {labelize(c.status ?? "available")}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs tabular-nums text-muted-foreground">
                       {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
                     </span>
                   </div>
@@ -615,10 +615,10 @@ function DashboardPage() {
         )}
 
 
-        <section className="card-amber rounded-2xl border bg-card p-5">
+        <section className="card-amber rounded-3xl p-5 sm:p-6">
           <SectionTitle
             action={
-              <Link to="/roles" className="text-sm text-primary hover:underline">
+              <Link to="/roles" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
                 Manage roles
               </Link>
             }
@@ -634,10 +634,10 @@ function DashboardPage() {
                 <div key={r.id}>
                   <div className="flex items-center justify-between text-sm">
                     <span>{r.name}</span>
-                    <span className="text-muted-foreground">{count}</span>
+                    <span className="font-semibold tabular-nums text-muted-foreground">{count}</span>
                   </div>
-                  <div className="mt-1 h-2 rounded-full bg-primary-soft">
-                    <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                  <div className="mt-1.5 h-2 rounded-full bg-primary/[0.08]">
+                    <div className="h-2 rounded-full bg-gradient-to-r from-[#431867] to-[#7a59a3] transition-[width] duration-500" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
               );
@@ -646,7 +646,7 @@ function DashboardPage() {
           </div>
         </section>
 
-        <section className="card-amber rounded-2xl border bg-card p-5">
+        <section className="card-amber rounded-3xl p-5 sm:p-6">
           <SectionTitle>{isAdmin ? "Recently added" : "My recently added"}</SectionTitle>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {(isAdmin ? recent : myRecent).map((c) => (
@@ -654,11 +654,11 @@ function DashboardPage() {
                 key={c.id}
                 to="/candidates/$candidateId"
                 params={{ candidateId: c.id }}
-                className="rounded-xl border p-3 transition-all hover:-translate-y-0.5 hover:border-amber hover:shadow-md"
+                className="rounded-2xl bg-stone/90 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] p-4 transition-[box-shadow,border-color] duration-300 hover:shadow-[inset_0_0_0_1px_rgb(122_89_163/0.25),0_22px_44px_-24px_rgb(46_16_73/0.5)]"
               >
                 <div className="truncate font-medium">{c.full_name}</div>
                 <div className="truncate text-xs text-muted-foreground">{c.headline || c.email || "—"}</div>
-                {isAdmin && <div className="mt-1 text-[11px] text-primary">{c.recruiterName ?? "Unassigned"}</div>}
+                {isAdmin && <div className="mt-1.5 text-[11px] font-semibold text-primary">{c.recruiterName ?? "Unassigned"}</div>}
               </Link>
             ))}
             {!(isAdmin ? recent : myRecent).length && (

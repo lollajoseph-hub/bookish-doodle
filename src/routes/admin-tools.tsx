@@ -14,6 +14,7 @@ import {
 } from "@/lib/crm-queries";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -174,14 +175,20 @@ function AdminToolsPage() {
                   className="pl-9"
                 />
               </div>
-              {isLoading && <p className="text-sm text-muted-foreground">Loading candidates…</p>}
-              <div className="divide-y overflow-hidden card-amber rounded-2xl border bg-card">
+              {isLoading && (
+                <div className="mb-4 space-y-2" aria-busy="true" aria-label="Loading">
+                  <Skeleton className="h-[60px] rounded-3xl bg-white/70" />
+                  <Skeleton className="h-[60px] rounded-3xl bg-white/70" />
+                  <Skeleton className="h-[60px] rounded-3xl bg-white/70" />
+                </div>
+              )}
+              <div className="card-amber divide-y divide-foreground/[0.06] overflow-hidden rounded-3xl">
                 {filtered.map((c) => (
                   <button
                     key={c.id}
                     onClick={() => setSelectedId(c.id)}
-                    className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors ${
-                      selectedId === c.id ? "bg-primary-soft" : "hover:bg-muted/50"
+                    className={`flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left transition-colors duration-300 ${
+                      selectedId === c.id ? "bg-primary-soft" : "hover:bg-primary/[0.04]"
                     }`}
                   >
                     <div className="min-w-0">
@@ -190,7 +197,7 @@ function AdminToolsPage() {
                         {c.recruiterName ?? "Unassigned"}
                       </div>
                     </div>
-                    <Badge variant="secondary">{labelize(c.status)}</Badge>
+                    <Badge variant="secondary" className="h-6 rounded-full border-transparent px-2.5 text-[11.5px] font-semibold bg-foreground/[0.06] text-secondary-foreground">{labelize(c.status)}</Badge>
                   </button>
                 ))}
                 {!isLoading && !filtered.length && (
@@ -199,7 +206,7 @@ function AdminToolsPage() {
               </div>
             </div>
 
-            <div className="card-amber rounded-2xl border bg-card p-5">
+            <div className="card-amber self-start rounded-3xl p-6">
               {!selected ? (
                 <p className="text-sm text-muted-foreground">
                   Pick a candidate on the left to change status, reassign or archive.
@@ -207,12 +214,12 @@ function AdminToolsPage() {
               ) : (
                 <div className="space-y-5">
                   <div>
-                    <div className="text-lg font-semibold">{selected.full_name}</div>
+                    <div className="font-display text-2xl font-semibold leading-tight">{selected.full_name}</div>
                     <div className="text-sm text-muted-foreground">{selected.email ?? "No email"}</div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Status</Label>
+                    <Label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Status</Label>
                     <Select
                       value={selected.status ?? "available"}
                       onValueChange={(status) => statusMutation.mutate({ id: selected.id, status })}
@@ -231,7 +238,7 @@ function AdminToolsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Recruiter</Label>
+                    <Label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Recruiter</Label>
                     <Select
                       value={selected.recruiter_id ?? "none"}
                       onValueChange={(value) =>
@@ -281,14 +288,20 @@ function AdminToolsPage() {
                   className="pl-9"
                 />
               </div>
-              {clientsLoading && <p className="text-sm text-muted-foreground">Loading clients…</p>}
-              <div className="divide-y overflow-hidden card-amber rounded-2xl border bg-card">
+              {clientsLoading && (
+                <div className="mb-4 space-y-2" aria-busy="true" aria-label="Loading">
+                  <Skeleton className="h-[60px] rounded-3xl bg-white/70" />
+                  <Skeleton className="h-[60px] rounded-3xl bg-white/70" />
+                  <Skeleton className="h-[60px] rounded-3xl bg-white/70" />
+                </div>
+              )}
+              <div className="card-amber divide-y divide-foreground/[0.06] overflow-hidden rounded-3xl">
                 {filteredClients.map((client) => (
                   <button
                     key={client.id}
                     onClick={() => setSelectedClientId(client.id)}
-                    className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors ${
-                      selectedClientId === client.id ? "bg-primary-soft" : "hover:bg-muted/50"
+                    className={`flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left transition-colors duration-300 ${
+                      selectedClientId === client.id ? "bg-primary-soft" : "hover:bg-primary/[0.04]"
                     }`}
                   >
                     <div className="min-w-0">
@@ -305,7 +318,7 @@ function AdminToolsPage() {
               </div>
             </div>
 
-            <div className="card-amber rounded-2xl border bg-card p-5">
+            <div className="card-amber self-start rounded-3xl p-6">
               {!selectedClient ? (
                 <p className="text-sm text-muted-foreground">
                   Pick a client on the left to see their requests.
@@ -313,7 +326,7 @@ function AdminToolsPage() {
               ) : (
                 <div className="space-y-5">
                   <div>
-                    <div className="text-lg font-semibold">{selectedClient.name}</div>
+                    <div className="font-display text-2xl font-semibold leading-tight">{selectedClient.name}</div>
                     <div className="text-sm text-muted-foreground">
                       {selectedClient.industry ?? "No industry listed"}
                     </div>
@@ -322,7 +335,7 @@ function AdminToolsPage() {
                   {requestsLoading ? (
                     <p className="text-sm text-muted-foreground">Loading requests…</p>
                   ) : selectedClientRequests.length ? (
-                    <div className="divide-y overflow-hidden rounded-lg border">
+                    <div className="divide-y divide-foreground/[0.06] overflow-hidden rounded-2xl bg-stone/90 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
                       {selectedClientRequests.map((request) => {
                         const rejectionCount = request.rejection_count ?? 0;
                         const isCurated = request.source === "staff_curated";
@@ -339,13 +352,13 @@ function AdminToolsPage() {
                               <div className="truncate text-sm font-medium">
                                 {request.roleName ?? "Role"}
                               </div>
-                              <Badge variant="secondary" className="mt-1">
+                              <Badge variant="secondary" className="mt-1 h-6 rounded-full border-transparent px-2.5 text-[11.5px] font-semibold bg-primary-soft text-primary">
                                 {labelize(request.status)}
                               </Badge>
                             </div>
                             {isCurated ? (
                               <div className="flex flex-col items-end gap-1.5">
-                                <Badge variant="outline" className="border-amber bg-amber/10 text-amber-foreground">
+                                <Badge variant="outline" className="h-6 rounded-full border-transparent px-2.5 text-[11.5px] font-semibold bg-amber-soft text-gold-ink">
                                   Staff-curated
                                 </Badge>
                                 <span className="text-xs text-muted-foreground">

@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { fetchPlacements, labelize } from "@/lib/crm-queries";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const TABS = ["all", "active", "completed", "terminated"] as const;
 
@@ -46,15 +47,15 @@ function PlacementsPage() {
 
   return (
     <AppShell title="Placements" description="Candidates placed with clients">
-      <div className="mb-5 flex flex-wrap items-center gap-2">
+      <div className="mb-6 flex flex-wrap items-center gap-2">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`rounded-full border px-3 py-1.5 text-sm transition-all ${
+            className={`h-9 rounded-full px-4 text-[13px] font-semibold transition-[background-color,color,box-shadow] duration-200 ${
               tab === t
-                ? "border-amber bg-amber/15 text-amber-foreground shadow-sm"
-                : "bg-card hover:border-primary/50"
+                ? "bg-primary text-primary-foreground shadow-[0_10px_24px_-14px_rgb(46_16_73/0.7)]"
+                : "bg-white/70 text-secondary-foreground shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] backdrop-blur-md hover:bg-white hover:text-primary"
             }`}
           >
             {t === "all" ? "All" : labelize(t)}
@@ -64,28 +65,34 @@ function PlacementsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Filter by candidate or client…"
-          className="ml-auto max-w-xs"
+          className="ml-auto max-w-xs rounded-full"
         />
       </div>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading placements…</p>}
+      {isLoading && (
+        <div className="grid gap-4 lg:grid-cols-2" aria-busy="true" aria-label="Loading">
+          <Skeleton className="h-[150px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[150px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[150px] rounded-3xl bg-white/70" />
+        </div>
+      )}
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         {filtered.map((p) => (
           <div
             key={p.id}
-            className="card-amber rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
+            className="card-amber rounded-3xl p-5 transition-[box-shadow,border-color] duration-300 hover:border-[rgb(122_89_163/0.25)] hover:shadow-[0_22px_44px_-24px_rgb(46_16_73/0.5)]"
           >
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary-soft">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft">
                   <Briefcase className="h-4 w-4 text-primary" />
                 </div>
                 <div>
                   <Link
                     to="/candidates/$candidateId"
                     params={{ candidateId: p.candidate_id }}
-                    className="font-semibold text-primary hover:underline"
+                    className="font-display text-xl font-semibold leading-tight text-primary hover:underline"
                   >
                     {p.candidateName || "Candidate"}
                   </Link>
@@ -103,18 +110,18 @@ function PlacementsPage() {
               </div>
               <Badge
                 variant="outline"
-                className={
+                className={`h-6 rounded-full border-transparent text-[11.5px] font-semibold ${
                   p.status === "active"
-                    ? "border-emerald-300 bg-emerald-100 text-emerald-800"
+                    ? "bg-[#e9f2ea] text-[#2f5f35]"
                     : p.status === "terminated"
-                      ? "border-border bg-muted text-muted-foreground"
-                      : "border-primary/30 bg-primary-soft text-primary"
-                }
+                      ? "bg-foreground/[0.06] text-secondary-foreground"
+                      : "bg-primary-soft text-primary"
+                }`}
               >
                 {labelize(p.status)}
               </Badge>
             </div>
-            <div className="mt-3 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
+            <div className="mt-4 grid gap-1 rounded-2xl bg-stone/90 p-3 text-xs tabular-nums text-muted-foreground shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] sm:grid-cols-2">
               <span>Billing start: {p.billing_start_date || "—"}</span>
               <span>Monthly rate: {p.monthly_rate != null ? p.monthly_rate : "—"}</span>
               <span>Guarantee ends: {p.guarantee_window_expires || "—"}</span>
@@ -124,7 +131,12 @@ function PlacementsPage() {
         ))}
       </div>
       {!isLoading && !filtered.length && (
-        <p className="text-sm text-muted-foreground">No placements in this view.</p>
+        <div className="card-amber flex flex-col items-center gap-4 rounded-3xl border-dashed px-6 py-14 text-center">
+          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft text-primary">
+            <Briefcase className="h-7 w-7" />
+          </div>
+          <p className="font-display text-3xl font-medium">No placements in this view.</p>
+        </div>
       )}
     </AppShell>
   );

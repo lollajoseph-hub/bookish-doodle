@@ -5,6 +5,7 @@ import { Database, HardDrive } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { fetchAuditLogs, fetchSystemStats } from "@/lib/crm-queries";
 import { useAuth } from "@/lib/auth";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/system-monitor")({
@@ -31,9 +32,9 @@ function formatBytes(bytes: number) {
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="card-amber rounded-2xl border bg-card p-4">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="mt-1 text-2xl font-semibold">{value}</div>
+    <div className="card-amber rounded-3xl p-5">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</div>
+      <div className="mt-3 font-display text-4xl font-semibold leading-none tabular-nums">{value}</div>
     </div>
   );
 }
@@ -63,13 +64,19 @@ function SystemMonitorPage() {
 
   return (
     <AppShell title="System monitor" description="A snapshot of what's stored in the system">
-      {isLoading && <p className="text-sm text-muted-foreground">Loading snapshot…</p>}
+      {isLoading && (
+        <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5" aria-busy="true" aria-label="Loading">
+          <Skeleton className="h-[104px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[104px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[104px] rounded-3xl bg-white/70" />
+        </div>
+      )}
 
       <section className="mb-8">
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+        <h2 className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           <Database className="h-4 w-4 text-primary" /> Records
         </h2>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <Stat label="Candidates" value={stats?.candidates ?? 0} />
           <Stat label="Clients" value={stats?.clients ?? 0} />
           <Stat label="Client requests" value={stats?.requests ?? 0} />
@@ -79,36 +86,36 @@ function SystemMonitorPage() {
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+        <h2 className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           <HardDrive className="h-4 w-4 text-primary" /> Stored files
         </h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Stat label="Files uploaded" value={stats?.files ?? 0} />
           <Stat label="Storage used" value={formatBytes(stats?.storageBytes ?? 0)} />
         </div>
       </section>
 
       <section>
-        <h2 className="mb-3 text-sm font-semibold">Latest activity</h2>
-        <div className="divide-y card-amber rounded-2xl border bg-card">
+        <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Latest activity</h2>
+        <div className="card-amber divide-y divide-foreground/[0.06] overflow-hidden rounded-3xl">
           {logs.map((l) => (
-            <div key={l.id} className="flex items-center justify-between gap-3 px-4 py-3">
+            <div key={l.id} className="flex items-center justify-between gap-3 px-5 py-3.5">
               <div className="min-w-0">
-                <div className="truncate text-sm">{l.userName ?? "System"}</div>
+                <div className="truncate text-sm font-medium">{l.userName ?? "System"}</div>
                 <div className="truncate text-xs text-muted-foreground">
                   {l.entity_type}
                   {l.entity_id ? ` · ${l.entity_id.slice(0, 8)}…` : ""}
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <Badge variant="secondary">{l.action}</Badge>
-                <span className="text-xs text-muted-foreground">
+                <Badge variant="secondary" className="h-6 rounded-full border-transparent px-2.5 text-[11.5px] font-semibold bg-primary-soft text-primary">{l.action}</Badge>
+                <span className="text-xs tabular-nums text-muted-foreground">
                   {formatDistanceToNow(new Date(l.created_at), { addSuffix: true })}
                 </span>
               </div>
             </div>
           ))}
-          {!logs.length && <p className="px-4 py-6 text-sm text-muted-foreground">No activity yet.</p>}
+          {!logs.length && <p className="px-5 py-6 text-sm text-muted-foreground">No activity yet.</p>}
         </div>
       </section>
     </AppShell>

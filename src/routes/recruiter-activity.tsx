@@ -4,6 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import { AppShell } from "@/components/app-shell";
 import { fetchAuditLogsWithRole } from "@/lib/crm-queries";
 import { useAuth } from "@/lib/auth";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -50,26 +51,32 @@ function RecruiterActivityPage() {
 
   return (
     <AppShell title="Recruiter activity" description="What recruiters have been doing">
-      {isLoading && <p className="text-sm text-muted-foreground">Loading activity…</p>}
-      <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
+      {isLoading && (
+        <div className="mb-4 space-y-2" aria-busy="true" aria-label="Loading">
+          <Skeleton className="h-[52px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[52px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[52px] rounded-3xl bg-white/70" />
+        </div>
+      )}
+      <div className="card-amber overflow-x-auto rounded-3xl">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>When</TableHead>
-              <TableHead>Recruiter</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead>Entity</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">When</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Recruiter</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Action</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Entity</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {recruiterLogs.map((l) => (
               <TableRow key={l.id}>
-                <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                <TableCell className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
                   {formatDistanceToNow(new Date(l.created_at), { addSuffix: true })}
                 </TableCell>
-                <TableCell className="text-sm">{l.userName ?? "Recruiter"}</TableCell>
+                <TableCell className="text-sm font-medium">{l.userName ?? "Recruiter"}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{l.action}</Badge>
+                  <Badge variant="secondary" className="h-6 rounded-full border-transparent px-2.5 text-[11.5px] font-semibold bg-primary-soft text-primary">{l.action}</Badge>
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {l.entity_type}

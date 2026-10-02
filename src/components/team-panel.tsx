@@ -4,6 +4,7 @@ import { Loader2, Mail, Plus, Send, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { fetchStaffProfiles } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,16 +78,22 @@ export function TeamPanel({ isAdmin }: { isAdmin: boolean }) {
         </Button>
       </div>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading admins…</p>}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {isLoading && (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-busy="true" aria-label="Loading">
+          <Skeleton className="h-[150px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[150px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[150px] rounded-3xl bg-white/70" />
+        </div>
+      )}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {admins.map((s) => {
           const pendingInvite = signinStatus ? signinStatus[s.id] === false : true;
           return (
-            <div key={s.id} className="card-amber rounded-2xl border bg-card p-4">
+            <div key={s.id} className="card-amber rounded-3xl p-5">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <div className="truncate font-semibold">{s.full_name || s.email}</div>
-                  <Badge variant="secondary" className="mt-1">
+                  <div className="truncate font-display text-2xl font-semibold leading-tight">{s.full_name || s.email}</div>
+                  <Badge variant="secondary" className="mt-1.5 h-6 rounded-full border-transparent px-2.5 text-[11.5px] font-semibold bg-primary-soft text-primary">
                     <ShieldCheck className="mr-1 h-3 w-3" /> Admin
                   </Badge>
                 </div>
@@ -94,7 +101,7 @@ export function TeamPanel({ isAdmin }: { isAdmin: boolean }) {
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8"
+                    className="h-8 w-8 rounded-full text-primary hover:bg-primary-soft"
                     aria-label="Resend invite"
                     title="Resend invite"
                     disabled={resend.isPending}
@@ -109,11 +116,15 @@ export function TeamPanel({ isAdmin }: { isAdmin: boolean }) {
                 )}
               </div>
               {s.email && (
-                <div className="mt-3 flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                <div className="mt-4 flex items-center gap-1.5 truncate text-xs text-muted-foreground">
                   <Mail className="h-3.5 w-3.5" /> {s.email}
                 </div>
               )}
-              <div className="mt-2 text-xs text-muted-foreground">
+              <div
+                className={`mt-3 inline-flex h-6 items-center rounded-full px-2.5 text-[11.5px] font-semibold ${
+                  pendingInvite ? "bg-amber-soft text-gold-ink" : "bg-[#e9f2ea] text-[#2f5f35]"
+                }`}
+              >
                 {pendingInvite ? "Invite pending" : "Active account"}
               </div>
             </div>
@@ -121,7 +132,7 @@ export function TeamPanel({ isAdmin }: { isAdmin: boolean }) {
         })}
       </div>
       {!isLoading && !admins.length && (
-        <p className="text-sm text-muted-foreground">No admin accounts yet.</p>
+        <p className="card-amber rounded-3xl border-dashed p-8 text-center font-display text-3xl font-medium">No admin accounts yet.</p>
       )}
 
       <InviteAdminDialog

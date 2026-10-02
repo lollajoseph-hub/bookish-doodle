@@ -42,14 +42,14 @@ function ForgotPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/40 to-accent/40 px-4">
-      <div className="w-full max-w-md card-amber rounded-2xl border bg-card shadow-xl p-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Reset password</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+    <div className="flex min-h-screen items-center justify-center bg-stone px-4">
+      <div className="card-amber w-full max-w-md rounded-[30px] p-8 sm:p-10">
+        <h1 className="font-display text-4xl font-semibold leading-none">Reset password</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
           We'll email you a recovery link.
         </p>
         {sent ? (
-          <div className="mt-6 rounded-xl bg-secondary p-4 text-sm">
+          <div className="mt-6 rounded-2xl bg-primary/[0.06] p-4 text-sm text-primary">
             If an account exists for <strong>{email}</strong>, a reset link is on its way.
           </div>
         ) : (
@@ -64,14 +64,14 @@ function ForgotPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={submitting}>
+            <Button type="submit" className="w-full rounded-full" disabled={submitting}>
               {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Send reset link
             </Button>
           </form>
         )}
         <div className="mt-6 text-sm text-center">
-          <Link to="/login" className="text-primary hover:underline">
+          <Link to="/login" className="font-medium text-primary hover:underline">
             Back to sign in
           </Link>
         </div>

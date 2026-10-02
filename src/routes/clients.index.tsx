@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DatePicker } from "@/components/date-time-fields";
 import {
   Dialog,
   DialogContent,
@@ -310,39 +312,45 @@ function ClientsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search clients…"
-          className="pl-9"
+          className="rounded-full bg-white/70 pl-9 backdrop-blur-md"
         />
       </div>
 
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading clients…</p>}
+      {isLoading && (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-busy="true" aria-label="Loading">
+          <Skeleton className="h-[150px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[150px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[150px] rounded-3xl bg-white/70" />
+        </div>
+      )}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {filtered.map((c) => (
           <Link
             key={c.id}
             to="/clients/$clientId"
             params={{ clientId: c.id }}
-            className="card-amber rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-amber hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber"
+            className="card-amber rounded-3xl p-5 transition-[box-shadow,border-color] duration-300 hover:border-[rgb(122_89_163/0.25)] hover:shadow-[0_22px_44px_-24px_rgb(46_16_73/0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary-soft">
+              <div className="flex items-center gap-3">
+                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-[#ebddf7] to-[#d6c2ea]">
                   <Building2 className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <div className="font-semibold">{c.name}</div>
+                  <div className="font-display text-2xl font-semibold leading-tight">{c.name}</div>
                   {c.industry && (
                     <div className="text-xs text-muted-foreground">{c.industry}</div>
                   )}
                 </div>
               </div>
-              {c.is_franchise_brand && <Badge variant="secondary">Franchise brand</Badge>}
+              {c.is_franchise_brand && <Badge variant="secondary" className="h-[25px] shrink-0 whitespace-nowrap rounded-full border-transparent bg-primary-soft px-2.5 py-0 text-[11.5px] font-semibold text-primary">Franchise brand</Badge>}
             </div>
             {c.parentName && (
               <p className="mt-3 text-xs text-muted-foreground">Part of {c.parentName}</p>
             )}
-            <div className="mt-4 flex gap-4 text-xs text-muted-foreground">
+            <div className="mt-4 flex gap-4 border-t border-foreground/[0.06] pt-3 text-xs text-muted-foreground tabular-nums">
               <span className="inline-flex items-center gap-1">
                 <Users className="h-3.5 w-3.5" /> {c.memberCount} contacts
               </span>
@@ -354,7 +362,12 @@ function ClientsPage() {
         ))}
       </div>
       {!isLoading && !filtered.length && (
-        <p className="text-sm text-muted-foreground">No clients yet.</p>
+        <div className="card-amber flex flex-col items-center gap-3 rounded-3xl border-dashed px-6 py-12 text-center">
+          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft text-primary">
+            <Building2 className="h-7 w-7" />
+          </div>
+          <p className="font-display text-3xl font-medium">No clients yet.</p>
+        </div>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -423,7 +436,7 @@ function ClientsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="rounded-xl border p-3 space-y-3">
+            <div className="space-y-3 rounded-2xl bg-stone/90 p-4 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
               <div>
                 <Label>Primary contact *</Label>
                 <p className="text-xs text-muted-foreground">
@@ -493,7 +506,7 @@ function ClientsPage() {
                 )}
               </div>
             </div>
-            <div className="flex items-center justify-between rounded-xl border p-3">
+            <div className="flex items-center justify-between rounded-2xl bg-stone/90 p-4 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
               <div>
                 <Label htmlFor="franchise">Franchise brand</Label>
                 <p className="text-xs text-muted-foreground">Groups multiple locations under one brand.</p>
@@ -503,15 +516,15 @@ function ClientsPage() {
           </FormSection>
 
           <FormSection title="First request" description="Created together with the client.">
-            <div className="grid grid-cols-2 gap-1 rounded-xl border p-1">
+            <div className="grid grid-cols-2 gap-1 rounded-full bg-stone/90 p-1 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
               {(["standard", "staff_curated"] as const).map((v) => (
                 <button
                   key={v}
                   type="button"
                   onClick={() => setReqSource(v)}
-                  className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                     reqSource === v
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-primary text-primary-foreground shadow-[0_8px_18px_-8px_rgb(67_24_103/0.7)]"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -565,7 +578,7 @@ function ClientsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="req-start">Desired start date</Label>
-                    <Input id="req-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                    <DatePicker id="req-start" value={startDate} onChange={setStartDate} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="req-hires">Hires needed</Label>
@@ -583,8 +596,8 @@ function ClientsPage() {
                             onClick={() => setDays(on ? days.filter((x) => x !== d) : [...days, d])}
                             className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                               on
-                                ? "border border-amber bg-amber-soft text-amber-foreground hover:bg-amber/80"
-                                : "border bg-card text-muted-foreground hover:border-amber/60 hover:text-foreground"
+                                ? "border border-transparent bg-primary text-primary-foreground"
+                                : "border border-foreground/10 bg-white/80 text-muted-foreground hover:border-[rgb(122_89_163/0.25)] hover:text-foreground"
                             }`}
                           >
                             {d}
@@ -624,14 +637,14 @@ function ClientsPage() {
                       value={candSearch}
                       onChange={(e) => setCandSearch(e.target.value)}
                     />
-                    <div className="max-h-56 space-y-1 overflow-y-auto rounded-xl border p-2">
+                    <div className="max-h-56 space-y-1 overflow-y-auto rounded-2xl bg-stone/90 p-2 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
                       {filteredCandidates.map((c) => {
                         const on = candidateIds.includes(c.id);
                         return (
                           <label
                             key={c.id}
-                            className={`flex cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors ${
-                              on ? "bg-amber/10" : "hover:bg-muted"
+                            className={`flex cursor-pointer items-start gap-2 rounded-xl px-2 py-1.5 text-sm transition-colors ${
+                              on ? "bg-primary-soft" : "hover:bg-white/80"
                             }`}
                           >
                             <Checkbox

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { FileCheck, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { DatePicker } from "@/components/date-time-fields";
 import { MatchStatusBadge } from "@/components/match-status";
 import {
   createPlacement,
@@ -14,6 +15,7 @@ import {
 } from "@/lib/crm-queries";
 import type { MatchStatus } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -81,24 +83,30 @@ function OfferReviewPage() {
 
   return (
     <AppShell title="Offer review" description="Offers awaiting a decision, and hires awaiting placement">
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+      <section className="space-y-4">
+        <h2 className="font-display text-[32px] font-semibold leading-none">
           Offer out — create placement
         </h2>
         <p className="text-sm text-muted-foreground">
           The contract has been sent. Adding the commercial terms creates the placement and marks the
           candidate hired.
         </p>
-        {isLoading && <p className="text-sm text-muted-foreground">Loading offers…</p>}
-        <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
+        {isLoading && (
+          <div className="space-y-3" aria-busy="true" aria-label="Loading">
+            <Skeleton className="h-14 rounded-3xl bg-white/70" />
+            <Skeleton className="h-14 rounded-3xl bg-white/70" />
+            <Skeleton className="h-14 rounded-3xl bg-white/70" />
+          </div>
+        )}
+        <div className="card-amber overflow-x-auto rounded-3xl">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Candidate</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Candidate</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Client</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Role</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Status</TableHead>
+                <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -108,7 +116,7 @@ function OfferReviewPage() {
                     <Link
                       to="/candidates/$candidateId"
                       params={{ candidateId: m.candidate_id }}
-                      className="font-medium hover:underline"
+                      className="font-semibold text-primary hover:underline"
                     >
                       {m.candidateName ?? "Candidate"}
                     </Link>
@@ -139,30 +147,33 @@ function OfferReviewPage() {
           </Table>
         </div>
         {!isLoading && !offers.length && (
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
-            <FileCheck className="h-4 w-4" /> No offers are pending a decision.
-          </p>
+          <div className="card-amber flex flex-col items-center gap-4 rounded-3xl border-dashed px-6 py-14 text-center">
+            <div className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft text-primary">
+              <FileCheck className="h-7 w-7" />
+            </div>
+            <p className="font-display text-3xl font-medium">No offers are pending a decision.</p>
+          </div>
         )}
       </section>
 
       {/* Legacy: pre-existing "hired" matches with no placement row. Under the current
           pipeline this list stays empty, since creating the placement is what marks a
           match hired. Kept so older data is still visible. */}
-      <section className="mt-10 space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <section className="mt-12 space-y-4">
+        <h2 className="font-display text-[32px] font-semibold leading-none text-muted-foreground">
           Legacy — hired, awaiting placement
         </h2>
         <p className="text-sm text-muted-foreground">
           Older hires recorded before placements were created automatically.
         </p>
-        <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
+        <div className="card-amber overflow-x-auto rounded-3xl">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Candidate</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Candidate</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Client</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Role</TableHead>
+                <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -172,7 +183,7 @@ function OfferReviewPage() {
                     <Link
                       to="/candidates/$candidateId"
                       params={{ candidateId: m.candidate_id }}
-                      className="font-medium hover:underline"
+                      className="font-semibold text-primary hover:underline"
                     >
                       {m.candidateName ?? "Candidate"}
                     </Link>
@@ -190,7 +201,7 @@ function OfferReviewPage() {
           </Table>
         </div>
         {!awaitingPlacement.length && (
-          <p className="text-sm text-muted-foreground">Every hire has a placement record.</p>
+          <p className="rounded-2xl bg-stone/90 p-4 text-sm text-muted-foreground shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">Every hire has a placement record.</p>
         )}
       </section>
 
@@ -273,12 +284,7 @@ function PlacementDialog({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="billing_start">Billing start date</Label>
-              <Input
-                id="billing_start"
-                type="date"
-                value={billingStart}
-                onChange={(e) => setBillingStart(e.target.value)}
-              />
+              <DatePicker id="billing_start" value={billingStart} onChange={setBillingStart} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="monthly_rate">Monthly rate</Label>
@@ -293,12 +299,7 @@ function PlacementDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="guarantee">Guarantee window expires</Label>
-            <Input
-              id="guarantee"
-              type="date"
-              value={guarantee}
-              onChange={(e) => setGuarantee(e.target.value)}
-            />
+            <DatePicker id="guarantee" value={guarantee} onChange={setGuarantee} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="placement_notes">Notes</Label>

@@ -30,10 +30,10 @@ function NewCandidatePage() {
   return (
     <AppShell title="Add candidate" description="Create a new candidate record">
       <div className="space-y-6">
-        <Link to="/candidates" className="inline-flex items-center text-sm text-primary hover:underline">
+        <Link to="/candidates" className="inline-flex items-center text-sm font-medium text-primary underline-offset-4 hover:underline">
           <ArrowLeft className="mr-1 h-4 w-4" /> Back to candidate pool
         </Link>
-        <div className="card-amber rounded-2xl border bg-card p-5 sm:p-6">
+        <div className="card-amber rounded-[30px] p-5 sm:p-8">
           <CandidateForm
             onCancel={() => navigate({ to: "/candidates" })}
             onSaved={(id) => navigate({ to: "/candidates/$candidateId", params: { candidateId: id } })}

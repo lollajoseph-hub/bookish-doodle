@@ -65,9 +65,9 @@ export function RoleSkillsPanel() {
       <p className="text-sm text-muted-foreground">
         Choose which skills belong to each job role. Removing a skill here only untags it from the role.
       </p>
-      <div className="card-amber flex flex-wrap items-end gap-3 rounded-2xl border bg-card p-4">
+      <div className="card-amber flex flex-wrap items-end gap-3 rounded-3xl p-5">
         <div className="space-y-2">
-          <Label>Job role</Label>
+          <Label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Job role</Label>
           <Select value={roleId} onValueChange={setRoleId}>
             <SelectTrigger className="w-[260px]">
               <SelectValue placeholder="Pick a job role" />
@@ -120,7 +120,7 @@ export function RoleSkillsPanel() {
       </div>
 
       {roleId && (
-        <div className="card-amber rounded-2xl border bg-card p-4">
+        <div className="card-amber rounded-3xl p-5">
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Loading role skills…</p>
           ) : roleSkills.length === 0 ? (
@@ -128,16 +128,16 @@ export function RoleSkillsPanel() {
           ) : (
             <div className="flex flex-wrap gap-2">
               {roleSkills.map((s) => (
-                <Badge key={s.skill_id} variant="secondary" className="gap-1 py-1 pl-3 pr-1">
+                <Badge key={s.skill_id} variant="secondary" className="h-[26px] gap-1 rounded-full border-transparent bg-primary-soft py-0 pl-3 pr-1 text-[11.5px] font-semibold text-primary">
                   {s.name}
-                  <span className="text-muted-foreground">· {s.category ?? OTHER_CATEGORY}</span>
+                  <span className="font-medium text-primary/60">· {s.category ?? OTHER_CATEGORY}</span>
                   <button
                     type="button"
                     aria-label={`Remove ${s.name} from this role`}
                     title="Remove from this role"
                     disabled={remove.isPending}
                     onClick={() => remove.mutate(s.skill_id)}
-                    className="ml-1 rounded-full p-0.5 hover:bg-destructive/15 hover:text-destructive"
+                    className="ml-1 rounded-full p-1 transition-colors hover:bg-destructive/15 hover:text-destructive"
                   >
                     <X className="h-3 w-3" />
                   </button>

@@ -120,14 +120,31 @@ function initials(name: string) {
   return name.slice(0, 2).toUpperCase();
 }
 
+function statusTone(status: string) {
+  switch (status) {
+    case "hired":
+    case "placed":
+      return "bg-[#e9f2ea] text-[#2f5f35]";
+    case "shortlisted":
+      return "bg-amber-soft text-gold-ink";
+    case "available":
+    case "interviewed":
+      return "bg-primary-soft text-primary";
+    case "rejected":
+      return "bg-destructive/10 text-destructive";
+    default:
+      return "bg-foreground/[0.06] text-secondary-foreground";
+  }
+}
+
 function isDirectVideo(url: string) {
   return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
 }
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="card-amber rounded-2xl border bg-card p-5">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">{title}</h2>
+    <section className="card-amber rounded-3xl p-5 sm:p-6">
+      <h2 className="font-display text-2xl font-semibold leading-tight">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
   );
@@ -248,37 +265,37 @@ function CandidateDetailPage() {
     return (
       <AppShell title="Candidate">
         <div className="space-y-6">
-          <div className="h-4 w-40 animate-pulse rounded bg-primary/10" />
+          <div className="h-4 w-40 animate-pulse rounded-full bg-primary/10" />
           <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
             <div className="space-y-6">
-              <section className="card-amber rounded-2xl border bg-card p-5 text-center">
-                <div className="mx-auto h-28 w-28 animate-pulse rounded-full bg-primary/10" />
+              <section className="card-amber rounded-[30px] p-6 text-center">
+                <div className="mx-auto h-28 w-28 animate-pulse rounded-2xl bg-primary/10" />
                 <div className="mx-auto mt-3 h-5 w-40 animate-pulse rounded bg-primary/10" />
                 <div className="mx-auto mt-2 h-4 w-52 animate-pulse rounded bg-primary/10" />
-                <div className="mt-4 space-y-2 border-t pt-4">
+                <div className="mt-4 space-y-2 border-t border-[rgb(26_19_32/0.08)] pt-4">
                   {[0, 1, 2, 3].map((i) => (
                     <div key={i} className="h-4 animate-pulse rounded bg-primary/10" />
                   ))}
                 </div>
               </section>
-              <section className="card-amber rounded-2xl border bg-card p-5">
+              <section className="card-amber rounded-3xl p-5">
                 <div className="h-4 w-28 animate-pulse rounded bg-primary/10" />
                 <div className="mt-3 space-y-2">
                   {[0, 1, 2].map((i) => (
-                    <div key={i} className="h-9 animate-pulse rounded-xl bg-primary/10" />
+                    <div key={i} className="h-9 animate-pulse rounded-full bg-primary/10" />
                   ))}
                 </div>
               </section>
             </div>
-            <div className="card-amber rounded-2xl border bg-card p-4 sm:p-5">
-              <div className="flex flex-wrap gap-1">
+            <div className="card-amber rounded-[30px] p-4 sm:p-6">
+              <div className="flex w-full flex-wrap gap-1 rounded-full bg-white/70 p-1 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] sm:w-fit">
                 {["Overview", "Documents", "AI Profile", "Client Pipeline", "Notes"].map(
                   (label, i) => (
                     <span
                       key={label}
-                      className={`rounded-xl px-3 py-2 text-sm font-medium ${
+                      className={`rounded-full px-4 py-2 text-[13px] font-semibold ${
                         i === 0
-                          ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-amber/70"
+                          ? "bg-primary text-primary-foreground shadow-[0_10px_24px_-12px_rgb(67_24_103/0.6)]"
                           : "text-foreground/70"
                       }`}
                     >
@@ -289,7 +306,7 @@ function CandidateDetailPage() {
               </div>
               <div className="mt-4 space-y-5">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="card-amber rounded-2xl border bg-card p-5">
+                  <div key={i} className="card-amber rounded-3xl p-5">
                     <div className="h-4 w-24 animate-pulse rounded bg-primary/10" />
                     <div className="mt-3 space-y-2">
                       <div className="h-4 animate-pulse rounded bg-primary/10" />
@@ -307,8 +324,8 @@ function CandidateDetailPage() {
   if (error || !data) {
     return (
       <AppShell title="Candidate">
-        <div className="card-amber rounded-2xl border bg-card p-8 text-center">
-          <p className="font-medium">Candidate not found</p>
+        <div className="card-amber rounded-3xl border-dashed p-10 text-center">
+          <p className="font-display text-3xl font-medium">Candidate not found</p>
           <Button className="mt-4" onClick={() => navigate({ to: "/candidates" })}>
             Back to pool
           </Button>
@@ -332,25 +349,25 @@ function CandidateDetailPage() {
       description={c.headline ?? roleNames.join(", ")}
       actions={
         canEdit ? null : (
-          <Badge variant="secondary" className="gap-1">
+          <Badge variant="secondary" className="h-6 gap-1 rounded-full border-0 bg-foreground/[0.06] px-2.5 text-[11.5px] font-semibold text-secondary-foreground">
             <Lock className="h-3 w-3" /> View only
           </Badge>
         )
       }
     >
       <div className="space-y-6">
-        <Link to="/candidates" className="inline-flex items-center text-sm text-primary hover:underline">
+        <Link to="/candidates" className="inline-flex items-center text-sm font-medium text-primary underline-offset-4 hover:underline">
           <ArrowLeft className="mr-1 h-4 w-4" /> Back to candidate pool
         </Link>
 
         <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
           {/* ------------------------------ left rail ------------------------------ */}
           <div className="space-y-6">
-            <section className="card-amber rounded-2xl border bg-card p-5 text-center">
+            <section className="card-amber rounded-[30px] p-6 text-center">
               <div className="relative mx-auto w-fit">
-                <Avatar className="h-28 w-28 border-2 border-primary-soft">
-                  {media?.photoUrl && <AvatarImage src={media.photoUrl} alt={c.full_name} />}
-                  <AvatarFallback className="bg-primary text-xl text-primary-foreground">
+                <Avatar className="h-28 w-28 rounded-2xl shadow-[0_18px_36px_-20px_rgb(46_16_73/0.55)]">
+                  {media?.photoUrl && <AvatarImage src={media.photoUrl} alt={c.full_name} className="object-cover" />}
+                  <AvatarFallback className="rounded-2xl bg-gradient-to-br from-[#ebddf7] to-[#d6c2ea] font-display text-3xl font-semibold text-primary">
                     {initials(c.full_name)}
                   </AvatarFallback>
                 </Avatar>
@@ -372,7 +389,7 @@ function CandidateDetailPage() {
                       aria-label="Upload photo"
                       onClick={() => photoInputRef.current?.click()}
                       disabled={uploadPhoto.isPending}
-                      className="absolute bottom-0 right-0 grid h-9 w-9 place-items-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow-md transition-transform hover:scale-105"
+                      className="absolute -bottom-1.5 -right-1.5 grid h-9 w-9 place-items-center rounded-full border-2 border-white bg-primary text-primary-foreground shadow-[0_10px_24px_-12px_rgb(67_24_103/0.7)] transition-[background-color,box-shadow] duration-300 hover:bg-primary/90"
                     >
                       {uploadPhoto.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -383,15 +400,15 @@ function CandidateDetailPage() {
                   </>
                 )}
               </div>
-              <h2 className="mt-3 text-lg font-semibold">{c.full_name}</h2>
+              <h2 className="mt-4 font-display text-[28px] font-semibold leading-tight">{c.full_name}</h2>
               {c.email && <p className="truncate text-sm text-muted-foreground">{c.email}</p>}
               {c.status && (
-                <Badge variant="secondary" className="mt-2 capitalize">
+                <Badge variant="secondary" className={`mt-2 h-6 rounded-full border-0 px-2.5 text-[11.5px] font-semibold capitalize ${statusTone(c.status)}`}>
                   {c.status}
                 </Badge>
               )}
 
-              <dl className="mt-4 space-y-2 border-t pt-4 text-left text-sm">
+              <dl className="mt-5 space-y-2.5 border-t border-[rgb(26_19_32/0.08)] pt-4 text-left text-sm">
                 <div className="flex justify-between gap-2">
                   <dt className="text-muted-foreground">Role(s)</dt>
                   <dd className="text-right">{roleNames.join(", ") || "—"}</dd>
@@ -402,22 +419,22 @@ function CandidateDetailPage() {
                 </div>
                 <div className="flex justify-between gap-2">
                   <dt className="text-muted-foreground">Experience</dt>
-                  <dd>{c.years_experience != null ? `${c.years_experience} yrs` : "—"}</dd>
+                  <dd className="tabular-nums">{c.years_experience != null ? `${c.years_experience} yrs` : "—"}</dd>
                 </div>
                 <div className="flex justify-between gap-2">
                   <dt className="text-muted-foreground">Added</dt>
-                  <dd>{new Date(c.created_at).toLocaleDateString()}</dd>
+                  <dd className="tabular-nums">{new Date(c.created_at).toLocaleDateString()}</dd>
                 </div>
               </dl>
             </section>
 
-            <section className="card-amber rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+            <section className="card-amber rounded-3xl p-5">
+              <h2 className="font-display text-2xl font-semibold leading-tight">
                 Quick actions
               </h2>
               <div className="mt-3 space-y-2">
                 <Button
-                  className="w-full justify-start rounded-xl bg-transparent px-3 py-2 text-foreground/80 hover:bg-primary/10 hover:text-primary hover:translate-x-0.5 hover:border-transparent border-transparent"
+                  className="w-full justify-start rounded-full border-transparent bg-transparent px-4 py-2 text-foreground/80 hover:border-transparent hover:bg-primary/[0.08] hover:text-primary"
                   variant="ghost"
                   disabled={!canEdit}
                   onClick={() => setEditOpen(true)}
@@ -425,7 +442,7 @@ function CandidateDetailPage() {
                   <Pencil className="mr-2 h-4 w-4" /> Edit candidate
                 </Button>
                 <Button
-                  className="w-full justify-start rounded-xl bg-transparent px-3 py-2 text-foreground/80 hover:bg-primary/10 hover:text-primary hover:translate-x-0.5 hover:border-transparent border-transparent"
+                  className="w-full justify-start rounded-full border-transparent bg-transparent px-4 py-2 text-foreground/80 hover:border-transparent hover:bg-primary/[0.08] hover:text-primary"
                   variant="ghost"
                   onClick={() => setTab("documents")}
                 >
@@ -433,12 +450,12 @@ function CandidateDetailPage() {
                 </Button>
                 {isAdmin && (
                   <div className="space-y-1.5 pt-1">
-                    <p className="text-xs text-muted-foreground">Reassign recruiter</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Reassign recruiter</p>
                     <Select
                       value={c.recruiter_id ?? "unassigned"}
                       onValueChange={(v: string) => reassign.mutate(v === "unassigned" ? null : v)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="rounded-full">
                         <SelectValue placeholder="Reassign recruiter" />
                       </SelectTrigger>
                       <SelectContent>
@@ -454,7 +471,7 @@ function CandidateDetailPage() {
                 )}
                 {isAdmin && (
                   <Button
-                    className="w-full justify-start rounded-xl bg-transparent px-3 py-2 text-destructive hover:bg-destructive/10 hover:text-destructive hover:translate-x-0.5 border-transparent hover:border-transparent"
+                    className="w-full justify-start rounded-full border-transparent bg-transparent px-4 py-2 text-destructive hover:border-transparent hover:bg-destructive/10 hover:text-destructive"
                     variant="ghost"
                     onClick={() => setDeleteOpen(true)}
                   >
@@ -466,36 +483,36 @@ function CandidateDetailPage() {
           </div>
 
           {/* ------------------------------- tabs ---------------------------------- */}
-          <div className="card-amber rounded-2xl border bg-card p-4 sm:p-5">
+          <div className="card-amber rounded-[30px] p-4 sm:p-6">
             <Tabs value={tab} onValueChange={setTab}>
-              <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 border-0 bg-transparent p-0">
+              <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 rounded-full border-0 bg-white/70 p-1 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] backdrop-blur-md sm:w-fit">
                 <TabsTrigger
                   value="overview"
-                  className="rounded-xl px-3 py-2 text-foreground/70 hover:bg-primary/10 hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
+                  className="rounded-full px-4 py-2 text-[13px] font-semibold text-foreground/70 transition-[background-color,color,box-shadow] duration-300 hover:bg-primary/[0.08] hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_10px_24px_-12px_rgb(67_24_103/0.6)] data-[state=active]:hover:bg-primary"
                 >
                   Overview
                 </TabsTrigger>
                 <TabsTrigger
                   value="documents"
-                  className="rounded-xl px-3 py-2 text-foreground/70 hover:bg-primary/10 hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
+                  className="rounded-full px-4 py-2 text-[13px] font-semibold text-foreground/70 transition-[background-color,color,box-shadow] duration-300 hover:bg-primary/[0.08] hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_10px_24px_-12px_rgb(67_24_103/0.6)] data-[state=active]:hover:bg-primary"
                 >
                   Documents
                 </TabsTrigger>
                 <TabsTrigger
                   value="ai"
-                  className="rounded-xl px-3 py-2 text-foreground/70 hover:bg-primary/10 hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
+                  className="rounded-full px-4 py-2 text-[13px] font-semibold text-foreground/70 transition-[background-color,color,box-shadow] duration-300 hover:bg-primary/[0.08] hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_10px_24px_-12px_rgb(67_24_103/0.6)] data-[state=active]:hover:bg-primary"
                 >
                   AI Profile
                 </TabsTrigger>
                 <TabsTrigger
                   value="pipeline"
-                  className="rounded-xl px-3 py-2 text-foreground/70 hover:bg-primary/10 hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
+                  className="rounded-full px-4 py-2 text-[13px] font-semibold text-foreground/70 transition-[background-color,color,box-shadow] duration-300 hover:bg-primary/[0.08] hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_10px_24px_-12px_rgb(67_24_103/0.6)] data-[state=active]:hover:bg-primary"
                 >
                   Client Pipeline
                 </TabsTrigger>
                 <TabsTrigger
                   value="notes"
-                  className="rounded-xl px-3 py-2 text-foreground/70 hover:bg-primary/10 hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-amber/70 data-[state=active]:hover:bg-primary"
+                  className="rounded-full px-4 py-2 text-[13px] font-semibold text-foreground/70 transition-[background-color,color,box-shadow] duration-300 hover:bg-primary/[0.08] hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_10px_24px_-12px_rgb(67_24_103/0.6)] data-[state=active]:hover:bg-primary"
                 >
                   Notes
                 </TabsTrigger>
@@ -522,7 +539,7 @@ function CandidateDetailPage() {
                     {roleNames.map((r) => (
                       <span
                         key={r}
-                        className="rounded-full bg-primary-soft px-2.5 py-1 text-xs text-primary"
+                        className="rounded-full bg-primary-soft px-2.5 py-1 text-[11.5px] font-semibold text-primary"
                       >
                         {r}
                       </span>
@@ -546,15 +563,15 @@ function CandidateDetailPage() {
               </TabsContent>
 
               <TabsContent value="ai" className="mt-4 space-y-5">
-                <section className="flex items-center gap-4 card-amber rounded-2xl border bg-card p-5">
-                  <Avatar className="h-16 w-16">
-                    {media?.photoUrl && <AvatarImage src={media.photoUrl} alt={c.full_name} />}
-                    <AvatarFallback className="bg-primary text-primary-foreground">
+                <section className="flex items-center gap-4 card-amber rounded-3xl p-5 sm:p-6">
+                  <Avatar className="h-16 w-16 rounded-2xl">
+                    {media?.photoUrl && <AvatarImage src={media.photoUrl} alt={c.full_name} className="object-cover" />}
+                    <AvatarFallback className="rounded-2xl bg-gradient-to-br from-[#ebddf7] to-[#d6c2ea] font-display text-xl font-semibold text-primary">
                       {initials(c.full_name)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
-                    <h2 className="text-lg font-semibold">{c.full_name}</h2>
+                    <h2 className="font-display text-2xl font-semibold leading-tight">{c.full_name}</h2>
                     <p className="text-sm text-muted-foreground">
                       {c.headline || roleNames.join(", ") || "No headline"}
                     </p>
@@ -589,7 +606,7 @@ function CandidateDetailPage() {
                       matches.map((m) => (
                         <div
                           key={m.id}
-                          className="rounded-xl border p-3 transition-all hover:border-amber hover:bg-amber/5"
+                          className="rounded-2xl bg-stone/90 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] p-4 transition-[box-shadow,border-color] duration-300 hover:shadow-[inset_0_0_0_1px_rgb(122_89_163/0.25),0_22px_44px_-24px_rgb(46_16_73/0.5)]"
                         >
                           <Link
                             to="/requests/$requestId"
@@ -611,7 +628,7 @@ function CandidateDetailPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="mt-2"
+                              className="mt-3 rounded-full"
                               onClick={() => navigate({ to: "/messages", search: { match: m.id } })}
                             >
                               <MessageSquare className="mr-1 h-3.5 w-3.5" /> Talk to us about{" "}
@@ -646,9 +663,9 @@ function CandidateDetailPage() {
                   <div className="mt-4 space-y-3">
                     {data.notes.length ? (
                       data.notes.map((n) => (
-                        <div key={n.id} className="rounded-xl bg-primary-soft/60 p-3 text-sm">
+                        <div key={n.id} className="rounded-2xl bg-stone/90 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] p-4 text-sm">
                           <p>{n.note}</p>
-                          <p className="mt-1 text-[11px] text-muted-foreground">
+                          <p className="mt-1.5 text-[11px] tabular-nums text-muted-foreground">
                             {new Date(n.created_at).toLocaleString()}
                           </p>
                         </div>
@@ -721,15 +738,15 @@ function IntroVideoCard({
   return (
     <SectionCard title="Introduction video">
       {isImage ? (
-        <img src={source} alt="Candidate introduction" className="w-full rounded-xl border" />
+        <img src={source} alt="Candidate introduction" className="w-full rounded-2xl" />
       ) : embeddable ? (
-        <video src={source} controls className="w-full rounded-xl border bg-black" />
+        <video src={source} controls className="w-full rounded-2xl bg-[#1d0a2e]" />
       ) : (
         <a
           href={source}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm text-primary transition-colors hover:border-amber hover:bg-amber/5"
+          className="inline-flex items-center gap-2 rounded-full bg-primary/[0.06] px-4 py-2 text-sm font-medium text-primary transition-colors duration-300 hover:bg-primary/[0.1]"
         >
           <Video className="h-4 w-4" /> Open introductory video
           <ExternalLink className="h-3.5 w-3.5" />
@@ -745,7 +762,7 @@ function SkillsSection({ skills }: { skills: CandidateDetail["skills"] }) {
       <div className="flex flex-wrap gap-2">
         {skills.length ? (
           skills.map((s) => (
-            <Badge key={s.id} variant="outline">
+            <Badge key={s.id} variant="outline" className="h-6 rounded-full border-0 bg-foreground/[0.06] px-2.5 text-[11.5px] font-semibold text-secondary-foreground">
               {s.name}
             </Badge>
           ))
@@ -767,9 +784,9 @@ function WorkHistorySection({ workHistory }: { workHistory: CandidateDetail["wor
         {workHistory.length ? (
           <>
             {visible.map((w) => (
-              <div key={w.id} className="border-l-2 border-amber/70 pl-3">
+              <div key={w.id} className="border-l-2 border-[rgb(122_89_163/0.3)] pl-4">
                 <div className="font-medium">{w.title || "Role"}</div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm tabular-nums text-muted-foreground">
                   {w.company}{" "}
                   {dateRange(w.start_date, w.end_date) && `· ${dateRange(w.start_date, w.end_date)}`}
                 </div>
@@ -780,7 +797,7 @@ function WorkHistorySection({ workHistory }: { workHistory: CandidateDetail["wor
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-primary"
+                className="rounded-full text-primary"
                 onClick={() => setExpanded((v) => !v)}
               >
                 {expanded ? "See less" : `See more (${hidden})`}
@@ -801,9 +818,9 @@ function EducationSection({ education }: { education: CandidateDetail["education
       <div className="space-y-3">
         {education.length ? (
           education.map((e) => (
-            <div key={e.id} className="border-l-2 border-amber/70 pl-3">
+            <div key={e.id} className="border-l-2 border-[rgb(122_89_163/0.3)] pl-4">
               <div className="font-medium">{e.degree || "Studies"}</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm tabular-nums text-muted-foreground">
                 {[e.institution, e.field].filter(Boolean).join(" · ")}{" "}
                 {dateRange(e.start_date, e.end_date)}
               </div>
@@ -847,23 +864,23 @@ function AiSummaryCard({
   });
 
   return (
-    <section className="card-amber rounded-2xl border bg-card p-5">
+    <section className="card-amber rounded-3xl p-5 sm:p-6">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+        <h2 className="font-display text-2xl font-semibold leading-tight">
           Candidate summary
         </h2>
-        {rankScore != null && <Badge variant="secondary">AI score {rankScore}/15</Badge>}
+        {rankScore != null && <Badge variant="secondary" className="h-6 rounded-full border-0 bg-primary-soft px-2.5 text-[11.5px] font-semibold tabular-nums text-primary">AI score {rankScore}/15</Badge>}
       </div>
       <div className="mt-3 space-y-1">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           AI-generated recruiter summary
         </p>
-        <p className="rounded-xl bg-primary-soft/60 p-3 text-sm">
+        <p className="rounded-2xl bg-primary/[0.06] p-4 text-sm">
           {recruiterSummary || "No AI summary generated yet."}
         </p>
       </div>
       <div className="mt-4 space-y-2">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           Approved client-facing summary
         </p>
         {canEdit ? (
@@ -885,7 +902,7 @@ function AiSummaryCard({
       </div>
       {highlights && highlights.length > 0 && (
         <div className="mt-4 space-y-2">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             Highlights (client-visible)
           </p>
           <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">

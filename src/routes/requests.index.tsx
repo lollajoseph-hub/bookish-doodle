@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ChevronDown, ChevronUp, Loader2, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, ClipboardList, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { CuratedBadge, PriorityBadge, RequestStatusBadge } from "@/components/match-status";
@@ -23,6 +23,8 @@ import { FormSection } from "@/components/form-section";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DatePicker } from "@/components/date-time-fields";
 import {
   Dialog,
   DialogContent,
@@ -253,15 +255,15 @@ function RequestsPage() {
         </div>
       </div>
 
-      <div className="mb-5 flex flex-wrap gap-2">
+      <div className="mb-5 inline-flex flex-wrap gap-1 rounded-full bg-white/70 p-1 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] backdrop-blur-md">
         {STATUS_TABS.map((s) => (
           <button
             key={s}
             onClick={() => setTab(s)}
-            className={`rounded-full border px-3 py-1.5 text-sm transition-all ${
+            className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
               tab === s
-                ? "border-amber bg-amber/15 text-amber-foreground shadow-sm"
-                : "bg-card hover:border-primary/50"
+                ? "bg-primary text-primary-foreground shadow-[0_8px_18px_-8px_rgb(67_24_103/0.7)]"
+                : "text-muted-foreground hover:bg-primary/[0.07] hover:text-foreground"
             }`}
           >
             {s === "all" ? "All" : labelize(s)}
@@ -269,9 +271,15 @@ function RequestsPage() {
         ))}
       </div>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading requests…</p>}
+      {isLoading && (
+        <div className="grid gap-4 lg:grid-cols-2" aria-busy="true" aria-label="Loading">
+          <Skeleton className="h-[180px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[180px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[180px] rounded-3xl bg-white/70" />
+        </div>
+      )}
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         {filtered.map((r) => {
           const pct = r.candidates_wanted
             ? Math.min(100, Math.round((r.matchCount / r.candidates_wanted) * 100))
@@ -281,15 +289,15 @@ function RequestsPage() {
               key={r.id}
               to="/requests/$requestId"
               params={{ requestId: r.id }}
-              className="card-amber rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-amber hover:shadow-md"
+              className="card-amber rounded-3xl p-5 transition-[box-shadow,border-color] duration-300 hover:border-[rgb(122_89_163/0.25)] hover:shadow-[0_22px_44px_-24px_rgb(46_16_73/0.5)]"
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold">{r.title || r.roleName || "Request"}</span>
+                    <span className="font-display text-2xl font-semibold leading-tight">{r.title || r.roleName || "Request"}</span>
                     <PriorityBadge priority={r.priority} />
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="mt-0.5 text-xs text-muted-foreground">
                     {r.clientName} · {r.roleName} · {labelize(r.engagement_type)}
                   </div>
                 </div>
@@ -300,7 +308,7 @@ function RequestsPage() {
               </div>
 
               <div className="mt-4 space-y-1">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <div className="flex items-center justify-between text-xs text-muted-foreground tabular-nums">
                   <span>
                     {r.matchCount} of {r.candidates_wanted} candidates in batch
                   </span>
@@ -312,17 +320,22 @@ function RequestsPage() {
               </div>
 
               <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-                {r.desired_start_date && <Badge variant="secondary">Start {r.desired_start_date}</Badge>}
-                {r.timezone_requirement && <Badge variant="outline">{r.timezone_requirement}</Badge>}
-                {r.hours_needed && <Badge variant="outline">{r.hours_needed}</Badge>}
-                {!!r.rejection_count && <Badge variant="outline">{r.rejection_count} rejected</Badge>}
+                {r.desired_start_date && <Badge variant="secondary" className="h-[25px] whitespace-nowrap rounded-full border-transparent px-2.5 py-0 text-[11.5px] font-semibold bg-primary-soft text-primary tabular-nums">Start {r.desired_start_date}</Badge>}
+                {r.timezone_requirement && <Badge variant="outline" className="h-[25px] whitespace-nowrap rounded-full border-transparent px-2.5 py-0 text-[11.5px] font-semibold bg-foreground/[0.06] text-secondary-foreground">{r.timezone_requirement}</Badge>}
+                {r.hours_needed && <Badge variant="outline" className="h-[25px] whitespace-nowrap rounded-full border-transparent px-2.5 py-0 text-[11.5px] font-semibold bg-foreground/[0.06] text-secondary-foreground">{r.hours_needed}</Badge>}
+                {!!r.rejection_count && <Badge variant="outline" className="h-[25px] whitespace-nowrap rounded-full border-transparent px-2.5 py-0 text-[11.5px] font-semibold bg-destructive/10 text-destructive tabular-nums">{r.rejection_count} rejected</Badge>}
               </div>
             </Link>
           );
         })}
       </div>
       {!isLoading && !filtered.length && (
-        <p className="text-sm text-muted-foreground">No requests in this view.</p>
+        <div className="card-amber flex flex-col items-center gap-3 rounded-3xl border-dashed px-6 py-12 text-center">
+          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft text-primary">
+            <ClipboardList className="h-7 w-7" />
+          </div>
+          <p className="font-display text-3xl font-medium">No requests in this view.</p>
+        </div>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -404,7 +417,7 @@ function RequestsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="start">Desired start date</Label>
-                <Input id="start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <DatePicker id="start" value={startDate} onChange={setStartDate} />
               </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label>Days needed *</Label>
@@ -418,8 +431,8 @@ function RequestsPage() {
                         onClick={() => setDays(on ? days.filter((x) => x !== d) : [...days, d])}
                         className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                           on
-                            ? "border border-amber bg-amber-soft text-amber-foreground hover:bg-amber/80"
-                            : "border bg-card text-muted-foreground hover:border-amber/60 hover:text-foreground"
+                            ? "border border-transparent bg-primary text-primary-foreground"
+                            : "border border-foreground/10 bg-white/80 text-muted-foreground hover:border-[rgb(122_89_163/0.25)] hover:text-foreground"
                         }`}
                       >
                         {d}

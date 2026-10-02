@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -55,27 +56,33 @@ export function RolesPanel() {
         )}
       </div>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading roles…</p>}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {isLoading && (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-busy="true" aria-label="Loading">
+          <Skeleton className="h-[120px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[120px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[120px] rounded-3xl bg-white/70" />
+        </div>
+      )}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {roles.map((r) => {
           const count = candidates.filter((c) => c.roleIds.includes(r.id)).length;
           return (
             <div
               key={r.id}
-              className="card-amber rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
+              className="card-amber rounded-3xl p-5"
             >
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="h-9 w-9 rounded-xl bg-primary-soft grid place-items-center">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft">
                     <Briefcase className="h-4 w-4 text-primary" />
                   </div>
-                  <div className="font-semibold">{r.name}</div>
+                  <div className="font-display text-2xl font-semibold leading-tight">{r.name}</div>
                 </div>
-                <Badge variant="secondary">{count}</Badge>
+                <Badge variant="secondary" className="h-6 rounded-full border-transparent px-2.5 text-[11.5px] font-semibold bg-primary-soft tabular-nums text-primary">{count}</Badge>
               </div>
               {r.description && <p className="mt-3 text-sm text-muted-foreground">{r.description}</p>}
               {r.is_active === false && (
-                <Badge variant="outline" className="mt-3">
+                <Badge variant="outline" className="mt-3 h-6 rounded-full border-transparent px-2.5 text-[11.5px] font-semibold bg-foreground/[0.06] text-secondary-foreground">
                   Inactive
                 </Badge>
               )}

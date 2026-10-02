@@ -15,17 +15,17 @@ import { AuthProvider } from "../lib/auth";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+    <div className="flex min-h-screen items-center justify-center bg-stone px-4">
+      <div className="card-amber w-full max-w-md rounded-[30px] p-10 text-center">
+        <h1 className="font-display text-[120px] font-semibold leading-none tracking-[-0.02em] text-primary">404</h1>
+        <h2 className="mt-4 font-display text-3xl font-semibold leading-tight text-foreground">Page not found</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           The page you're looking for doesn't exist.
         </p>
         <div className="mt-6">
           <a
             href="/dashboard"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-[0_14px_30px_-16px_rgb(46_16_73/0.7)] transition-colors hover:bg-primary-dark"
           >
             Go to dashboard
           </a>
@@ -42,9 +42,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold text-foreground">Something went wrong</h1>
+    <div className="flex min-h-screen items-center justify-center bg-stone px-4">
+      <div className="card-amber w-full max-w-md rounded-[30px] p-10 text-center">
+        <h1 className="font-display text-4xl font-semibold leading-none text-foreground">Something went wrong</h1>
         <p className="mt-2 text-sm text-muted-foreground">Please try again.</p>
         <div className="mt-6 flex justify-center gap-2">
           <button
@@ -52,7 +52,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-[0_14px_30px_-16px_rgb(46_16_73/0.7)] transition-colors hover:bg-primary-dark"
           >
             Try again
           </button>
@@ -74,8 +74,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://rsms.me/" },
-      { rel: "stylesheet", href: "https://rsms.me/inter/inter.css" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,500;0,600;1,500;1,600&family=Montserrat:wght@400;500;600;700&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,

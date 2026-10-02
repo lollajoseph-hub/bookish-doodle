@@ -5,7 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Cormorant", "Cormorant Garamond", Georgia, serif;
+  --color-gold-ink: var(--gold-ink);
+  --color-stone: var(--stone);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -53,44 +56,47 @@
 
 :root {
   --radius: 0.875rem;
-  /* ScaleSource deep purple + amber palette */
-  --background: #d8d0e0;
-  --foreground: #221a2c;
+  /* ScaleSource liquid-glass palette: deep plum + gold on warm stone */
+  --stone: #faf9f7;
+  --background: #faf9f7;
+  --foreground: #1a1320;
   --card: #ffffff;
-  --card-foreground: #221a2c;
+  --card-foreground: #1a1320;
   --popover: #ffffff;
-  --popover-foreground: #221a2c;
+  --popover-foreground: #1a1320;
   --primary: #431867;
   --primary-foreground: #ffffff;
   --primary-dark: #2e1049;
   --primary-soft: #f1edf5;
   --brand-accent: #7a59a3;
-  --secondary: #f1edf5;
-  --secondary-foreground: #4a3663;
-  --muted: #f1edf5;
-  --muted-foreground: #6f6580;
-  --accent: #e9e1f2;
-  --accent-foreground: #4a3663;
-  --amber: #f59e0b;
-  --amber-foreground: #3d2a05;
-  --amber-soft: #fef3c7;
-  --destructive: #dc2626;
+  --secondary: #f3f0f6;
+  --secondary-foreground: #463f4d;
+  --muted: #f4f2f6;
+  --muted-foreground: #6e6876;
+  --accent: #eee8f4;
+  --accent-foreground: #431867;
+  --amber: #e0a43a;
+  --amber-foreground: #1d0a2e;
+  --amber-soft: #fbf1de;
+  --gold-ink: #8c5a0b;
+  --destructive: #b3332f;
   --destructive-foreground: #ffffff;
-  --success: #16a34a;
+  --success: #2f7a3a;
   --success-foreground: #ffffff;
-  --warning: #f59e0b;
-  --warning-foreground: #3d2a05;
-  --border: #e6e0ee;
-  --input: #e6e0ee;
-  --ring: #431867;
-  --sidebar: #2e1049;
+  --warning: #e0a43a;
+  --warning-foreground: #1d0a2e;
+  --border: rgb(26 19 32 / 10%);
+  --input: rgb(26 19 32 / 16%);
+  --ring: #e0a43a;
+  /* Deep plum sidebar: the one large brand surface in the staff app */
+  --sidebar: #1d0a2e;
   --sidebar-foreground: #f1edf5;
   --sidebar-primary: #431867;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #431867;
+  --sidebar-accent: rgb(255 255 255 / 9%);
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #714f9c;
-  --sidebar-ring: #f59e0b;
+  --sidebar-border: rgb(255 255 255 / 10%);
+  --sidebar-ring: #e0a43a;
 }
 
 .dark {
@@ -141,7 +147,26 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Ambient plum/gold light behind every page. Fixed and non-interactive. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(40vw 40vw at 0% 0%, rgb(122 89 163 / 14%), transparent 70%),
+      radial-gradient(34vw 34vw at 100% 12%, rgb(224 164 58 / 10%), transparent 70%),
+      radial-gradient(30vw 30vw at 45% 100%, rgb(67 24 103 / 6%), transparent 70%);
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
   }
   a,
   button:not(:disabled) {
@@ -407,10 +432,18 @@
   }
 }
 
-/* Shared #431867 border for main content cards (amber stays for highlights) */
+/* Liquid-glass surface. Name kept so every existing usage restyles in one place.
+   No hover transform: this class is also used on dialogs, whose centring relies on transform. */
 @utility card-amber {
-  border-color: var(--primary);
-  border-width: 2px;
+  border-color: rgb(26 19 32 / 7%);
+  border-width: 1px;
+  border-radius: 1.5rem;
+  background-color: rgb(255 255 255 / 78%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 90%),
+    0 1px 2px rgb(46 16 73 / 4%),
+    0 18px 40px -28px rgb(46 16 73 / 40%);
+  transition: box-shadow 350ms cubic-bezier(0.16, 1, 0.3, 1), border-color 350ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Hide native number-input spinners (white arrows) */
@@ -423,3 +456,91 @@ input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
+
+/* ---------- Liquid glass system ---------- */
+.aurora-backdrop { position: absolute; inset: -20%; z-index: 0; pointer-events: none; overflow: hidden; }
+.aurora-blob { position: absolute; border-radius: 50%; filter: blur(70px); will-change: transform; }
+.aurora-blob-1 { width: 46vw; height: 46vw; left: 4%; top: 8%; opacity: .75; background: radial-gradient(circle, #5b2a8a 0%, rgb(91 42 138 / 0) 70%); }
+.aurora-blob-2 { width: 38vw; height: 38vw; right: 6%; top: 2%; opacity: .55; background: radial-gradient(circle, #7a59a3 0%, rgb(122 89 163 / 0) 70%); }
+.aurora-blob-3 { width: 34vw; height: 34vw; right: 18%; bottom: 4%; opacity: .5; background: radial-gradient(circle, rgb(224 164 58 / 55%) 0%, rgb(224 164 58 / 0) 68%); }
+.aurora-blob-4 { width: 30vw; height: 30vw; left: 22%; bottom: -6%; opacity: .75; background: radial-gradient(circle, #2e1049 0%, rgb(46 16 73 / 0) 70%); }
+.aurora-lines { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .35; }
+
+/* Fine grain over dark brand surfaces */
+.grain::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .07; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Glass panel on a dark surface: gradient edge + blur + pointer glare (--gx/--gy from useGlare) */
+.glass-dark-edge {
+  border-radius: 28px; padding: 1px;
+  background: linear-gradient(140deg, rgb(255 255 255 / 55%), rgb(255 255 255 / 8%) 40%, rgb(255 255 255 / 4%) 60%, rgb(224 164 58 / 35%));
+  box-shadow: 0 30px 80px -30px rgb(10 3 18 / 80%);
+}
+.glass-dark {
+  position: relative; overflow: hidden; border-radius: 27px;
+  background: rgb(255 255 255 / 7.5%);
+  backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 25%), inset 0 -1px 0 rgb(255 255 255 / 5%);
+}
+.glass-dark::before, .glass-light::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background: radial-gradient(420px circle at var(--gx, 70%) var(--gy, 0%), rgb(255 255 255 / 16%), transparent 55%);
+}
+.glass-dark > *, .glass-light > * { position: relative; z-index: 1; }
+
+/* Glass panel on the light canvas */
+.glass-light-edge {
+  border-radius: 30px; padding: 1px;
+  background: linear-gradient(150deg, #fff, rgb(255 255 255 / 40%) 35%, rgb(122 89 163 / 25%) 70%, rgb(224 164 58 / 35%));
+  box-shadow: 0 40px 90px -40px rgb(46 16 73 / 55%);
+}
+.glass-light {
+  position: relative; overflow: hidden; border-radius: 29px;
+  background: rgb(255 255 255 / 70%);
+  backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%);
+}
+.glass-light::before { background: radial-gradient(520px circle at var(--gx, 80%) var(--gy, -10%), rgb(255 255 255 / 75%), transparent 55%); }
+
+/* Gold call to action for dark surfaces, with a sheen on hover */
+.cta-gold {
+  position: relative; overflow: hidden; color: #1d0a2e !important;
+  background: linear-gradient(180deg, #f1c474, #e0a43a) !important;
+  box-shadow: 0 10px 30px -10px rgb(224 164 58 / 65%), inset 0 1px 0 rgb(255 255 255 / 50%) !important;
+}
+.cta-gold::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 60%; left: -70%;
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 55%), transparent);
+  transform: skewX(-18deg); transition: left .8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cta-gold:hover::after { left: 120%; }
+
+/* Inputs on dark glass */
+.input-dark {
+  height: 2.875rem !important; border-radius: .75rem !important;
+  border-color: rgb(255 255 255 / 16%) !important; background: rgb(255 255 255 / 7%) !important;
+  color: #f6f1fa !important;
+}
+.input-dark::placeholder { color: rgb(246 241 250 / 42%); }
+.input-dark:focus-visible { border-color: #e0a43a !important; box-shadow: 0 0 0 4px rgb(224 164 58 / 16%) !important; outline: none; }
+
+/* Notification bell: rings when new notifications arrive, then a short reminder ring every 6s while unread */
+@keyframes bell-ring {
+  0% { transform: rotate(0); }
+  2% { transform: rotate(16deg); }
+  4% { transform: rotate(-14deg); }
+  6% { transform: rotate(11deg); }
+  8% { transform: rotate(-8deg); }
+  10% { transform: rotate(5deg); }
+  12% { transform: rotate(-2deg); }
+  14%, 100% { transform: rotate(0); }
+}
+.bell-ring { transform-origin: 50% 2px; animation: bell-ring 6s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite; }
+@keyframes bell-badge-pop {
+  0% { transform: scale(0.4); }
+  60% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+.bell-badge { animation: bell-badge-pop 500ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+

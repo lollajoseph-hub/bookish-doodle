@@ -8,6 +8,7 @@ import { RequestStatusBadge } from "@/components/match-status";
 import { fetchClientRequests, updateRequestStatus } from "@/lib/crm-queries";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -56,7 +57,7 @@ function CsQueuePage() {
   if (!isAdmin) {
     return (
       <AppShell title="CS queue">
-        <p className="text-sm text-muted-foreground">Only admins can view the CS queue.</p>
+        <p className="rounded-2xl bg-primary/[0.06] p-4 text-sm text-primary">Only admins can view the CS queue.</p>
       </AppShell>
     );
   }
@@ -65,16 +66,22 @@ function CsQueuePage() {
 
   return (
     <AppShell title="CS queue" description="Client requests that need attention">
-      {isLoading && <p className="text-sm text-muted-foreground">Loading queue…</p>}
-      <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
+      {isLoading && (
+        <div className="mb-4 space-y-3" aria-busy="true" aria-label="Loading">
+          <Skeleton className="h-14 rounded-3xl bg-white/70" />
+          <Skeleton className="h-14 rounded-3xl bg-white/70" />
+          <Skeleton className="h-14 rounded-3xl bg-white/70" />
+        </div>
+      )}
+      <div className="card-amber overflow-x-auto rounded-3xl">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Client</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Waiting</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Client</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Role</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Waiting</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Status</TableHead>
+              <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -82,7 +89,7 @@ function CsQueuePage() {
               <TableRow key={r.id}>
                 <TableCell className="font-medium">{r.clientName ?? "—"}</TableCell>
                 <TableCell className="text-sm">{r.roleName ?? r.title ?? "—"}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">
+                <TableCell className="text-xs tabular-nums text-muted-foreground">
                   {formatDistanceToNow(new Date(r.updated_at ?? r.created_at), { addSuffix: true })}
                 </TableCell>
                 <TableCell>
@@ -106,9 +113,12 @@ function CsQueuePage() {
         </Table>
       </div>
       {!isLoading && !flagged.length && (
-        <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
-          <LifeBuoy className="h-4 w-4" /> Nothing needs attention right now.
-        </p>
+        <div className="card-amber mt-4 flex flex-col items-center gap-4 rounded-3xl border-dashed px-6 py-14 text-center">
+          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft text-primary">
+            <LifeBuoy className="h-7 w-7" />
+          </div>
+          <p className="font-display text-3xl font-medium">Nothing needs attention right now.</p>
+        </div>
       )}
     </AppShell>
   );

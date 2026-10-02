@@ -71,7 +71,7 @@ export function PdfPagePreview({ url, className }: { url: string; className?: st
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="block p-4 text-sm text-muted-foreground underline"
+          className="block p-4 text-sm font-medium text-primary underline underline-offset-4"
         >
           Open file
         </a>

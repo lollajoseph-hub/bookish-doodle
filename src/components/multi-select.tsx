@@ -40,7 +40,7 @@ export function MultiSelect({
             type="button"
             variant="outline"
             role="combobox"
-            className="h-9 w-full justify-between rounded-md border-input bg-transparent px-3 py-2 text-left font-normal text-foreground shadow-sm"
+            className="h-10 w-full justify-between rounded-xl border-input bg-white/90 px-3.5 py-2 text-left text-sm font-normal text-foreground shadow-none hover:bg-white/90 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10"
           >
             <span className="truncate">
               {selected.length
@@ -53,7 +53,7 @@ export function MultiSelect({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[280px] p-0" align="start">
+        <PopoverContent className="w-[280px] overflow-hidden rounded-2xl p-0" align="start">
           <Command>
             <CommandInput placeholder={searchPlaceholder} />
             <CommandList>
@@ -85,7 +85,7 @@ export function MultiSelect({
                 key={id}
                 type="button"
                 onClick={() => toggle(id)}
-                className="rounded-full border-amber bg-amber-soft px-3 py-0.5 text-xs font-medium text-amber-foreground transition-colors hover:bg-amber/80"
+                className="inline-flex h-[26px] items-center rounded-full bg-primary-soft px-3 text-[11.5px] font-semibold text-primary transition-colors duration-300 hover:bg-primary/15"
               >
                 {opt.label} ✕
               </button>

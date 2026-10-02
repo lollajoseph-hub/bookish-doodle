@@ -7,6 +7,7 @@ import { fetchCandidates, fetchStaffProfiles } from "@/lib/queries";
 import { labelize } from "@/lib/crm-queries";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -93,7 +94,11 @@ function RecruiterDetailPage() {
   if (isLoading) {
     return (
       <AppShell title="Recruiter">
-        <p className="text-sm text-muted-foreground">Loading recruiter…</p>
+        <div className="space-y-6" aria-busy="true" aria-label="Loading">
+          <Skeleton className="h-[140px] rounded-[30px] bg-white/70" />
+          <Skeleton className="h-[96px] rounded-3xl bg-white/70" />
+          <Skeleton className="h-[220px] rounded-3xl bg-white/70" />
+        </div>
       </AppShell>
     );
   }
@@ -102,10 +107,10 @@ function RecruiterDetailPage() {
   if (error || !member) {
     return (
       <AppShell title="Recruiter">
-        <div className="card-amber rounded-2xl border bg-card p-8 text-center">
-          <p className="font-medium">Recruiter not found</p>
+        <div className="card-amber rounded-3xl border-dashed p-10 text-center">
+          <p className="font-display text-3xl font-medium">Recruiter not found</p>
           <Link to="/recruiters">
-            <Button className="mt-4">Back to team</Button>
+            <Button className="mt-5">Back to team</Button>
           </Link>
         </div>
       </AppShell>
@@ -143,25 +148,25 @@ function RecruiterDetailPage() {
       <div className="space-y-6">
         <Link
           to="/recruiters"
-          className="inline-flex items-center text-sm text-primary hover:underline"
+          className="inline-flex items-center text-sm font-medium text-primary hover:underline"
         >
           <ArrowLeft className="mr-1 h-4 w-4" /> Back to recruiter pool
         </Link>
 
-        <section className="card-amber rounded-2xl border bg-card p-5">
+        <section className="card-amber rounded-[30px] p-6 sm:p-7">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <div className="text-lg font-semibold">{member.full_name || member.email}</div>
-              <Badge variant="secondary" className="mt-1 capitalize">
+              <div className="font-display text-[32px] font-semibold leading-none">{member.full_name || member.email}</div>
+              <Badge variant="secondary" className="mt-2 h-6 rounded-full border-transparent px-2.5 text-[11.5px] font-semibold bg-primary-soft text-primary capitalize">
                 {member.role}
               </Badge>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-semibold text-primary-dark">{owned.length}</div>
-              <div className="text-[11px] text-muted-foreground">candidates</div>
+              <div className="font-display text-4xl font-semibold leading-none tabular-nums text-primary">{owned.length}</div>
+              <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">candidates</div>
             </div>
           </div>
-          <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+          <div className="mt-4 space-y-1 text-sm text-muted-foreground">
             {member.email && (
               <div className="flex items-center gap-1.5 truncate">
                 <Mail className="h-3.5 w-3.5" /> {member.email}
@@ -175,13 +180,13 @@ function RecruiterDetailPage() {
           </div>
         </section>
 
-        <section className="card-amber rounded-2xl border bg-card p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+        <section className="card-amber rounded-3xl p-6">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             Pipeline breakdown
           </h2>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {breakdown.map((b) => (
-              <Badge key={b.status} variant="outline" className="text-[11px] font-normal">
+              <Badge key={b.status} variant="outline" className="h-6 rounded-full border-transparent px-2.5 text-[11.5px] font-semibold bg-foreground/[0.06] text-secondary-foreground">
                 {b.count} {labelize(b.status).toLowerCase()}
               </Badge>
             ))}
@@ -191,8 +196,8 @@ function RecruiterDetailPage() {
           </div>
         </section>
 
-        <section className="card-amber rounded-2xl border bg-card p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+        <section className="card-amber rounded-3xl p-6">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             Owned candidates
           </h2>
           <div className="mt-3 space-y-2">
@@ -201,7 +206,7 @@ function RecruiterDetailPage() {
                 key={c.id}
                 to="/candidates/$candidateId"
                 params={{ candidateId: c.id }}
-                className="flex items-center justify-between gap-3 rounded-xl border bg-card p-3 transition-colors hover:border-amber hover:bg-amber/5"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-foreground/[0.08] bg-white/70 px-4 py-3 transition-[box-shadow,border-color] duration-300 hover:border-[rgb(122_89_163/0.25)] hover:shadow-[0_22px_44px_-24px_rgb(46_16_73/0.5)]"
               >
                 <div className="min-w-0">
                   <div className="truncate font-medium">{c.full_name}</div>
@@ -209,7 +214,7 @@ function RecruiterDetailPage() {
                     <div className="truncate text-xs text-muted-foreground">{c.headline}</div>
                   )}
                 </div>
-                <Badge variant="secondary" className="shrink-0 capitalize">
+                <Badge variant="secondary" className="shrink-0 h-6 rounded-full border-transparent px-2.5 text-[11.5px] font-semibold bg-primary-soft text-primary capitalize">
                   {labelize(c.status ?? "available")}
                 </Badge>
               </Link>

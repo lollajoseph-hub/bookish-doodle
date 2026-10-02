@@ -17,6 +17,7 @@ import { MatchStatusBadge, RequestStatusBadge } from "@/components/match-status"
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
@@ -81,7 +82,7 @@ const STRUCTURED_META: Record<StructuredType, StructuredMeta> = {
     label: "Request Reschedule",
     body: "Requesting to reschedule this interview.",
     icon: CalendarClock,
-    chip: "bg-amber-soft text-amber-foreground border-amber/40",
+    chip: "bg-amber-soft text-gold-ink border-amber/40",
   },
   call_me_asap: {
     label: "Call Me ASAP",
@@ -296,21 +297,22 @@ function MessagesPage() {
     <AppShell title="Messages">
       <div className="grid h-[calc(100vh-10rem)] min-h-[560px] grid-cols-1 gap-4 lg:grid-cols-4">
         {/* Column 1: thread list */}
-        <section className="card-amber flex min-h-0 flex-col overflow-hidden rounded-2xl border bg-card lg:col-span-1">
-          <div className="border-b p-3">
+        <section className="card-amber flex min-h-0 flex-col overflow-hidden rounded-3xl lg:col-span-1">
+          <div className="border-b border-[rgb(26_19_32/0.07)] p-3">
             <Input
               placeholder="Search client or role…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              className="rounded-full bg-white/70 backdrop-blur-md"
             />
           </div>
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as Selection["kind"])} className="flex min-h-0 flex-1 flex-col">
-            <TabsList className="mx-2 mt-2 grid h-auto grid-cols-3 gap-0.5 p-0.5">
+            <TabsList className="mx-2 mt-2 grid h-auto grid-cols-3 gap-0.5 rounded-full p-0.5">
               {([ ["general", "General"], ["candidate", "Candidates"], ["request", "Requests"] ] as const).map(([kind, label]) => (
-                <TabsTrigger key={kind} value={kind} className="min-w-0 gap-1 px-1 py-1.5 text-xs">
+                <TabsTrigger key={kind} value={kind} className="min-w-0 gap-1 rounded-full px-1 py-1.5 text-xs font-semibold">
                   <span className="truncate">{label}</span>
                   {unreadCounts[kind] > 0 && (
-                    <span className="grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-amber px-1 text-[10px] font-semibold text-amber-foreground">
+                    <span className="grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-amber px-1 text-[10px] font-bold tabular-nums text-amber-foreground">
                       {unreadCounts[kind] > 9 ? "9+" : unreadCounts[kind]}
                     </span>
                   )}
@@ -319,11 +321,15 @@ function MessagesPage() {
             </TabsList>
           <div className="min-h-0 flex-1 overflow-y-auto">
             {isLoading ? (
-              <p className="p-4 text-sm text-muted-foreground">Loading…</p>
+              <div className="space-y-2 p-3" aria-busy="true" aria-label="Loading">
+                <Skeleton className="h-[68px] rounded-3xl bg-white/70" />
+                <Skeleton className="h-[68px] rounded-3xl bg-white/70" />
+                <Skeleton className="h-[68px] rounded-3xl bg-white/70" />
+              </div>
             ) : (
               <>
                 <TabsContent value="general" className="m-0">
-                  {filteredGenerals.length === 0 ? <p className="p-4 text-sm text-muted-foreground">No conversations.</p> :
+                  {filteredGenerals.length === 0 ? <p className="p-5 text-center text-sm text-muted-foreground">No conversations.</p> :
                     filteredGenerals.map((g) => (
                       <ThreadListRow
                         key={`g-${g.clientId}`}
@@ -340,7 +346,7 @@ function MessagesPage() {
                     ))}
                 </TabsContent>
                 <TabsContent value="candidate" className="m-0">
-                  {filteredCandidates.length === 0 ? <p className="p-4 text-sm text-muted-foreground">No conversations.</p> :
+                  {filteredCandidates.length === 0 ? <p className="p-5 text-center text-sm text-muted-foreground">No conversations.</p> :
                     filteredCandidates.map((c) => (
                       <ThreadListRow
                         key={`c-${c.matchId}`}
@@ -360,7 +366,7 @@ function MessagesPage() {
                 </TabsContent>
                 <TabsContent value="request" className="m-0">
                 {filtered.length === 0 ? (
-                  <p className="p-4 text-sm text-muted-foreground">No conversations.</p>
+                  <p className="p-5 text-center text-sm text-muted-foreground">No conversations.</p>
                 ) : (
                   filtered.map((item) => (
                     <ThreadListRow
@@ -384,10 +390,12 @@ function MessagesPage() {
         </section>
 
         {workspace ?? (
-          <section className="card-amber flex items-center justify-center rounded-2xl border bg-card p-8 text-center lg:col-span-3">
-            <div className="text-muted-foreground">
-              <MessageSquare className="mx-auto mb-2 h-8 w-8" />
-              <p className="text-sm">Select a conversation to start messaging.</p>
+          <section className="card-amber flex items-center justify-center rounded-3xl border-dashed p-8 text-center lg:col-span-3">
+            <div className="flex flex-col items-center gap-4">
+              <div className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft text-primary">
+                <MessageSquare className="h-7 w-7" />
+              </div>
+              <p className="font-display text-3xl font-medium">Select a conversation to start messaging.</p>
             </div>
           </section>
         )}
@@ -423,8 +431,8 @@ function ThreadListRow({
       type="button"
       onClick={onClick}
       className={cn(
-        "block w-full border-b px-4 py-3 text-left transition-colors hover:bg-muted",
-        active && "bg-primary-soft",
+        "block w-full border-b border-[rgb(26_19_32/0.06)] px-4 py-3 text-left transition-colors hover:bg-primary/[0.04]",
+        active && "bg-primary-soft shadow-[inset_3px_0_0_0_var(--primary)]",
       )}
     >
       <div className="flex items-center justify-between gap-2">
@@ -437,7 +445,7 @@ function ThreadListRow({
           {Icon && <Icon className="h-3.5 w-3.5 shrink-0 text-primary" />}
           <span className="truncate">{title}</span>
         </span>
-        <span className="shrink-0 text-[11px] text-muted-foreground">
+        <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
           {lastMessage ? formatDistanceToNow(new Date(lastMessage.created_at), { addSuffix: true }) : ""}
         </span>
       </div>
@@ -481,9 +489,9 @@ function RequestWorkspace({
       quickActions={[]}
       side={
         <div className="space-y-4">
-        <div className="card-amber rounded-2xl border bg-card p-5 text-sm">
+        <div className="card-amber rounded-3xl p-5 text-sm">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-semibold">Request details</h3>
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Request details</h3>
             <Link
               to="/requests/$requestId"
               params={{ requestId }}
@@ -574,8 +582,8 @@ function CandidateWorkspace({
       quickActions={quickActions}
       side={
         <div className="space-y-4">
-        <div className="card-amber rounded-2xl border bg-card p-5 text-sm">
-          <h3 className="mb-3 flex items-center gap-2 font-semibold">
+        <div className="card-amber rounded-3xl p-5 text-sm">
+          <h3 className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             <UserRound className="h-4 w-4 text-primary" /> Candidate
           </h3>
           {ctx ? (
@@ -676,9 +684,9 @@ function CompanyCard({
     ? [primaryContact.name, primaryContact.title].filter(Boolean).join(" · ")
     : "";
   return (
-    <div className="card-amber rounded-2xl border bg-card p-5 text-sm">
+    <div className="card-amber rounded-3xl p-5 text-sm">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="flex items-center gap-2 font-semibold">
+        <h3 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           <Building2 className="h-4 w-4 text-primary" /> Company
         </h3>
         {clientId && (
@@ -687,7 +695,7 @@ function CompanyCard({
           </Link>
         )}
       </div>
-      <p className="font-medium">{clientName ?? "—"}</p>
+      <p className="font-display text-2xl font-semibold leading-tight">{clientName ?? "—"}</p>
       {(contactLine || primaryContact?.email || roleName) && (
         <dl className="mt-3 space-y-2">
           {contactLine && <Detail label="Primary contact" value={contactLine} />}
@@ -825,9 +833,9 @@ function ThreadWorkspace({
 
   return (
     <section className="flex min-h-0 flex-col gap-4 lg:col-span-3 lg:overflow-y-auto">
-      <div className="card-amber flex min-h-[400px] flex-1 flex-col rounded-2xl border bg-card">
-        <div className="border-b px-5 py-3">
-          <div className="font-semibold">{title}</div>
+      <div className="card-amber flex min-h-[400px] flex-1 flex-col overflow-hidden rounded-3xl">
+        <div className="border-b border-[rgb(26_19_32/0.07)] px-5 py-4">
+          <div className="font-display text-2xl font-semibold leading-tight">{title}</div>
           {subtitle && <div className="text-xs text-muted-foreground">{subtitle}</div>}
         </div>
         <div className="min-h-0 flex-1 space-y-3 overflow-x-hidden overflow-y-auto px-5 py-4">
@@ -842,7 +850,7 @@ function ThreadWorkspace({
           )}
           <div ref={bottomRef} />
         </div>
-        <div className="space-y-2 border-t p-3">
+        <div className="space-y-2 border-t border-[rgb(26_19_32/0.07)] bg-white/60 p-3">
           {quickActions.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {quickActions.map((type) => {
@@ -875,7 +883,7 @@ function ThreadWorkspace({
                   submit();
                 }
               }}
-              className="min-h-[44px] resize-none"
+              className="min-h-[44px] resize-none rounded-2xl bg-white"
             />
             <Button onClick={submit} disabled={threadLoading || !draft.trim() || send.isPending}>
               <Send className="mr-1 h-4 w-4" /> Send
@@ -929,15 +937,15 @@ function MessageBubble({ m }: { m: ThreadMessageRow }) {
       <div className="min-w-0 max-w-[75%] break-words">
         <div
           className={cn(
-            "min-w-0 whitespace-pre-wrap break-words rounded-2xl px-4 py-2 text-sm",
+            "min-w-0 whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm",
             mine
-              ? "rounded-br-sm bg-primary text-primary-foreground"
-              : "rounded-bl-sm bg-muted text-foreground",
+              ? "rounded-br-md bg-primary text-primary-foreground"
+              : "rounded-bl-md bg-white text-foreground shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]",
           )}
         >
           {m.body}
         </div>
-        <p className={cn("mt-1 text-[11px] text-muted-foreground", mine && "text-right")}>
+        <p className={cn("mt-1 text-[11px] tabular-nums text-muted-foreground", mine && "text-right")}>
           {mine ? "You" : "Client"} · {time}
         </p>
       </div>

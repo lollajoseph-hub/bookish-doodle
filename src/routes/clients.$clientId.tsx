@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -149,15 +150,21 @@ function ClientDetailPage() {
   if (isLoading) {
     return (
       <AppShell title="Client">
-        <p className="text-sm text-muted-foreground">Loading client…</p>
+        <div className="grid gap-6 lg:grid-cols-3" aria-busy="true" aria-label="Loading">
+          <div className="space-y-6 lg:col-span-2">
+            <Skeleton className="h-[220px] rounded-3xl bg-white/70" />
+            <Skeleton className="h-[160px] rounded-3xl bg-white/70" />
+          </div>
+          <Skeleton className="h-[300px] rounded-3xl bg-white/70" />
+        </div>
       </AppShell>
     );
   }
   if (error || !data) {
     return (
       <AppShell title="Client">
-        <div className="card-amber rounded-2xl border bg-card p-8 text-center">
-          <p className="font-medium">Client not found</p>
+        <div className="card-amber rounded-3xl border-dashed p-10 text-center">
+          <p className="font-display text-3xl font-medium">Client not found</p>
           <Button className="mt-4" onClick={() => navigate({ to: "/clients" })}>
             Back to clients
           </Button>
@@ -196,11 +203,11 @@ function ClientDetailPage() {
         </Link>
 
         {c.pending_contact && (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber bg-amber/10 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl bg-amber-soft p-5 shadow-[inset_0_0_0_1px_rgb(224_164_58/0.35)]">
             <div className="flex items-start gap-3">
-              <Mail className="mt-0.5 h-5 w-5 text-primary" />
+              <Mail className="mt-0.5 h-5 w-5 text-gold-ink" />
               <div>
-                <p className="font-semibold">Invite pending</p>
+                <p className="font-semibold text-gold-ink">Invite pending</p>
                 <p className="text-sm text-muted-foreground">
                   {[c.pending_contact.first_name, c.pending_contact.last_name].filter(Boolean).join(" ") ||
                     "The primary contact"}
@@ -219,9 +226,9 @@ function ClientDetailPage() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
-            <section className="card-amber rounded-2xl border bg-card p-5">
+            <section className="card-amber rounded-3xl p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+                <h2 className="font-display text-2xl font-semibold leading-tight">
                   Open requests
                 </h2>
                 <Link to="/requests" className="text-xs text-primary hover:underline">
@@ -235,7 +242,7 @@ function ClientDetailPage() {
                       key={r.id}
                       to="/requests/$requestId"
                       params={{ requestId: r.id }}
-                      className="block rounded-xl border p-3 transition-all hover:border-amber hover:bg-amber/5"
+                      className="block rounded-2xl border border-transparent bg-stone/90 p-4 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] transition-[box-shadow,border-color] duration-300 hover:border-[rgb(122_89_163/0.25)] hover:shadow-[0_22px_44px_-24px_rgb(46_16_73/0.5)]"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="font-medium">
@@ -243,7 +250,7 @@ function ClientDetailPage() {
                         </span>
                         <RequestStatusBadge status={r.status} />
                       </div>
-                      <p className="mt-1 text-xs text-muted-foreground">
+                      <p className="mt-1 text-xs text-muted-foreground tabular-nums">
                         {roles.find((x) => x.id === r.role_id)?.name ?? "Role"} ·{" "}
                         {labelize(r.engagement_type)} · {r.candidates_wanted} candidates for{" "}
                         {r.hires_needed} hire{r.hires_needed === 1 ? "" : "s"}
@@ -256,19 +263,19 @@ function ClientDetailPage() {
               </div>
             </section>
 
-            <section className="card-amber rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+            <section className="card-amber rounded-3xl p-6">
+              <h2 className="font-display text-2xl font-semibold leading-tight">
                 Placements
               </h2>
               <div className="mt-3 space-y-2">
                 {data.placements.length ? (
                   data.placements.map((p) => (
-                    <div key={p.id} className="rounded-xl border p-3 text-sm">
+                    <div key={p.id} className="rounded-2xl bg-stone/90 p-4 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] text-sm">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-medium">{p.seat_title || "Seat"}</span>
-                        <Badge variant="secondary">{labelize(p.status)}</Badge>
+                        <Badge variant="secondary" className="h-[25px] whitespace-nowrap rounded-full border-transparent px-2.5 py-0 text-[11.5px] font-semibold bg-foreground/[0.06] text-secondary-foreground">{labelize(p.status)}</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground tabular-nums">
                         {p.billing_start_date ? `Billing from ${p.billing_start_date}` : "No billing date"}
                         {p.monthly_rate != null ? ` · ${p.monthly_rate}/mo` : ""}
                       </p>
@@ -282,9 +289,9 @@ function ClientDetailPage() {
           </div>
 
           <div className="space-y-6">
-            <section className="card-amber rounded-2xl border bg-card p-5">
+            <section className="card-amber rounded-3xl p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+                <h2 className="font-display text-2xl font-semibold leading-tight">
                   Contacts
                 </h2>
                 <Button size="sm" variant="ghost" onClick={() => setMemberOpen(true)}>
@@ -294,7 +301,7 @@ function ClientDetailPage() {
               <div className="mt-3 space-y-3">
                 {data.members.length ? (
                   data.members.map((m) => (
-                    <div key={m.profile_id} className="rounded-xl bg-primary-soft/60 p-3 text-sm">
+                    <div key={m.profile_id} className="rounded-2xl bg-stone/90 p-4 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] text-sm">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <div className="font-medium">
@@ -315,7 +322,7 @@ function ClientDetailPage() {
                           )}
                         </div>
                         <div className="flex shrink-0 items-center gap-1">
-                          {m.is_primary && <Badge className="bg-amber text-amber-foreground">Primary</Badge>}
+                          {m.is_primary && <Badge className="h-[25px] whitespace-nowrap rounded-full border-transparent px-2.5 py-0 text-[11.5px] font-semibold bg-amber-soft text-gold-ink shadow-none hover:bg-amber-soft">Primary</Badge>}
                           <Button
                             variant="ghost"
                             size="icon"
@@ -335,8 +342,8 @@ function ClientDetailPage() {
               </div>
             </section>
 
-            <section className="card-amber rounded-2xl border bg-card p-5 text-sm">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">
+            <section className="card-amber rounded-3xl p-6 text-sm">
+              <h2 className="font-display text-2xl font-semibold leading-tight">
                 Company
               </h2>
               <div className="mt-3 space-y-1 text-muted-foreground">
@@ -383,7 +390,7 @@ function ClientDetailPage() {
                 onChange={(e) => setMemberPosition(e.target.value)}
               />
             </div>
-            <div className="flex items-center justify-between rounded-xl border p-3">
+            <div className="flex items-center justify-between rounded-2xl bg-stone/90 p-4 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
               <Label htmlFor="primary">Primary contact</Label>
               <Switch id="primary" checked={memberPrimary} onCheckedChange={setMemberPrimary} />
             </div>

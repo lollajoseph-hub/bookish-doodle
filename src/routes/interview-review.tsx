@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CalendarCheck, StickyNote } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { DateTimePicker } from "@/components/date-time-fields";
 import { MatchStatusBadge } from "@/components/match-status";
 import {
   completeInterview,
@@ -26,7 +27,7 @@ import {
 } from "@/lib/messages-queries";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -180,7 +181,13 @@ function InterviewReviewPage() {
 
   return (
     <AppShell title="Interview review" description="Candidates in the interview stages">
-      {isLoading && <p className="text-sm text-muted-foreground">Loading interviews…</p>}
+      {isLoading && (
+        <div className="mb-4 space-y-3" aria-busy="true" aria-label="Loading">
+          <Skeleton className="h-14 rounded-3xl bg-white/70" />
+          <Skeleton className="h-14 rounded-3xl bg-white/70" />
+          <Skeleton className="h-14 rounded-3xl bg-white/70" />
+        </div>
+      )}
       <Tabs defaultValue="interview_requested">
         <TabsList className="h-auto max-w-full flex-wrap justify-start">
           {STAGES.map((stage) => (
@@ -189,15 +196,15 @@ function InterviewReviewPage() {
         </TabsList>
         {STAGES.map((stage) => (
           <TabsContent key={stage} value={stage}>
-      <div className="overflow-x-auto card-amber rounded-2xl border bg-card">
+      <div className="card-amber overflow-x-auto rounded-3xl">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Candidate</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Stage</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Candidate</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Client</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Role</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Stage</TableHead>
+              <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -210,7 +217,7 @@ function InterviewReviewPage() {
                     <Link
                       to="/candidates/$candidateId"
                       params={{ candidateId: m.candidate_id }}
-                      className="font-medium hover:underline"
+                      className="font-semibold text-primary hover:underline"
                     >
                       {m.candidateName ?? "Candidate"}
                     </Link>
@@ -229,7 +236,7 @@ function InterviewReviewPage() {
                         <>
                           {m.interview_proposed_at ? (
                             <>
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-xs tabular-nums text-muted-foreground">
                                 Client proposed{" "}
                                 {new Date(m.interview_proposed_at).toLocaleString()}
                               </span>
@@ -321,7 +328,7 @@ function InterviewReviewPage() {
                 </TableRow>
                 {notesOpenFor === m.id && (
                   <TableRow>
-                    <TableCell colSpan={5} className="bg-muted/40">
+                    <TableCell colSpan={5} className="bg-stone/90 shadow-[inset_0_1px_0_0_rgb(26_19_32/0.06)]">
                       <InterviewPrepNotes matchId={m.id} />
                     </TableCell>
                   </TableRow>
@@ -333,9 +340,12 @@ function InterviewReviewPage() {
         </Table>
       </div>
       {!isLoading && !matches.some((m) => m.status === stage) && (
-        <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
-          <CalendarCheck className="h-4 w-4" /> No candidates in this stage right now.
-        </p>
+        <div className="card-amber mt-4 flex flex-col items-center gap-4 rounded-3xl border-dashed px-6 py-14 text-center">
+          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft text-primary">
+            <CalendarCheck className="h-7 w-7" />
+          </div>
+          <p className="font-display text-3xl font-medium">No candidates in this stage right now.</p>
+        </div>
       )}
           </TabsContent>
         ))}
@@ -450,12 +460,7 @@ function InterviewReviewPage() {
             <Label htmlFor="proposed-time">
               Proposed time <span className="text-amber">*</span>
             </Label>
-            <Input
-              id="proposed-time"
-              type="datetime-local"
-              value={proposedTime}
-              onChange={(e) => setProposedTime(e.target.value)}
-            />
+            <DateTimePicker id="proposed-time" value={proposedTime} onChange={setProposedTime} />
             <Label htmlFor="propose-notes">Notes (optional)</Label>
             <Textarea
               id="propose-notes"
@@ -569,9 +574,9 @@ function InterviewPrepNotes({ matchId }: { matchId: string }) {
   });
 
   return (
-    <div className="py-1">
-      <div className="mb-2">
-        <h3 className="text-sm font-semibold">Interview Prep Notes</h3>
+    <div className="py-2">
+      <div className="mb-3">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Interview Prep Notes</h3>
         <p className="text-xs text-muted-foreground">
           Shared prep notes for this candidate's interview.
         </p>
@@ -579,10 +584,10 @@ function InterviewPrepNotes({ matchId }: { matchId: string }) {
       {threadId && notes.length > 0 && (
         <div className="mb-3 space-y-2">
           {notes.map((n) => (
-            <div key={n.id} className="rounded-lg border bg-card p-2">
+            <div key={n.id} className="rounded-2xl bg-white/90 p-3 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
               <div className="flex items-baseline justify-between gap-2">
                 <span className="text-xs font-medium">{authorLabel(n.author_id)}</span>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[11px] tabular-nums text-muted-foreground">
                   {new Date(n.created_at).toLocaleString(undefined, {
                     month: "short",
                     day: "numeric",
@@ -604,7 +609,7 @@ function InterviewPrepNotes({ matchId }: { matchId: string }) {
           value={draft}
           placeholder="Talking points, questions to ask, things to highlight…"
           onChange={(e) => setDraft(e.target.value)}
-          className="min-h-[60px] flex-1 resize-none bg-card"
+          className="min-h-[60px] flex-1 resize-none rounded-2xl bg-white"
         />
         <Button
           size="sm"

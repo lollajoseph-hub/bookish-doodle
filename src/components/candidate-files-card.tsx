@@ -145,13 +145,13 @@ export function CandidateFilesCard({
   };
 
   return (
-    <section className="card-amber rounded-2xl border bg-card p-5">
+    <section className="card-amber rounded-3xl p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-primary-dark">Files</h2>
+        <h2 className="font-display text-2xl font-semibold leading-tight">Files</h2>
         {canEdit && (
           <div className="flex items-center gap-2">
             <Select value={fileType} onValueChange={(v: string) => setFileType(v as CandidateFileType)}>
-              <SelectTrigger className="h-8 w-40">
+              <SelectTrigger className="h-9 w-40 rounded-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -191,36 +191,36 @@ export function CandidateFilesCard({
         )}
       </div>
 
-      <div className="mt-3 space-y-2">
+      <div className="mt-4 space-y-2.5">
         {isLoading && <p className="text-sm text-muted-foreground">Loading files…</p>}
         {files.map((f) => {
           const Icon = iconFor(f.file_type);
           const pdf = isPdf(f);
           const isPreviewing = previewFileId === f.id;
           return (
-            <div key={f.id} className="rounded-xl border transition-colors hover:border-amber">
+            <div key={f.id} className="rounded-2xl bg-white/70 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] transition-[box-shadow,border-color] duration-300 hover:shadow-[inset_0_0_0_1px_rgb(122_89_163/0.25),0_22px_44px_-24px_rgb(46_16_73/0.5)]">
               <div className="flex items-center justify-between gap-2 p-3">
                 <button
                   onClick={() => (pdf ? togglePreview(f) : openFile(f))}
                   className="flex min-w-0 items-center gap-3 text-left"
                 >
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary-soft">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft">
                     <Icon className="h-4 w-4 text-primary" />
                   </div>
                   <div className="min-w-0">
                     <div className="truncate text-sm font-medium">{f.file_name || f.storage_path}</div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs tabular-nums text-muted-foreground">
                       {labelize(f.file_type)} {prettySize(f.size_bytes)}
                     </div>
                   </div>
                 </button>
                 <div className="flex shrink-0 items-center gap-1">
-                  <Badge variant="secondary">{labelize(f.file_type)}</Badge>
+                  <Badge variant="secondary" className="h-6 rounded-full border-0 bg-primary-soft px-2.5 text-[11.5px] font-semibold text-primary">{labelize(f.file_type)}</Badge>
                   {pdf && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7"
+                      className="h-8 w-8 rounded-full"
                       aria-label={isPreviewing ? "Hide preview" : "Preview file"}
                       onClick={() => togglePreview(f)}
                     >
@@ -234,7 +234,7 @@ export function CandidateFilesCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7"
+                    className="h-8 w-8 rounded-full"
                     aria-label="Open in new tab"
                     onClick={() => openFile(f)}
                   >
@@ -244,7 +244,7 @@ export function CandidateFilesCard({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7"
+                      className="h-8 w-8 rounded-full"
                       aria-label="Delete file"
                       onClick={() => remove.mutate(f)}
                     >
@@ -254,14 +254,14 @@ export function CandidateFilesCard({
                 </div>
               </div>
               {isPreviewing && (
-                <div className="border-t p-3">
+                <div className="border-t border-[rgb(26_19_32/0.08)] p-3">
                   {previewLoading && (
                     <p className="text-sm text-muted-foreground">Loading preview…</p>
                   )}
                   {!previewLoading && previewUrl && (
                     <PdfPagePreview
                       url={previewUrl}
-                      className="max-h-[70vh] overflow-y-auto rounded-lg border bg-muted/30"
+                      className="max-h-[70vh] overflow-y-auto rounded-2xl bg-stone/90 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]"
                     />
                   )}
                 </div>
