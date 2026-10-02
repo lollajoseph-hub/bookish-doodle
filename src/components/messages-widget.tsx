@@ -75,7 +75,7 @@ export function MessagesWidget() {
   return (
     <section
       aria-label="Messages"
-      className="fixed bottom-4 right-4 z-50 flex h-[min(600px,80vh)] w-[calc(100vw-2rem)] max-w-[400px] flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white/90 text-card-foreground shadow-[0_40px_90px_-30px_rgb(46_16_73/0.6)] backdrop-blur-xl animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-500 motion-reduce:animate-none sm:bottom-6 sm:right-6"
+      className="fixed bottom-4 right-4 z-50 flex h-[min(600px,80vh)] w-[calc(100vw-2rem)] max-w-[400px] flex-col overflow-hidden rounded-[28px] border border-[rgb(26_19_32/0.06)] bg-white text-card-foreground shadow-[0_40px_90px_-30px_rgb(46_16_73/0.6)] animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-500 motion-reduce:animate-none sm:bottom-6 sm:right-6"
     >
       {selected ? (
         <ChatPane
