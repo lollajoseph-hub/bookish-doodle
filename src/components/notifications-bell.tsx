@@ -62,7 +62,7 @@ export function NotificationsBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 overflow-hidden rounded-3xl border-white/80 bg-white/95 p-0 shadow-[0_30px_70px_-30px_rgb(46_16_73/0.55)] backdrop-blur-xl">
+      <PopoverContent align="end" className="w-80 overflow-hidden rounded-3xl border-[rgb(26_19_32/0.06)] bg-white p-0 shadow-[0_30px_70px_-30px_rgb(46_16_73/0.55)]">
         <div className="flex items-center justify-between border-b px-4 py-3">
           <span className="font-display text-xl font-semibold leading-none">Notifications</span>
           {unread > 0 && (
