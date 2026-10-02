@@ -9,6 +9,8 @@ import { PlusCircle, Users, ArrowRight, Sparkles } from "lucide-react";
 import { REQUEST_STATUS_LABELS, REQUEST_PRIORITY_LABELS, requestStatusTone, requestPriorityTone, formatDate } from "@/lib/matches";
 import { ENGAGEMENT_TYPES } from "@/lib/catalog";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SplitWords, useEntrance } from "@/lib/motion";
 
 export const Route = createFileRoute("/requests/")({
   head: () => ({
@@ -58,15 +60,19 @@ function RequestsList() {
   }, [load]);
 
   usePollingRefresh(load, 20000);
+  // Entrance runs once when data first arrives; the 20s polling never replays it.
+  const scope = useEntrance<HTMLDivElement>([rows === null]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div ref={scope} className="space-y-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">My requests</h1>
-          <p className="text-sm text-muted-foreground">All hiring requests for your company.</p>
+          <h1 className="font-display text-5xl font-medium leading-none tracking-[-0.02em] sm:text-6xl">
+            <SplitWords text="My" /> <SplitWords text="requests" className="italic text-primary" />
+          </h1>
+          <p data-rise className="mt-3 text-sm text-muted-foreground">All hiring requests for your company.</p>
         </div>
-        <Button asChild>
+        <Button asChild data-rise className="h-11 px-5">
           <Link to="/new-request" search={{}}>
             <PlusCircle className="mr-1.5 h-4 w-4" />
             New request
@@ -81,12 +87,18 @@ function RequestsList() {
       )}
 
       {rows === null ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <div className="grid gap-3" aria-busy="true" aria-label="Loading">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-[92px] rounded-3xl bg-white/70" />
+          ))}
+        </div>
       ) : rows.length === 0 ? (
-        <Card className="rounded-2xl border-dashed">
+        <Card className="card-amber rounded-3xl border-dashed">
           <CardContent className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <Users className="h-8 w-8 text-muted-foreground" />
-            <p className="font-medium">No requests yet</p>
+            <span className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft text-primary">
+              <Users className="h-7 w-7" />
+            </span>
+            <p className="font-display text-3xl font-medium">No requests yet</p>
             <p className="text-sm text-muted-foreground">
               Submit your first hiring request and we&apos;ll start matching candidates.
             </p>
@@ -102,12 +114,12 @@ function RequestsList() {
             const engagement =
               ENGAGEMENT_TYPES.find((e) => e.value === r.engagement_type)?.label ?? r.engagement_type;
             return (
-              <Link key={r.id} to="/requests/$id" params={{ id: r.id }} className="block">
-                <Card className="card-amber rounded-2xl transition hover:shadow-sm">
-                  <CardContent className="flex items-center justify-between gap-4 p-5">
+              <Link key={r.id} to="/requests/$id" params={{ id: r.id }} data-rise className="group block rounded-3xl">
+                <Card className="card-amber rounded-3xl">
+                  <CardContent className="flex items-center justify-between gap-4 p-5 sm:p-6">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="truncate font-medium">{r.job_roles?.name ?? "Role"}</h2>
+                        <h2 className="font-display truncate text-2xl font-semibold leading-tight">{r.job_roles?.name ?? "Role"}</h2>
                         <Badge className={requestStatusTone(r.status)} variant="secondary">
                           {REQUEST_STATUS_LABELS[r.status ?? ""] ?? r.status ?? "—"}
                         </Badge>
@@ -123,14 +135,16 @@ function RequestsList() {
                           </Badge>
                         )}
                       </div>
-                      <p className="mt-1 text-sm text-muted-foreground">
+                      <p className="mt-1.5 text-sm tabular-nums text-muted-foreground">
                         {engagement ? `${engagement} · ` : ""}
                         {r.hires_needed ?? 1} hire{(r.hires_needed ?? 1) === 1 ? "" : "s"} ·{" "}
                         {count} candidate{count === 1 ? "" : "s"} presented · submitted{" "}
                         {formatDate(r.created_at)}
                       </p>
                     </div>
-                    <ArrowRight className="h-4 w-4 flex-none text-muted-foreground" />
+                    <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-primary/[0.06] text-primary transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:translate-x-1">
+                      <ArrowRight className="h-4 w-4" />
+                    </span>
                   </CardContent>
                 </Card>
               </Link>

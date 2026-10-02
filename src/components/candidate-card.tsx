@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { Input } from "@/components/ui/input";
+import { DateTimePicker } from "@/components/date-time-fields";
 import { CandidateRating } from "@/components/candidate-rating";
 import {
   BriefcaseBusiness,
@@ -100,11 +100,11 @@ export const MATCH_SELECT =
 export function statusTone(s: MatchStatus | string) {
   switch (s) {
     case "hired":
-      return "bg-success text-success-foreground";
+      return "bg-[#e9f2ea] text-[#2f5f35]";
     case "shortlisted":
-      return "bg-amber text-amber-foreground";
+      return "bg-amber-soft text-gold-ink";
     case "rejected":
-      return "bg-muted text-muted-foreground";
+      return "bg-foreground/[0.06] text-muted-foreground";
     case "interview_requested":
       return "bg-primary text-primary-foreground";
     case "interview_confirmed":
@@ -113,7 +113,7 @@ export function statusTone(s: MatchStatus | string) {
     case "offer_extended":
       return "bg-primary-soft text-primary";
     default:
-      return "bg-secondary text-secondary-foreground";
+      return "bg-foreground/[0.06] text-secondary-foreground";
   }
 }
 
@@ -171,7 +171,7 @@ export function availabilityToneClass(value: string | null | undefined) {
   switch (value) {
     case "interviewing":
     case "closing_next_week":
-      return "text-amber";
+      return "text-gold-ink";
     case "off_market":
       return "text-muted-foreground";
     case "available_now":
@@ -313,37 +313,36 @@ export function CandidateCard({
   const canReject = canAct || status === "interview_completed";
 
   return (
-    <Card className={`card-amber relative rounded-2xl ${isRejected ? "opacity-60" : ""}`}>
-      <div className="absolute right-4 top-4 z-10 flex flex-col items-end gap-1.5">
-        <span
-          className={`inline-flex w-fit max-w-[calc(100%-2rem)] min-w-0 items-center gap-1 truncate rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(status)}`}
-        >
-          <MatchStatusIcon status={status} />
-          <span className="truncate">{MATCH_STATUS_LABELS[status] ?? status}</span>
-        </span>
-        {curated && (
-          <span className="inline-flex max-w-[calc(100%-2rem)] min-w-0 items-center gap-1 truncate rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">
-            <Sparkles className="h-3 w-3 flex-none" />
-            <span className="truncate">Hand-picked for you</span>
-          </span>
-        )}
-      </div>
-      <CardContent className="space-y-3 p-5">
-        <div className={`flex items-start gap-4 ${curated ? "pt-14" : "pt-8"}`}>
+    <Card className={`card-amber relative rounded-3xl ${isRejected ? "opacity-60" : ""}`}>
+      <CardContent className="space-y-4 p-5 sm:p-6">
+        <div className="flex items-start gap-4">
           {photoUrl ? (
-            <img src={photoUrl} alt="" className="h-24 w-24 flex-none rounded-full object-cover ring-2 ring-primary/15" />
+            <img src={photoUrl} alt="" className="h-[72px] w-[72px] flex-none rounded-[22px] object-cover shadow-[0_14px_30px_-14px_rgb(46_16_73/0.5)]" />
           ) : (
-            <div className="grid h-24 w-24 flex-none place-items-center rounded-full bg-primary/10 text-3xl font-semibold text-primary">
+            <div className="grid h-[72px] w-[72px] flex-none place-items-center rounded-[22px] bg-gradient-to-br from-[#ebddf7] to-[#d6c2ea] text-xl font-semibold text-primary">
               {initial}
             </div>
           )}
           <div className="min-w-0 flex-1">
             <div className="min-w-0 space-y-1">
-              {!isHired && <p className="text-sm italic leading-none text-muted-foreground">Meet</p>}
-              <h3 className="truncate text-lg font-semibold leading-tight">{name}</h3>
-              {p?.headline && <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">{p.headline}</p>}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span
+                  className={`inline-flex h-[26px] min-w-0 max-w-full items-center gap-1 truncate rounded-full px-2.5 text-[11.5px] font-semibold ${statusTone(status)}`}
+                >
+                  <MatchStatusIcon status={status} />
+                  <span className="truncate">{MATCH_STATUS_LABELS[status] ?? status}</span>
+                </span>
+                {curated && (
+                  <span className="inline-flex h-[26px] min-w-0 max-w-full items-center gap-1 truncate rounded-full bg-[#e9f2ea] px-2.5 text-[11.5px] font-semibold text-[#2f5f35]">
+                    <Sparkles className="h-3 w-3 flex-none" />
+                    <span className="truncate">Hand-picked for you</span>
+                  </span>
+                )}
+              </div>
+              <h3 className="font-display truncate pt-2 text-[30px] font-semibold leading-none">{name}</h3>
+              {p?.headline && <p className="line-clamp-2 text-[13px] leading-snug text-secondary-foreground">{p.headline}</p>}
               {availabilityStatus && (
-                <p className={`text-sm font-semibold ${availabilityToneClass(p?.availability)}`}>
+                <p className={`text-xs font-semibold ${availabilityToneClass(p?.availability)}`}>
                   {availabilityStatus}
                 </p>
               )}
@@ -351,7 +350,7 @@ export function CandidateCard({
           </div>
         </div>
 
-        <div className="grid gap-2 border-t border-border/70 pt-3 text-xs text-muted-foreground sm:grid-cols-2">
+        <div className="grid gap-2 border-t border-border pt-3 text-xs tabular-nums text-muted-foreground sm:grid-cols-2">
           {primaryRole && (
             <p className="flex min-w-0 items-center gap-2">
               <BriefcaseBusiness className="h-3.5 w-3.5 flex-none text-primary" />
@@ -380,11 +379,11 @@ export function CandidateCard({
         {contextLabel && <div className="text-xs text-muted-foreground">{contextLabel}</div>}
 
         {match.match_reason?.trim() && (
-          <div className="border-t border-border/70 pt-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Why this candidate</p>
-            <p className={reasonExpanded ? "mt-1 text-sm leading-relaxed text-muted-foreground" : "mt-1 text-sm leading-relaxed text-muted-foreground line-clamp-2"}>{match.match_reason}</p>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Why this candidate</p>
+            <p className={reasonExpanded ? "mt-1.5 text-[13px] leading-relaxed text-secondary-foreground" : "mt-1.5 text-[13px] leading-relaxed text-secondary-foreground line-clamp-2"}>{match.match_reason}</p>
             {match.match_reason.length > 120 && (
-              <button type="button" onClick={() => setReasonExpanded((v) => !v)} className="mt-0.5 text-xs font-medium text-primary">
+              <button type="button" onClick={() => setReasonExpanded((v) => !v)} className="mt-1 rounded text-xs font-semibold text-primary hover:underline hover:underline-offset-4">
                 {reasonExpanded ? "Show less" : "Read more"}
               </button>
             )}
@@ -403,7 +402,7 @@ export function CandidateCard({
 
         {status === "interview_requested" &&
           (match.interview_proposed_by === "staff" ? (
-            <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary">
+            <div className="space-y-2 rounded-2xl bg-primary/[0.05] px-4 py-3 text-sm text-primary">
               <p className="flex items-center gap-2 font-medium">
                 <Clock className="h-4 w-4 flex-none" />
                 ScaleSource proposed a new time: {formatDateTime(match.interview_proposed_at)}
@@ -426,18 +425,12 @@ export function CandidateCard({
               </div>
 
               {proposing && (
-                <div className="space-y-2 rounded-lg border border-border bg-background/60 p-3">
+                <div className="space-y-2 rounded-2xl bg-white/85 p-3 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
                   <p className="text-sm font-medium">
                     You've declined that time — suggest one that works:
                   </p>
                   <Label htmlFor={`propose-when-${match.id}`}>Your preferred time</Label>
-                  <Input
-                    id={`propose-when-${match.id}`}
-                    type="datetime-local"
-                    value={proposedAt}
-                    onChange={(e) => setProposedAt(e.target.value)}
-                    className="bg-background"
-                  />
+                  <DateTimePicker id={`propose-when-${match.id}`} value={proposedAt} onChange={setProposedAt} />
                   <div className="flex justify-end gap-2">
                     <Button
                       variant="outline"
@@ -459,7 +452,7 @@ export function CandidateCard({
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary">
+            <div className="flex items-center gap-2 rounded-2xl bg-primary/[0.05] px-4 py-3 text-sm text-primary">
               <Clock className="h-4 w-4 flex-none" />
               {match.interview_proposed_at
                 ? `You proposed ${formatDateTime(match.interview_proposed_at)} — waiting for ScaleSource to confirm.`
@@ -468,7 +461,7 @@ export function CandidateCard({
           ))}
 
         {status === "interview_confirmed" && (
-          <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+          <div className="space-y-2 rounded-2xl bg-primary/[0.05] px-4 py-3">
             <p className="flex items-center gap-2 text-sm font-medium text-primary">
               <CalendarClock className="h-4 w-4 flex-none" />
               {scheduled ? `Interview on ${scheduled}` : "Interview confirmed"}
@@ -485,7 +478,7 @@ export function CandidateCard({
         )}
 
         {status === "interview_completed" && (
-          <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+          <div className="space-y-2 rounded-2xl bg-primary/[0.05] px-4 py-3">
             <p className="flex items-center gap-2 text-sm font-medium text-primary">
               <CalendarClock className="h-4 w-4 flex-none" />
               {scheduled ? `Interview held on ${scheduled}` : "Interview completed"}
@@ -517,7 +510,7 @@ export function CandidateCard({
         )}
 
         {status === "hire_requested" && (
-          <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+          <div className="space-y-2 rounded-2xl bg-primary/[0.05] px-4 py-3">
             <p className="flex items-center gap-2 text-sm font-medium text-primary">
               <CheckCircle2 className="h-4 w-4 flex-none" />
               Hire requested — waiting on ScaleSource to send the contract.
@@ -526,7 +519,7 @@ export function CandidateCard({
         )}
 
         {status === "offer_extended" && (
-          <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+          <div className="space-y-2 rounded-2xl bg-primary/[0.05] px-4 py-3">
             <p className="flex items-center gap-2 text-sm font-medium text-primary">
               <Mail className="h-4 w-4 flex-none" />
               Contract sent — you&apos;ll be notified once the placement is confirmed.
@@ -535,7 +528,7 @@ export function CandidateCard({
         )}
 
         {isRejected && (
-          <div className="rounded-lg bg-muted px-3 py-2 text-sm">
+          <div className="rounded-2xl bg-foreground/[0.04] px-4 py-3 text-sm">
             <p className="font-medium">Not a fit — {rejectionReasonLabel(match.rejection_reason)}</p>
             {match.rejection_reason_note && (
               <p className="mt-0.5 text-muted-foreground">{match.rejection_reason_note}</p>
@@ -547,7 +540,7 @@ export function CandidateCard({
         )}
 
         {rejecting && (
-          <div className="space-y-3 rounded-lg border border-border bg-muted/40 p-3">
+          <div className="space-y-3 rounded-2xl bg-foreground/[0.04] p-4">
             <p className="text-sm font-medium">
               Not a fit — tell us why so we can find better matches.
             </p>
@@ -620,7 +613,7 @@ export function CandidateCard({
               size="sm"
               disabled={busy || locked}
               onClick={onShortlist}
-              className={status === "shortlisted" ? "bg-amber-500 text-white hover:bg-amber-600" : ""}
+              className={status === "shortlisted" ? "bg-amber-soft text-gold-ink shadow-[inset_0_0_0_1px_rgb(224_164_58/0.5)] hover:bg-amber-soft" : ""}
             >
               {busy ? (
                 <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
@@ -675,13 +668,14 @@ export function CandidateSkillGap({ requiredSkills, candidateSkills }: Candidate
   const missing = requiredSkills.filter((skill) => !actual.has(skill.trim().toLocaleLowerCase()));
 
   return (
-    <div className="space-y-2 border-t border-border/70 pt-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Skill match</p>
-      <div className="flex flex-wrap items-center gap-x-2">
-        <p className="text-xs text-muted-foreground">
-          {matched.length} of {requiredSkills.length} required skills matched
+    <div className="space-y-2.5">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Skill match</p>
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+        <SkillRing matched={matched.length} total={requiredSkills.length} />
+        <p className="text-[12.5px] tabular-nums text-secondary-foreground">
+          <strong className="font-semibold text-foreground">{matched.length} of {requiredSkills.length}</strong> required skills matched
         </p>
-        <button type="button" onClick={() => setExpanded((v) => !v)} className="text-xs font-medium text-primary">
+        <button type="button" onClick={() => setExpanded((v) => !v)} className="rounded text-xs font-semibold text-primary hover:underline hover:underline-offset-4">
           {expanded ? "Hide details" : "Show details"}
         </button>
       </div>
@@ -692,7 +686,7 @@ export function CandidateSkillGap({ requiredSkills, candidateSkills }: Candidate
               <p className="text-xs text-muted-foreground">Matched</p>
               <div className="flex flex-wrap gap-1.5">
                 {matched.map((skill) => (
-                  <Badge key={skill} variant="secondary" className="bg-success text-success-foreground">
+                  <Badge key={skill} variant="secondary" className="rounded-full bg-[#e9f2ea] px-2.5 py-1 font-medium text-[#2f5f35]">
                     {skill}
                   </Badge>
                 ))}
@@ -704,7 +698,7 @@ export function CandidateSkillGap({ requiredSkills, candidateSkills }: Candidate
               <p className="text-xs text-muted-foreground">Missing</p>
               <div className="flex flex-wrap gap-1.5">
                 {missing.map((skill) => (
-                  <Badge key={skill} variant="outline" className="text-muted-foreground">
+                  <Badge key={skill} variant="outline" className="rounded-full px-2.5 py-1 font-medium text-muted-foreground line-through decoration-foreground/25">
                     {skill}
                   </Badge>
                 ))}
@@ -714,5 +708,40 @@ export function CandidateSkillGap({ requiredSkills, candidateSkills }: Candidate
         </>
       )}
     </div>
+  );
+}
+
+/** Ring that fills to the share of required skills matched. Decorative; the text beside it carries the meaning. */
+function SkillRing({ matched, total }: { matched: number; total: number }) {
+  const size = 40;
+  const stroke = 3;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const pct = total > 0 ? matched / total : 0;
+  return (
+    <span className="relative inline-grid h-10 w-10 flex-none place-items-center" aria-hidden="true">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="absolute inset-0 -rotate-90">
+        <defs>
+          <linearGradient id="skill-ring" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#E0A43A" />
+            <stop offset="1" stopColor="#431867" />
+          </linearGradient>
+        </defs>
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgb(26 19 32 / 8%)" strokeWidth={stroke} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="url(#skill-ring)"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - pct)}
+          className="transition-[stroke-dashoffset] duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        />
+      </svg>
+      <span className="relative text-xs font-semibold tabular-nums">{matched}</span>
+    </span>
   );
 }

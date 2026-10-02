@@ -66,7 +66,7 @@ function toEntries(value: unknown): Entry[] {
   });
 }
 
-export function CandidateFullProfileView({ candidateId, matchId, matchStatus, matchReason, requiredSkills, candidateSkills, preloadedProfile, scrollable = false }: {
+export function CandidateFullProfileView({ candidateId, matchId, matchStatus, matchReason, requiredSkills, candidateSkills, preloadedProfile, preloadedPhotoUrl, scrollable = false }: {
   candidateId: string | null;
   matchId?: string | null;
   matchStatus: string | null;
@@ -74,10 +74,14 @@ export function CandidateFullProfileView({ candidateId, matchId, matchStatus, ma
   requiredSkills?: string[];
   candidateSkills?: string[];
   preloadedProfile?: FullPoolProfile | null;
+  /** Already-signed photo URL from the parent, so the photo is there on first paint (no letter-to-photo swap). */
+  preloadedPhotoUrl?: string | null;
   scrollable?: boolean;
 }) {
-  const [profile, setProfile] = useState<FullPoolProfile | null>(null);
-  const [photo, setPhoto] = useState<string | null>(null);
+  // When the parent already has the profile, render it immediately (no "Loading…" flash between candidates).
+  const [profile, setProfile] = useState<FullPoolProfile | null>(preloadedProfile ?? null);
+  const [photo, setPhoto] = useState<string | null>(preloadedPhotoUrl ?? null);
+  const shownCandidateRef = useRef<string | null>(null);
   const [video, setVideo] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -91,7 +95,17 @@ export function CandidateFullProfileView({ candidateId, matchId, matchStatus, ma
       setProfile(null); setPhoto(null); setVideo(null); setErr(null);
       return;
     }
-    setVisibleWorkCount(5); setProfile(null); setErr(null); setLoading(true);
+    const isNewCandidate = shownCandidateRef.current !== candidateId;
+    shownCandidateRef.current = candidateId;
+    const preloaded = preloadedProfile !== undefined;
+    if (isNewCandidate) setVisibleWorkCount(5);
+    if (preloaded) {
+      // Same data as before, shown without first clearing the view (polling refreshes no longer blank it).
+      setProfile(preloadedProfile ?? null); setErr(null); setLoading(false);
+    } else {
+      setProfile(null); setErr(null); setLoading(true);
+      if (isNewCandidate) { setPhoto(null); setVideo(null); }
+    }
     // Analytics: record that the client opened this candidate's full profile.
     // Fire-and-forget — never block or break the viewing experience.
     if (matchId) {
@@ -111,7 +125,11 @@ export function CandidateFullProfileView({ candidateId, matchId, matchStatus, ma
       const nextProfile = (result.data as unknown as FullPoolProfile) ?? null;
       setProfile(nextProfile);
       const [nextPhoto, nextVideo] = await Promise.all([signedPhotoUrl(nextProfile?.profile_photo_path), signedVideoUrl(nextProfile?.intro_video_path)]);
-      if (!cancelled) { setPhoto(nextPhoto); setVideo(nextVideo); }
+      if (!cancelled) {
+        // Keep the photo already on screen for this candidate so a refresh never re-loads the image.
+        setPhoto((current) => (current && (!isNewCandidate || preloadedPhotoUrl) ? current : nextPhoto ?? current));
+        setVideo(nextVideo);
+      }
     })();
     return () => { cancelled = true; };
   }, [candidateId, preloadedProfile]);
@@ -140,47 +158,47 @@ export function CandidateFullProfileView({ candidateId, matchId, matchStatus, ma
   const education = toEntries(profile?.education);
 
   return (
-    <div className={scrollable ? "relative" : "overflow-hidden rounded-lg border border-border bg-card"}>
+    <div className={scrollable ? "relative" : "card-amber overflow-hidden rounded-[30px]"}>
       <div ref={scrollRef} className={scrollable ? "candidate-profile-scroll max-h-[90vh] overflow-y-auto scroll-smooth" : ""} tabIndex={scrollable ? 0 : undefined}>
         {err && <div className="space-y-4 p-6"><div><h2 className="text-lg font-semibold">Candidate profile</h2><p className="text-sm text-muted-foreground">We couldn&apos;t load this profile.</p></div><div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">{err}</div></div>}
         {loading && !profile ? (
           <div className="p-6"><h2 className="text-lg font-semibold">Loading profile…</h2><p className="text-sm text-muted-foreground">Full candidate profile</p><div className="flex items-center gap-2 py-10 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading…</div></div>
         ) : profile ? (
           <div>
-            <div className="bg-primary-soft/60 px-6 py-6"><div className="flex items-center gap-5">
-              {photo ? <img src={photo} alt="" className="h-24 w-24 shrink-0 rounded-2xl object-cover shadow-md ring-2 ring-primary/20" /> : <div className="grid h-24 w-24 shrink-0 place-items-center rounded-2xl bg-primary/10 text-3xl font-semibold text-primary ring-2 ring-primary/15">{name.slice(0, 1).toUpperCase()}</div>}
-              <div className="min-w-0">{matchStatus !== "hired" && <p className="text-sm italic text-foreground/70">Meet</p>}<h2 className="mt-0.5 text-2xl font-semibold leading-tight">{name}</h2><p className="text-sm text-foreground/80">{profile.headline ?? "Full candidate profile"}</p>{matchId && <div className="mt-3"><CandidateMessages matchId={matchId} matchStatus={matchStatus} candidateName={name} /></div>}</div>
+            <div className="bg-gradient-to-br from-primary-soft/80 via-white/40 to-amber-soft/40 px-6 py-7 sm:px-8"><div className="flex items-center gap-5">
+              {photo ? <img src={photo} alt="" className="h-24 w-24 shrink-0 rounded-[26px] object-cover shadow-[0_14px_30px_-14px_rgb(46_16_73/0.5)]" /> : <div className="grid h-24 w-24 shrink-0 place-items-center rounded-[26px] bg-gradient-to-br from-[#ebddf7] to-[#d6c2ea] text-3xl font-semibold text-primary shadow-[0_14px_30px_-14px_rgb(46_16_73/0.5)]">{name.slice(0, 1).toUpperCase()}</div>}
+              <div className="min-w-0"><h2 className="font-display text-[44px] font-semibold leading-[0.95]">{name}</h2><p className="mt-1.5 text-sm text-secondary-foreground">{profile.headline ?? "Full candidate profile"}</p>{matchId && <div className="mt-3"><CandidateMessages matchId={matchId} matchStatus={matchStatus} candidateName={name} /></div>}</div>
             </div></div>
-            <div className="space-y-6 px-6 py-6">
+            <div className="space-y-6 px-6 py-6 sm:px-8">
               <Separator />
-              <section className="space-y-3"><h3 className="text-sm font-semibold tracking-tight">Availability</h3><dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+              <section className="space-y-3"><h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Availability</h3><dl className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-2xl bg-stone/80 p-4 text-sm tabular-nums shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] sm:grid-cols-3">
                 <Row label="Status" value={availabilityLabel(profile.availability)} /><Row label="Country" value={profile.country} /><Row label="Timezone" value={profile.timezone} /><Row label="Weekly hours" value={profile.weekly_hours_available ? `${profile.weekly_hours_available} hrs` : null} /><Row label="Preferred shift" value={profile.preferred_shift} /><Row label="Experience" value={profile.years_experience ? `${profile.years_experience} years` : null} /><Row label="Earliest start" value={formatDate(profile.earliest_start_date)} />
               </dl></section>
                {matchReason?.trim() && (
-                 <div className="border-t border-border/70 pt-3">
-                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Why this candidate</p>
-                   <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{matchReason}</p>
+                 <div>
+                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Why this candidate</p>
+                   <p className="mt-1.5 text-sm leading-relaxed text-secondary-foreground">{matchReason}</p>
                  </div>
                )}
                <CandidateSkillGap requiredSkills={requiredSkills ?? []} candidateSkills={candidateSkills ?? []} />
-              {(video || profile.intro_video_url) && <Section title="Introductory Video">{video ? <video src={video} controls className="w-full rounded-xl bg-foreground" preload="metadata" /> : <LinkedVideo url={profile.intro_video_url!} />}</Section>}
-              {roles.length > 0 && <Section title="Roles"><div className="flex flex-wrap gap-1.5">{roles.map((role, index) => <Badge key={`${role}-${index}`} variant="secondary" className={index === 0 ? "bg-primary/10 text-primary" : ""}>{role}</Badge>)}</div></Section>}
-              {skills.length > 0 && <Section title="Skills"><div className="flex flex-wrap gap-1.5">{skills.map((skill, index) => <Badge key={`${skill}-${index}`} variant="outline">{skill}</Badge>)}</div></Section>}
+              {(video || profile.intro_video_url) && <Section title="Introductory Video">{video ? <video src={video} controls className="w-full rounded-2xl bg-[#1d0a2e]" preload="metadata" /> : <LinkedVideo url={profile.intro_video_url!} />}</Section>}
+              {roles.length > 0 && <Section title="Roles"><div className="flex flex-wrap gap-1.5">{roles.map((role, index) => <Badge key={`${role}-${index}`} variant="secondary" className={index === 0 ? "rounded-full bg-primary/[0.08] px-3 py-1 text-primary" : "rounded-full px-3 py-1"}>{role}</Badge>)}</div></Section>}
+              {skills.length > 0 && <Section title="Skills"><div className="flex flex-wrap gap-1.5">{skills.map((skill, index) => <Badge key={`${skill}-${index}`} variant="outline" className="rounded-full bg-white/80 px-3 py-1 font-medium">{skill}</Badge>)}</div></Section>}
               {work.length > 0 && <Section title="Work history"><EntryList entries={work.slice(0, visibleWorkCount)} />{visibleWorkCount < work.length && <Button type="button" variant="ghost" size="sm" className="mx-auto flex text-primary" onClick={() => setVisibleWorkCount((count) => Math.min(count + 5, work.length))}>See more <ArrowDown className="h-4 w-4" /></Button>}</Section>}
               {education.length > 0 && <Section title="Education"><EntryList entries={education} /></Section>}
-              {(summary || highlights.length > 0) && <Section title="AI Analysis">{summary && <p className="whitespace-pre-line text-sm text-muted-foreground">{summary}</p>}{highlights.length > 0 && <div className="space-y-2"><h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Highlights</h4><ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">{highlights.map((item, index) => <li key={index}>{item}</li>)}</ul></div>}</Section>}
+              {(summary || highlights.length > 0) && <Section title="Summary">{summary && <p className="whitespace-pre-line text-sm text-muted-foreground">{summary}</p>}{highlights.length > 0 && <div className="space-y-2"><h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Highlights</h4><ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">{highlights.map((item, index) => <li key={index}>{item}</li>)}</ul></div>}</Section>}
             </div>
           </div>
         ) : null}
       </div>
-      {scrollable && profile && <div className="absolute right-3 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-1 rounded-md border bg-card/95 p-1 shadow-md backdrop-blur-sm"><Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label="Scroll profile up" disabled={isAtTop} onClick={() => scrollRef.current?.scrollBy({ top: -300, behavior: "smooth" })}><ChevronUp className="h-4 w-4" /></Button><Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label="Scroll profile down" disabled={isAtBottom} onClick={() => scrollRef.current?.scrollBy({ top: 300, behavior: "smooth" })}><ChevronDown className="h-4 w-4" /></Button></div>}
+      {scrollable && profile && <div className="absolute right-3 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-1 rounded-full border border-white/80 bg-white/85 p-1 shadow-[0_10px_30px_-12px_rgb(46_16_73/0.45)] backdrop-blur-md"><Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label="Scroll profile up" disabled={isAtTop} onClick={() => scrollRef.current?.scrollBy({ top: -300, behavior: "smooth" })}><ChevronUp className="h-4 w-4" /></Button><Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label="Scroll profile down" disabled={isAtBottom} onClick={() => scrollRef.current?.scrollBy({ top: 300, behavior: "smooth" })}><ChevronDown className="h-4 w-4" /></Button></div>}
     </div>
   );
 }
 
 function Row({ label, value }: { label: string; value: string | null | undefined }) {
   if (!value) return null;
-  return <div><dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt><dd className="font-medium">{value}</dd></div>;
+  return <div><dt className="text-xs text-muted-foreground">{label}</dt><dd className="font-semibold">{value}</dd></div>;
 }
 
 function youTubeVideoId(url: string): string | null {
@@ -227,7 +245,7 @@ function LinkedVideo({ url }: { url: string }) {
     );
   }
   if (DIRECT_VIDEO_EXTENSION.test(trimmed)) {
-    return <video src={trimmed} controls className="w-full rounded-xl bg-foreground" preload="metadata" />;
+    return <video src={trimmed} controls className="w-full rounded-2xl bg-[#1d0a2e]" preload="metadata" />;
   }
   return (
     <a href={trimmed} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
@@ -237,9 +255,9 @@ function LinkedVideo({ url }: { url: string }) {
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="space-y-2"><Separator /><h3 className="text-sm font-semibold tracking-tight">{title}</h3>{children}</div>;
+  return <div className="space-y-2.5"><h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{title}</h3>{children}</div>;
 }
 
 function EntryList({ entries }: { entries: Entry[] }) {
-  return <ol className="space-y-3 border-l pl-4">{entries.map((entry, index) => <li key={index} className="relative"><span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-primary" /><p className="text-sm font-medium">{entry.title ?? "—"}</p>{entry.subtitle && <p className="text-sm text-muted-foreground">{entry.subtitle}</p>}{entry.period && <p className="text-xs text-muted-foreground">{entry.period}</p>}{entry.detail && <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{entry.detail}</p>}</li>)}</ol>;
+  return <ol className="space-y-3 border-l pl-4">{entries.map((entry, index) => <li key={index} className="relative"><span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-primary shadow-[0_0_0_3px_rgb(67_24_103/0.12)]" /><p className="text-sm font-medium">{entry.title ?? "—"}</p>{entry.subtitle && <p className="text-sm text-muted-foreground">{entry.subtitle}</p>}{entry.period && <p className="text-xs text-muted-foreground">{entry.period}</p>}{entry.detail && <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{entry.detail}</p>}</li>)}</ol>;
 }

@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { TimePicker } from "@/components/date-time-fields";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -69,7 +69,7 @@ export function InterviewRequestDialog({
 
   return (
     <Dialog open={!!matchId} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="card-amber max-h-[92vh] overflow-y-auto sm:max-w-md">
+      <DialogContent className="card-amber max-h-[92vh] overflow-y-auto rounded-[28px] bg-white/95 sm:max-w-md">
         <form onSubmit={submit} className="space-y-4">
           <DialogHeader>
             <DialogTitle>Request an interview</DialogTitle>
@@ -81,7 +81,7 @@ export function InterviewRequestDialog({
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label>Proposed date</Label>
-              <div className="flex justify-center rounded-md border bg-card">
+              <div className="flex justify-center rounded-2xl bg-white shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
                 <Calendar
                   mode="single"
                   selected={date}
@@ -100,13 +100,7 @@ export function InterviewRequestDialog({
 
             <div className="space-y-1.5">
               <Label htmlFor="interview-time">Proposed time</Label>
-              <Input
-                id="interview-time"
-                type="time"
-                value={time}
-                onChange={(event) => setTime(event.target.value)}
-                required
-              />
+              <TimePicker id="interview-time" value={time} onChange={setTime} />
               <p className="text-xs text-muted-foreground">Shown in your current timezone.</p>
             </div>
           </div>

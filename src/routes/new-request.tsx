@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { buildRequestRecap, RequestRecap } from "@/components/request-recap";
 import { SuccessFlourish } from "@/components/success-flourish";
+import { SplitWords, useEntrance } from "@/lib/motion";
 
 export const Route = createFileRoute("/new-request")({
   validateSearch: (search: Record<string, unknown>): { clone?: string } => ({
@@ -56,6 +57,7 @@ function NewRequest() {
   const [busy, setBusy] = useState(false);
   const [f, setF] = useState<RequestForm>(emptyRequestForm);
   const [submittedRequestId, setSubmittedRequestId] = useState<string | null>(null);
+  const scope = useEntrance<HTMLFormElement>();
 
   // Resolve the signed-in user's company from their own client_members row.
   useEffect(() => {
@@ -225,19 +227,19 @@ function NewRequest() {
       company: { name: membership?.client_name ?? "", industry: "" },
     });
     return (
-      <Card className="card-amber overflow-hidden rounded-2xl">
-        <CardContent className="flex flex-col items-center gap-5 px-6 py-10 text-center sm:px-10">
+      <Card className="card-amber overflow-hidden rounded-[30px]">
+        <CardContent className="flex flex-col items-center gap-6 px-6 py-12 text-center sm:px-12">
           <SuccessFlourish />
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Your request is submitted!</h1>
-            <p className="mt-1 text-muted-foreground">We're matching candidates now.</p>
+            <h1 className="font-display text-5xl font-medium leading-none">Your request is submitted!</h1>
+            <p className="mt-3 text-muted-foreground">We're matching candidates now.</p>
           </div>
-          <div className="w-full rounded-lg bg-primary-soft/60 p-5">
+          <div className="w-full rounded-3xl bg-stone/90 p-5 text-left shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
             <RequestRecap items={recap} expanded />
           </div>
           <Button
             type="button"
-            className="login-submit-button"
+            className="h-11 px-6"
             onClick={() => navigate({ to: "/requests/$id", params: { id: submittedRequestId } })}
           >
             View request
@@ -248,25 +250,27 @@ function NewRequest() {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-6">
+    <form ref={scope} onSubmit={submit} className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">New hiring request</h1>
-        <p className="text-sm text-muted-foreground">Tell us about the role you need filled.</p>
+        <h1 className="font-display text-5xl font-medium leading-none tracking-[-0.02em] sm:text-6xl">
+          <SplitWords text="New" /> <SplitWords text="hiring request" className="italic text-primary" />
+        </h1>
+        <p data-rise className="mt-3 text-sm text-muted-foreground">Tell us about the role you need filled.</p>
       </div>
 
-      <Card className="rounded-2xl">
-        <CardContent className="flex items-center gap-3 py-4">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+      <Card data-rise className="card-amber rounded-3xl">
+        <CardContent className="flex items-center gap-4 py-4">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft text-primary">
             <Building2 className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Company
             </div>
             {membershipLoading ? (
               <Skeleton className="mt-1 h-5 w-48" />
             ) : (
-              <div className="truncate text-base font-medium text-foreground">
+              <div className="font-display truncate text-2xl font-semibold leading-tight text-foreground">
                 {membership?.client_name ?? "—"}
               </div>
             )}
@@ -275,7 +279,7 @@ function NewRequest() {
       </Card>
 
       {(membershipError || catalog.error) && (
-        <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+        <div className="flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/[0.06] p-4 text-sm text-destructive">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>
             {membershipError
@@ -286,7 +290,7 @@ function NewRequest() {
       )}
 
       {clone && (
-        <div className="flex items-start gap-2 rounded-xl border border-primary/30 bg-primary-soft/60 p-3 text-sm text-primary">
+        <div className="flex items-start gap-2 rounded-2xl bg-primary/[0.06] p-4 text-sm text-primary">
           <Copy className="mt-0.5 h-4 w-4 shrink-0" />
           <span>
             You&apos;re cloning a previous request — everything is filled in for you. Review the details and pick a
@@ -295,21 +299,21 @@ function NewRequest() {
         </div>
       )}
 
-      <Card className="card-amber rounded-2xl">
-        <CardHeader>
+      <Card data-rise className="card-amber rounded-[30px]">
+        <CardHeader className="p-6 sm:p-8">
           <CardTitle>Role requirements</CardTitle>
           <CardDescription>What does the role look like?</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 pb-8 sm:px-8">
           <RequestFields value={f} onChange={setF} catalog={catalog} roleScopedSkills />
         </CardContent>
       </Card>
 
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={() => navigate({ to: "/requests" })}>
+      <div data-rise className="flex justify-end gap-2">
+        <Button type="button" variant="outline" className="h-11 px-5" onClick={() => navigate({ to: "/requests" })}>
           Cancel
         </Button>
-        <Button type="submit" disabled={busy || membershipLoading || !membership}>
+        <Button type="submit" className="h-11 px-6" disabled={busy || membershipLoading || !membership}>
           {busy ? "Submitting…" : "Submit request"}
         </Button>
       </div>

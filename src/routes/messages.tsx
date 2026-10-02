@@ -51,14 +51,14 @@ function MessagesPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Messages</h1>
-        <p className="text-sm text-muted-foreground">Every conversation with your ScaleSource team, in one place.</p>
+        <h1 className="font-display text-5xl font-medium leading-none tracking-[-0.02em] sm:text-6xl">Messages</h1>
+        <p className="mt-3 text-sm text-muted-foreground">Every conversation with your ScaleSource team, in one place.</p>
       </div>
       {err && <p className="text-sm text-destructive">{err}</p>}
-      <div className="grid h-[calc(100vh-14rem)] min-h-[480px] grid-cols-1 overflow-hidden rounded-xl border bg-card md:grid-cols-[300px_1fr]">
-        <aside className="min-h-0 overflow-y-auto border-b md:border-b-0 md:border-r">
+      <div className="grid h-[calc(100vh-14rem)] min-h-[480px] grid-cols-1 overflow-hidden rounded-[30px] border border-white/80 bg-white/75 shadow-[0_40px_90px_-50px_rgb(46_16_73/0.5)] backdrop-blur-xl md:grid-cols-[300px_1fr]">
+        <aside className="min-h-0 overflow-y-auto border-b p-2 md:border-b-0 md:border-r">
           <InboxSection label="General" rows={general ? [general] : []} selectedKey={selectedKey} onSelect={select} empty="" />
           <InboxSection label="Requests" rows={displayedRequests} selectedKey={selectedKey} onSelect={select} empty={loading ? "Loading…" : "No request conversations yet."} />
           <InboxSection label="Candidates" rows={displayedCandidates} selectedKey={selectedKey} onSelect={select} empty={loading ? "Loading…" : "No candidate conversations yet."} />

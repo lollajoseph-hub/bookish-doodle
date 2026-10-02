@@ -74,11 +74,11 @@ function TeamPage() {
   }, [load]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="space-y-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Team</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="font-display text-5xl font-medium leading-none tracking-[-0.02em] sm:text-6xl">Team</h1>
+          <p className="mt-3 text-sm text-muted-foreground">
             Colleagues at {membership?.client_name ?? "your company"} who can review candidates.
           </p>
         </div>
@@ -86,7 +86,7 @@ function TeamPage() {
       </div>
 
       {(err || membershipError) && (
-        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/[0.06] p-4 text-sm text-destructive">
           {err ?? membershipError}
         </div>
       )}
@@ -94,10 +94,10 @@ function TeamPage() {
       {membershipLoading || rows === null ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : rows.length === 0 ? (
-        <Card className="rounded-2xl border-dashed">
+        <Card className="card-amber rounded-3xl border-dashed">
           <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
-            <Users className="h-8 w-8 text-muted-foreground" />
-            <p className="font-medium">No colleagues listed yet.</p>
+            <span className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft text-primary"><Users className="h-7 w-7" /></span>
+            <p className="font-display text-3xl font-medium">No colleagues listed yet.</p>
           </CardContent>
         </Card>
       ) : (
@@ -105,14 +105,14 @@ function TeamPage() {
           {rows.map((m) => {
             const name = m.profiles?.full_name ?? m.profiles?.email ?? "Team member";
             return (
-              <Card key={m.profile_id} className="card-amber rounded-2xl">
-                <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+              <Card key={m.profile_id} className="card-amber rounded-3xl">
+                <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4 sm:px-5">
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="grid h-10 w-10 flex-none place-items-center rounded-full bg-primary/10 font-semibold text-primary">
+                    <div className="grid h-12 w-12 flex-none place-items-center rounded-2xl bg-gradient-to-br from-[#ebddf7] to-[#d6c2ea] font-semibold text-primary">
                       {name.slice(0, 1).toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate font-medium">
+                      <p className="truncate font-semibold">
                         {name}
                         {m.profile_id === user?.id && (
                           <span className="ml-1.5 text-xs text-muted-foreground">(you)</span>
@@ -125,7 +125,7 @@ function TeamPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {m.is_primary && (
-                      <Badge variant="secondary" className="bg-primary/10 text-primary">
+                      <Badge variant="secondary" className="rounded-full bg-primary/[0.08] px-3 py-1 text-primary">
                         Primary contact
                       </Badge>
                     )}
@@ -189,7 +189,7 @@ function InviteDialog({ onInvited }: { onInvited: () => void }) {
           Invite colleague
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="rounded-[28px] sm:max-w-md">
         <form onSubmit={submit}>
           <DialogHeader>
             <DialogTitle>Invite a colleague</DialogTitle>

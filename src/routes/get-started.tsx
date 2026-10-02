@@ -36,6 +36,7 @@ import {
 } from "@/components/request-fields";
 import { toast } from "sonner";
 import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
+import { SplitWords, useEntrance } from "@/lib/motion";
 import { buildRequestRecap, RequestRecap } from "@/components/request-recap";
 import { SuccessFlourish } from "@/components/success-flourish";
 
@@ -82,23 +83,23 @@ interface ContactForm {
 function Stepper({ stage }: { stage: number }) {
   const progress = ((stage + 1) / STAGES.length) * 100;
   return (
-    <div className="relative rounded-xl bg-primary-soft/55 px-4 pb-3 pt-5 sm:px-8">
+    <div className="relative overflow-hidden rounded-[26px] bg-white/65 px-4 pb-4 pt-5 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.9),0_0_0_1px_rgb(26_19_32/0.06),0_18px_40px_-28px_rgb(46_16_73/0.45)] backdrop-blur-md sm:px-8">
       <ol className="relative flex items-start">
       {STAGES.map(({ label, icon: Icon }, i) => {
         const state = i < stage ? "done" : i === stage ? "current" : "todo";
         return (
           <li key={label} className="relative flex flex-1 flex-col items-center gap-2 text-center">
             {i < STAGES.length - 1 && (
-              <span className="absolute left-1/2 top-5 h-px w-full border-t border-dashed border-primary/30" />
+              <span className="absolute left-1/2 top-5 h-px w-full border-t border-dashed border-primary/25" />
             )}
             <span
               className={
-                "relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-lg border transition-all duration-300 " +
+                "relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border transition-[background-color,color,box-shadow,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] " +
                 (state === "todo"
-                  ? "border-primary/25 bg-card text-muted-foreground"
+                  ? "border-foreground/10 bg-white text-muted-foreground"
                   : state === "current"
-                    ? "scale-110 border-amber bg-amber text-primary-foreground shadow-md ring-4 ring-amber/20"
-                    : "border-brand-accent bg-brand-accent text-primary-foreground")
+                    ? "scale-110 border-primary bg-primary text-primary-foreground shadow-[0_8px_20px_-8px_rgb(67_24_103/0.7)] ring-4 ring-amber/30"
+                    : "border-transparent bg-primary-soft text-primary")
               }
             >
               <Icon className="h-4 w-4" />
@@ -116,9 +117,9 @@ function Stepper({ stage }: { stage: number }) {
         );
       })}
       </ol>
-      <div className="absolute inset-x-0 bottom-0 h-1 overflow-hidden rounded-b-xl bg-border/70">
+      <div className="absolute inset-x-0 bottom-0 h-1 overflow-hidden bg-foreground/[0.06]">
         <div
-          className="wizard-progress-fill h-full transition-[width] duration-500 ease-out"
+          className="wizard-progress-fill h-full transition-[width] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -191,7 +192,7 @@ function SetPasswordForm() {
           required
         />
       </div>
-      <Button type="submit" disabled={busy} className="login-submit-button w-full">
+      <Button type="submit" disabled={busy} className="h-11 w-full">
         {busy ? "Saving…" : "Set password and continue"}
       </Button>
     </form>
@@ -201,6 +202,7 @@ function SetPasswordForm() {
 function GetStartedPage() {
   const catalog = useCatalog();
   const [stage, setStage] = useState(0);
+  const scope = useEntrance<HTMLFormElement>();
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ invited: boolean } | null>(null);
@@ -316,37 +318,37 @@ function GetStartedPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card/80 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-3">
-          <Link to="/login" className="flex items-center gap-2">
-             <span className="flex h-9 w-32 items-center rounded-md bg-primary px-3">
-               <img src={whiteBrandLogo.url} alt="ScaleSource" className="h-4 w-full object-contain object-left" />
+      <header className="sticky top-3 z-20 px-3 pt-3 sm:px-6">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 rounded-full bg-white/65 py-1.5 pl-2 pr-4 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.85),0_0_0_1px_rgb(26_19_32/0.06),0_10px_40px_-16px_rgb(46_16_73/0.35)] backdrop-blur-xl">
+          <Link to="/login" className="flex items-center gap-2.5 rounded-full">
+             <span className="flex h-9 w-28 items-center rounded-full bg-primary px-3.5">
+               <img src={whiteBrandLogo.url} alt="ScaleSource" className="h-3.5 w-full object-contain object-left" />
             </span>
-            <span className="font-semibold tracking-tight text-foreground">Candidate Pool</span>
+            <span className="font-display hidden text-xl font-semibold leading-none text-foreground sm:inline">Candidate Pool</span>
           </Link>
-          <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">
+          <Link to="/login" className="rounded text-sm text-muted-foreground hover:text-foreground">
             Already have an account? Sign in
           </Link>
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-6 py-10">
+      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
         {result ? (
-          <Card className="card-amber overflow-hidden rounded-2xl">
-            <CardContent className="flex flex-col items-center gap-5 px-6 py-10 text-center sm:px-10">
+          <Card className="card-amber overflow-hidden rounded-[30px]">
+            <CardContent className="flex flex-col items-center gap-6 px-6 py-12 text-center sm:px-12">
               <SuccessFlourish />
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight">
+                <h1 className="font-display text-5xl font-medium leading-none">
                   {result.invited ? "We're creating your dashboard" : "Your request is submitted!"}
                 </h1>
-              <p className="max-w-md text-muted-foreground">
+              <p className="mt-3 max-w-md text-muted-foreground">
                 {result.invited
                   ? "Set up your password here to get started."
                   : "Your request has been added — taking you to sign in…"}
               </p>
               </div>
               {!result.invited && (
-                <div className="w-full rounded-lg bg-primary-soft/60 p-5">
+                <div className="w-full rounded-3xl bg-stone/90 p-5 text-left shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
                   <RequestRecap items={allItems} expanded />
                 </div>
               )}
@@ -361,18 +363,20 @@ function GetStartedPage() {
             </CardContent>
           </Card>
         ) : (
-          <form onSubmit={submit} className="space-y-6">
+          <form ref={scope} onSubmit={submit} className="space-y-6">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Get started</h1>
-              <p className="text-sm text-muted-foreground">
+              <h1 className="font-display text-5xl font-medium leading-none tracking-[-0.02em] sm:text-6xl">
+                <SplitWords text="Get" /> <SplitWords text="started" className="italic text-primary" />
+              </h1>
+              <p data-rise className="mt-3 text-sm text-muted-foreground">
                  Five focused steps and we'll start matching candidates for you.
               </p>
             </div>
 
-            <Stepper stage={stage} />
+            <div data-rise><Stepper stage={stage} /></div>
 
             {catalog.error && stage >= 2 && (
-              <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+              <div className="flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/[0.06] p-4 text-sm text-destructive">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>
                   We couldn't load the role and skill options. Please refresh, or contact us if this keeps happening.
@@ -380,7 +384,7 @@ function GetStartedPage() {
               </div>
             )}
 
-            <Card className="card-amber overflow-hidden rounded-2xl">
+            <Card data-rise className="card-amber overflow-hidden rounded-[30px]">
             <div key={stage} className={direction === "forward" ? "wizard-forward-enter" : "wizard-back-enter"}>
             {stage === 0 && (
               <>
@@ -524,17 +528,18 @@ function GetStartedPage() {
                 variant="outline"
                 onClick={() => { setDirection("back"); setStage((s) => Math.max(s - 1, 0)); }}
                 disabled={stage === 0}
+                className="h-11 px-5"
               >
                 <ArrowLeft className="mr-1.5 h-4 w-4" />
                 Back
               </Button>
               {stage < STAGES.length - 1 ? (
-                <Button type="button" className="login-submit-button" onClick={next}>
+                <Button type="button" className="h-11 px-6" onClick={next}>
                   Continue
                   <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Button>
               ) : (
-                <Button type="submit" className="login-submit-button" disabled={busy}>
+                <Button type="submit" className="h-11 px-6" disabled={busy}>
                   {busy ? "Submitting…" : "Submit request"}
                 </Button>
               )}

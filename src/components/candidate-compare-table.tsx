@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
+import { DateTimePicker } from "@/components/date-time-fields";
 import { supabase } from "@/lib/supabase";
 import {
   displayName,
@@ -70,7 +70,7 @@ export function CandidateCompareTable({
   onViewProfile,
 }: CandidateCompareTableProps) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-border bg-card">
+    <div className="card-amber overflow-x-auto rounded-3xl">
       <table className="w-max min-w-full border-collapse text-sm">
         <tbody>
           <CompareRow label="Candidate">
@@ -81,15 +81,14 @@ export function CandidateCompareTable({
                 <CompareCell key={match.id} className="align-top">
                   <div className="flex items-center gap-3">
                     {photo ? (
-                      <img src={photo} alt="" className="h-14 w-14 flex-none rounded-full object-cover ring-2 ring-primary/15" />
+                      <img src={photo} alt="" className="h-14 w-14 flex-none rounded-[18px] object-cover" />
                     ) : (
-                      <div className="grid h-14 w-14 flex-none place-items-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
+                      <div className="grid h-14 w-14 flex-none place-items-center rounded-[18px] bg-gradient-to-br from-[#ebddf7] to-[#d6c2ea] text-lg font-semibold text-primary">
                         {name.slice(0, 1).toUpperCase()}
                       </div>
                     )}
                     <div className="min-w-0">
-                      {match.status !== "hired" && <p className="text-xs italic text-muted-foreground">Meet</p>}
-                      <p className="truncate font-semibold text-foreground">{name}</p>
+                      <p className="font-display truncate text-2xl font-semibold leading-none text-foreground">{name}</p>
                       {curated && (
                         <Badge variant="secondary" className="mt-1 bg-primary-soft text-primary">
                           <Sparkles className="mr-1 h-3 w-3" /> Hand-picked
@@ -135,7 +134,7 @@ export function CandidateCompareTable({
             ))}
           </CompareRow>
 
-          <CompareRow label="AI summary">
+          <CompareRow label="Summary">
             {matches.map((match) => (
               <CompareCell key={match.id} className="align-top leading-relaxed">
                 {firstNameOnlyAnalysis(match.candidate_pool_profile?.approved_summary, match.candidate_pool_profile?.full_name) || "—"}
@@ -202,7 +201,7 @@ export function CandidateCompareTable({
 function CompareRow({ label, last, children }: { label: string; last?: boolean; children: React.ReactNode }) {
   return (
     <tr className={last ? "" : "border-b border-border"}>
-      <th scope="row" className="w-40 min-w-40 bg-muted/40 px-4 py-4 text-left align-top text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <th scope="row" className="sticky left-0 z-[1] w-40 min-w-40 bg-stone/95 px-4 py-4 text-left align-top text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground backdrop-blur-sm">
         {label}
       </th>
       {children}
@@ -211,7 +210,7 @@ function CompareRow({ label, last, children }: { label: string; last?: boolean; 
 }
 
 function CompareCell({ className = "", children }: { className?: string; children: React.ReactNode }) {
-  return <td className={`w-64 min-w-64 border-l border-border px-4 py-4 text-foreground ${className}`}>{children}</td>;
+  return <td className={`w-64 min-w-64 border-l border-border px-4 py-4 text-secondary-foreground ${className}`}>{children}</td>;
 }
 
 export function CandidateActions({
@@ -356,7 +355,7 @@ export function CandidateActions({
         </>
       )}
       {match.status === "interview_requested" && match.interview_proposed_by === "staff" && (
-        <div className="space-y-2 rounded-md bg-primary/5 p-2 text-primary">
+        <div className="space-y-2 rounded-2xl bg-primary/[0.05] p-3 text-primary">
           <p className="text-xs"><CalendarClock className="mr-1 inline h-3.5 w-3.5" />New time: {formatDateTime(match.interview_proposed_at)}</p>
           <Button size="sm" disabled={acceptingTime || proposeBusy} onClick={acceptInterviewTime}>
             {acceptingTime && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />} Accept this time
@@ -372,18 +371,12 @@ export function CandidateActions({
           </Button>
 
           {proposing && (
-            <div className="w-full space-y-2 rounded-md border border-border bg-background/60 p-3 text-foreground">
+            <div className="w-full space-y-2 rounded-2xl bg-white/85 p-3 text-foreground shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
               <p className="text-sm font-medium">
                 You've declined that time — suggest one that works:
               </p>
               <Label htmlFor={`compare-propose-when-${match.id}`}>Your preferred time</Label>
-              <Input
-                id={`compare-propose-when-${match.id}`}
-                type="datetime-local"
-                value={proposedAt}
-                onChange={(e) => setProposedAt(e.target.value)}
-                className="bg-background"
-              />
+              <DateTimePicker id={`compare-propose-when-${match.id}`} value={proposedAt} onChange={setProposedAt} />
               <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"

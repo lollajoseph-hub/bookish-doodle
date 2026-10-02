@@ -103,7 +103,7 @@ export function TagInput({
 
   return (
     <div
-      className="rounded-md border border-input bg-background p-2"
+      className="rounded-xl border border-input bg-white/90 p-2 transition-[border-color,box-shadow] duration-300 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10"
       onKeyDownCapture={(event) => {
         if (event.key === "Enter") {
           event.preventDefault();
@@ -168,7 +168,7 @@ export function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-sm">
+      <Label className="text-[13px] font-semibold text-secondary-foreground">
         {label}
         {required && <span className="ml-0.5 text-destructive">*</span>}
       </Label>
@@ -231,10 +231,10 @@ function ChoiceCards({
               aria-checked={selected}
               onClick={() => onChange(option.value)}
               className={cn(
-                "group relative h-auto min-h-14 whitespace-normal px-2.5 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5",
+                "group relative h-auto min-h-14 whitespace-normal rounded-[16px] px-3 py-2.5 text-left font-medium transition-[background-color,color,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
                 selected
-                  ? "scale-[1.02] border-primary bg-primary text-primary-foreground shadow-md hover:bg-primary hover:text-primary-foreground"
-                  : "bg-card text-foreground hover:border-primary/40 hover:bg-primary-soft",
+                  ? "bg-primary text-primary-foreground shadow-[0_10px_24px_-12px_rgb(67_24_103/0.75)] hover:bg-primary hover:text-primary-foreground"
+                  : "bg-white/90 text-foreground hover:bg-primary-soft",
                 revealed && "wizard-choice-reveal",
               )}
               style={
@@ -244,7 +244,7 @@ function ChoiceCards({
               <span className="flex min-w-0 flex-1 items-center gap-2">
                 <span
                   className={cn(
-                    "grid h-7 w-7 shrink-0 place-items-center rounded transition-colors duration-300",
+                    "grid h-8 w-8 shrink-0 place-items-center rounded-xl transition-colors duration-300",
                     selected ? "bg-primary-foreground/15 text-primary-foreground" : "bg-primary/10 text-primary",
                   )}
                 >
@@ -352,7 +352,7 @@ export function RequestScheduleFields(props: RequestFieldsProps) {
               type="button"
               variant="outline"
               className={cn(
-                "w-full justify-start text-left font-normal",
+                "h-10 w-full justify-start rounded-xl text-left font-normal",
                 !selectedDate && "text-muted-foreground",
               )}
             >
@@ -360,7 +360,7 @@ export function RequestScheduleFields(props: RequestFieldsProps) {
               {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto overflow-hidden rounded-3xl p-0" align="start">
             <Calendar
               mode="single"
               selected={selectedDate}

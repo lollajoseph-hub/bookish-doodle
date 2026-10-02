@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,16 @@ export function NotificationsBell() {
 
   const unread = (rows ?? []).filter((n) => !n.read).length;
 
+  // Ring the bell straight away whenever the unread count goes up (new notifications arrived).
+  // While anything is unread it also gives a short reminder ring every few seconds (CSS, see .bell-ring).
+  const [ringKey, setRingKey] = useState(0);
+  const prevUnread = useRef<number | null>(null);
+  useEffect(() => {
+    if (rows === null) return;
+    if (prevUnread.current !== null && unread > prevUnread.current) setRingKey((k) => k + 1);
+    prevUnread.current = unread;
+  }, [rows, unread]);
+
   async function markRead(ids: string[]) {
     if (ids.length === 0) return;
     setBusy(true);
@@ -66,17 +76,22 @@ export function NotificationsBell() {
     <Popover onOpenChange={(o) => o && void load()}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="sm" className="relative" aria-label="Notifications">
-          <Bell className="h-4 w-4" />
+          <span key={ringKey} className={unread > 0 ? "bell-ring inline-flex" : "inline-flex"}>
+            <Bell className="h-4 w-4" />
+          </span>
           {unread > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white">
+            <span
+              key={`badge-${ringKey}`}
+              className="bell-badge absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-amber px-1 text-[10px] font-bold text-amber-foreground"
+            >
               {unread > 9 ? "9+" : unread}
             </span>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0">
-        <div className="flex items-center justify-between border-b px-3 py-2">
-          <span className="text-sm font-semibold">Notifications</span>
+      <PopoverContent align="end" className="w-80 overflow-hidden rounded-3xl border-white/80 bg-white/95 p-0 shadow-[0_30px_70px_-30px_rgb(46_16_73/0.55)] backdrop-blur-xl">
+        <div className="flex items-center justify-between border-b px-4 py-3">
+          <span className="font-display text-xl font-semibold leading-none">Notifications</span>
           {unread > 0 && (
             <Button
               variant="ghost"
@@ -102,11 +117,11 @@ export function NotificationsBell() {
               {rows.map((n) => (
                 <li
                   key={n.id}
-                  className={`cursor-pointer px-3 py-2.5 text-sm hover:bg-muted/60 ${n.read ? "" : "bg-primary/5"}`}
+                  className={`cursor-pointer px-4 py-3 text-sm transition-colors hover:bg-primary/[0.04] ${n.read ? "" : "bg-primary/[0.05]"}`}
                   onClick={() => !n.read && void markRead([n.id])}
                 >
                   <div className="flex items-start gap-2">
-                    {!n.read && <span className="mt-1.5 h-2 w-2 flex-none rounded-full bg-amber-500" />}
+                    {!n.read && <span className="mt-1.5 h-2 w-2 flex-none rounded-full bg-amber" />}
                     <div className="min-w-0">
                       <p className="font-medium leading-snug">{n.title ?? "Update"}</p>
                       {n.message && <p className="text-muted-foreground">{n.message}</p>}

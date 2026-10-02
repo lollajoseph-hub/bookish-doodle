@@ -1,5 +1,5 @@
 import { CandidateFullProfileView } from "@/components/candidate-full-profile-view";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 export function CandidateProfileDialog({
   candidateId,
@@ -19,8 +19,14 @@ export function CandidateProfileDialog({
   onClose: () => void;
 }) {
   return (
-    <Dialog open={!!candidateId} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="card-amber max-h-[90vh] max-w-2xl overflow-hidden bg-card p-0">
+    // Slides in from the right (approved mockup). Same open/close behaviour as before.
+    <Sheet open={!!candidateId} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent
+        side="right"
+        className="w-full overflow-hidden border-0 bg-transparent p-3 shadow-none data-[state=open]:duration-700 data-[state=closed]:duration-300 sm:max-w-[720px]"
+      >
+        <SheetTitle className="sr-only">Candidate profile</SheetTitle>
+        <div className="h-full overflow-hidden rounded-[30px] border border-white/70 bg-white/95 shadow-[0_40px_90px_-30px_rgb(46_16_73/0.55)] backdrop-blur-xl [&_.candidate-profile-scroll]:max-h-[calc(100dvh-1.5rem)]">
         <CandidateFullProfileView
           candidateId={candidateId}
           matchId={matchId}
@@ -30,7 +36,8 @@ export function CandidateProfileDialog({
           candidateSkills={candidateSkills}
           scrollable
         />
-      </DialogContent>
-    </Dialog>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

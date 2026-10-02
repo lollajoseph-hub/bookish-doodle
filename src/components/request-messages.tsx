@@ -38,7 +38,7 @@ export interface QuickAction {
 
 /** Display metadata for sendable structured types; legacy types render via LEGACY_ACTION_META. */
 export const ACTION_META: Record<Exclude<StructuredType, "call_me_asap">, QuickAction> = {
-  reschedule_request: { type: "reschedule_request", label: "Request Reschedule", body: "Request Reschedule", icon: CalendarClock, tone: "bg-amber-100 text-amber-800 border-amber-300" },
+  reschedule_request: { type: "reschedule_request", label: "Request Reschedule", body: "Request Reschedule", icon: CalendarClock, tone: "bg-amber-soft text-gold-ink border-amber/40" },
   send_portfolio: { type: "send_portfolio", label: "Send Portfolio", body: "Send Portfolio", icon: FileText, tone: "bg-primary-soft text-primary border-primary/30" },
 };
 
@@ -280,7 +280,7 @@ function MessagesButton({
       <MessageSquare className="mr-1.5 h-4 w-4" />
       {label}
       {unread > 0 && (
-        <span className="absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white">
+        <span className="absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-amber px-1 text-[10px] font-bold text-amber-foreground">
           {unread > 9 ? "9+" : unread}
         </span>
       )}
@@ -355,7 +355,7 @@ export function ChatFeed({
                   {formatDateTime(m.created_at)}
                 </span>
                 {action ? (
-                  <div className={`inline-flex min-w-0 max-w-[85%] flex-col gap-1 break-words rounded-xl border px-3 py-2 text-sm ${action.tone}`}>
+                  <div className={`inline-flex min-w-0 max-w-[85%] flex-col gap-1 break-words rounded-2xl border px-3.5 py-2.5 text-sm ${action.tone}`}>
                     <span className="inline-flex items-center gap-1.5 break-words font-semibold">
                       <action.icon className="h-3.5 w-3.5 flex-none" />
                       {action.label}
@@ -365,7 +365,7 @@ export function ChatFeed({
                 ) : (
                   <div
                     className={`max-w-[85%] whitespace-pre-line break-words rounded-2xl px-3.5 py-2 text-sm ${
-                      mine ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm bg-muted text-foreground"
+                      mine ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md bg-white text-foreground shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]"
                     }`}
                   >
                     {m.body}
@@ -484,7 +484,7 @@ export function Composer({
           onKeyDown={onKeyDown}
           placeholder="Write a message…"
           rows={2}
-          className="min-h-[44px] resize-none"
+          className="min-h-[44px] resize-none rounded-2xl"
           disabled={!canSend}
         />
         <Button size="icon" aria-label="Send" disabled={!canSend || !body.trim() || sending !== null} onClick={() => void send(body, null)}>

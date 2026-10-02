@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { DateTimePicker } from "@/components/date-time-fields";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
@@ -22,6 +22,8 @@ import {
 } from "@/lib/matches";
 import { createThread, findThreadId } from "@/components/request-messages";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SplitWords, useEntrance } from "@/lib/motion";
 
 export const Route = createFileRoute("/interviews")({
   head: () => ({
@@ -183,9 +185,9 @@ function PrepNotes({ matchId }: { matchId: string }) {
         <ChevronDown className={`ml-1.5 h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
       </Button>
       {open && (
-        <div className="space-y-3 rounded-lg bg-primary/5 px-3 py-2">
+        <div className="space-y-3 rounded-2xl bg-stone/90 p-4 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
           <div>
-            <p className="text-sm font-semibold text-primary">Interview Prep Notes</p>
+            <p className="text-sm font-semibold text-foreground">Interview Prep Notes</p>
             <p className="text-xs text-muted-foreground">Shared prep notes for this candidate&apos;s interview.</p>
           </div>
           {!loaded ? (
@@ -195,7 +197,7 @@ function PrepNotes({ matchId }: { matchId: string }) {
           ) : (
             <ul className="space-y-2">
               {notes.map((n) => (
-                <li key={n.id} className="rounded-md bg-background px-3 py-2">
+                <li key={n.id} className="rounded-xl bg-white px-3 py-2.5 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <span className="text-xs font-semibold text-foreground">{authorLabel(n)}</span>
                     <span className="text-[11px] text-muted-foreground">{formatDateTime(n.created_at)}</span>
@@ -212,7 +214,7 @@ function PrepNotes({ matchId }: { matchId: string }) {
               onChange={(e) => setDraft(e.target.value)}
               placeholder="Add a question, talking point, or thing to cover…"
               rows={3}
-              className="resize-none bg-background"
+              className="resize-none bg-white"
             />
             <div className="flex justify-end">
               <Button size="sm" onClick={() => void submit()} disabled={!loaded || sending || !draft.trim()}>
@@ -231,11 +233,11 @@ function InterviewReason({ reason }: { reason: string }) {
   const [reasonExpanded, setReasonExpanded] = useState(false);
 
   return (
-    <div className="border-t border-border/70 pt-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Why this candidate</p>
-      <p className={reasonExpanded ? "mt-1 text-sm leading-relaxed text-muted-foreground" : "mt-1 text-sm leading-relaxed text-muted-foreground line-clamp-2"}>{reason}</p>
+    <div>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Why this candidate</p>
+      <p className={reasonExpanded ? "mt-1.5 text-[13px] leading-relaxed text-secondary-foreground" : "mt-1.5 text-[13px] leading-relaxed text-secondary-foreground line-clamp-2"}>{reason}</p>
       {reason.length > 120 && (
-        <button type="button" onClick={() => setReasonExpanded((v) => !v)} className="mt-0.5 text-xs font-medium text-primary">
+        <button type="button" onClick={() => setReasonExpanded((v) => !v)} className="mt-1 rounded text-xs font-semibold text-primary hover:underline hover:underline-offset-4">
           {reasonExpanded ? "Show less" : "Read more"}
         </button>
       )}
@@ -289,18 +291,12 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
       </Button>
 
       {proposing && (
-        <div className="w-full space-y-2 rounded-lg border border-border bg-background/60 p-3">
+        <div className="w-full space-y-2 rounded-2xl bg-white/85 p-3 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">
           <p className="text-sm font-medium">
             You've declined that time — suggest one that works:
           </p>
           <Label htmlFor={`propose-when-${matchId}`}>Your preferred time</Label>
-          <Input
-            id={`propose-when-${matchId}`}
-            type="datetime-local"
-            value={proposedAt}
-            onChange={(e) => setProposedAt(e.target.value)}
-            className="bg-background"
-          />
+          <DateTimePicker id={`propose-when-${matchId}`} value={proposedAt} onChange={setProposedAt} />
           <div className="flex justify-end gap-2">
             <Button
               variant="outline"
@@ -326,6 +322,8 @@ function CounterProposalActions({ matchId, locked, onRefresh }: { matchId: strin
 
 function InterviewsPage() {
   const [rows, setRows] = useState<MatchRow[] | null>(null);
+  // Header animates once when data first arrives; the 20s polling never replays it.
+  const scope = useEntrance<HTMLDivElement>([rows === null]);
   const [requests, setRequests] = useState<Record<string, string>>({});
   const [photos, setPhotos] = useState<Record<string, string | null>>({});
   const [requestSkills, setRequestSkills] = useState<Record<string, string[]>>({});
@@ -480,43 +478,40 @@ function InterviewsPage() {
     const proposed = formatDateTime(m.interview_proposed_at);
     const photo = photos[m.id] ?? null;
     return (
-      <Card key={m.id} className="card-amber rounded-2xl">
-        <CardContent className="space-y-3 p-5">
+      <Card key={m.id} className="card-amber rounded-3xl">
+        <CardContent className="space-y-4 p-5 sm:p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="flex min-w-0 items-start gap-3">
                       {photo ? (
-                        <img src={photo} alt="" className="h-14 w-14 flex-none rounded-full object-cover ring-2 ring-primary/15" />
+                        <img src={photo} alt="" className="h-14 w-14 flex-none rounded-full object-cover shadow-[0_10px_24px_-12px_rgb(46_16_73/0.5)]" />
                       ) : (
-                        <div className="grid h-14 w-14 flex-none place-items-center rounded-full bg-primary/10 text-xl font-semibold text-primary">
+                        <div className="grid h-14 w-14 flex-none place-items-center rounded-full bg-gradient-to-br from-[#ebddf7] to-[#d6c2ea] text-xl font-semibold text-primary">
                           {name.slice(0, 1).toUpperCase()}
                         </div>
                       )}
                       <div className="min-w-0 space-y-1">
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <div className="min-w-0">
-                            {m.status !== "hired" && (
-                              <p className="text-sm italic leading-none text-muted-foreground">Meet</p>
-                            )}
-                            <h3 className="truncate font-semibold leading-tight">{name}</h3>
+                            <h3 className="font-display truncate text-[26px] font-semibold leading-none">{name}</h3>
                           </div>
                           <span
-                            className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusTone(m.status)}`}
+                            className={`inline-flex h-[26px] items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-[11.5px] font-semibold ${statusTone(m.status)}`}
                           >
                             <MatchStatusIcon status={m.status} />
                             {MATCH_STATUS_LABELS[m.status] ?? m.status}
                           </span>
                           {isUnseen(m) && (
-                            <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-amber bg-amber/10 px-2.5 py-0.5 text-xs font-semibold text-amber-foreground">
+                            <span className="inline-flex h-[26px] items-center gap-1.5 whitespace-nowrap rounded-full bg-amber/[0.12] px-2.5 text-[11.5px] font-semibold text-gold-ink shadow-[inset_0_0_0_1px_rgb(224_164_58/0.6)]">
                               <span className="h-1.5 w-1.5 rounded-full bg-amber" />
                               New
                             </span>
                           )}
                         </div>
-                        {p?.headline && <p className="truncate text-xs text-muted-foreground">{p.headline}</p>}
+                        {p?.headline && <p className="truncate text-[13px] text-secondary-foreground">{p.headline}</p>}
                         <Link
                           to="/requests/$id"
                           params={{ id: m.client_request_id }}
-                          className="block text-xs text-muted-foreground hover:text-foreground"
+                          className="inline-block rounded text-xs font-semibold text-primary hover:underline hover:underline-offset-4"
                         >
                           For: {requests[m.client_request_id] ?? "Hiring request"}
                         </Link>
@@ -549,7 +544,7 @@ function InterviewsPage() {
 
                   {m.status === "interview_requested" &&
                     (m.interview_proposed_by === "staff" ? (
-                      <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary">
+                      <div className="space-y-2 rounded-2xl bg-primary/[0.05] px-4 py-3 text-sm text-primary">
                         <p className="flex items-center gap-2 font-medium">
                           <Clock className="h-4 w-4 flex-none" />
                           ScaleSource proposed a new time: {formatDateTime(m.interview_proposed_at)}
@@ -563,7 +558,7 @@ function InterviewsPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary">
+                      <div className="flex items-center gap-2 rounded-2xl bg-primary/[0.05] px-4 py-3 text-sm text-primary">
                         <Clock className="h-4 w-4 flex-none" />
                         {proposed
                           ? `You proposed ${proposed} — waiting for ScaleSource to confirm.`
@@ -572,7 +567,7 @@ function InterviewsPage() {
                     ))}
 
                   {(m.status === "interview_confirmed" || m.status === "interview_completed") && (
-                    <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+                    <div className="space-y-2 rounded-2xl bg-primary/[0.05] px-4 py-3">
                       <p className="flex items-center gap-2 text-sm font-medium text-primary">
                         <CalendarClock className="h-4 w-4 flex-none" />
                         {when
@@ -586,7 +581,7 @@ function InterviewsPage() {
                       )}
                       {m.status === "interview_completed" && (m.meeting_notes_text || m.recording_url) && (
                         <div className="mt-2 space-y-1.5 border-t border-primary/10 pt-2">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-primary">Meeting notes &amp; recording</p>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">Meeting notes &amp; recording</p>
                           {m.meeting_notes_text && (
                             <p className="whitespace-pre-line text-sm text-muted-foreground">{m.meeting_notes_text}</p>
                           )}
@@ -618,7 +613,7 @@ function InterviewsPage() {
                   />
 
                   {m.status === "hire_requested" && (
-                    <div className="space-y-2 rounded-lg bg-primary/5 px-3 py-2">
+                    <div className="space-y-2 rounded-2xl bg-primary/[0.05] px-4 py-3">
                       <p className="text-sm font-medium text-primary">
                         Hire requested — waiting on ScaleSource to send the contract.
                       </p>
@@ -642,10 +637,12 @@ function InterviewsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div ref={scope} className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Interviews</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="font-display text-5xl font-medium leading-none tracking-[-0.02em] sm:text-6xl">
+          <SplitWords text="Interviews" />
+        </h1>
+        <p data-rise className="mt-3 text-sm text-muted-foreground">
           Every interview requested, scheduled or already held across your hiring requests.
         </p>
       </div>
@@ -657,12 +654,19 @@ function InterviewsPage() {
       )}
 
       {rows === null ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <div className="grid gap-3" aria-busy="true" aria-label="Loading">
+          <Skeleton className="h-11 w-[420px] max-w-full rounded-full bg-white/70" />
+          {[0, 1].map((i) => (
+            <Skeleton key={i} className="h-[220px] rounded-3xl bg-white/70" />
+          ))}
+        </div>
       ) : rows.length === 0 ? (
-        <Card className="rounded-2xl border-dashed">
+        <Card className="card-amber rounded-3xl border-dashed">
           <CardContent className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <CalendarClock className="h-8 w-8 text-muted-foreground" />
-            <p className="font-medium">No interviews yet.</p>
+            <span className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft text-primary">
+              <CalendarClock className="h-7 w-7" />
+            </span>
+            <p className="font-display text-3xl font-medium">No interviews yet.</p>
             <p className="text-sm text-muted-foreground">
               Request an interview from a candidate&apos;s card and it will appear here.
             </p>
@@ -676,14 +680,14 @@ function InterviewsPage() {
             const tab = STAGE_TABS.find((t) => t.value === v);
             if (tab && rows) void markStageSeen(tab.status, rows.filter((m) => m.status === tab.status));
           }}
-          className="space-y-3"
+          className="space-y-4"
         >
-          <TabsList>
+          <TabsList data-rise className="max-w-full overflow-x-auto">
             {STAGE_TABS.map((tab) => (
               <TabsTrigger key={tab.value} value={tab.value}>
                 {tab.label}
                 {rows.some((m) => m.status === tab.status && isUnseen(m)) && (
-                  <span className="ml-1.5 h-2 w-2 rounded-full bg-amber" />
+                  <span className="ml-1.5 h-2 w-2 rounded-full bg-amber shadow-[0_0_0_3px_rgb(224_164_58/0.25)]" />
                 )}
               </TabsTrigger>
             ))}
@@ -691,9 +695,9 @@ function InterviewsPage() {
           {STAGE_TABS.map((tab) => {
             const stageRows = rows.filter((m) => m.status === tab.status);
             return (
-              <TabsContent key={tab.value} value={tab.value} className="mt-3">
+              <TabsContent key={tab.value} value={tab.value} className="mt-3 animate-in fade-in slide-in-from-bottom-3 duration-500 motion-reduce:animate-none">
                 {stageRows.length === 0 ? (
-                  <p className="rounded-2xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+                  <p className="rounded-3xl border border-dashed border-foreground/15 bg-white/50 px-4 py-12 text-center text-sm text-muted-foreground">
                     No candidates in this stage right now.
                   </p>
                 ) : (

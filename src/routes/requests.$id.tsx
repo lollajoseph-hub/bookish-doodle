@@ -1,6 +1,7 @@
 import { CandidateRating } from "@/components/candidate-rating";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +17,9 @@ import { RequestMessages } from "@/components/request-messages";
 import { toast } from "sonner";
 import { ArrowLeft, ChevronLeft, ChevronRight, Columns3, Copy, LayoutGrid, Loader2, ScrollText, Sparkles, UsersRound } from "lucide-react";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
+import { Skeleton } from "@/components/ui/skeleton";
+import { prefersReducedMotion, useEntrance } from "@/lib/motion";
+import { gsap } from "gsap";
 import { ENGAGEMENT_TYPES, DAYS_OF_WEEK } from "@/lib/catalog";
 import {
   REQUEST_STATUS_LABELS,
@@ -99,6 +103,13 @@ function RequestDetail() {
   const [noMoreCandidates, setNoMoreCandidates] = useState(false);
   const [candidateView, setCandidateView] = useState<"cards" | "compare" | "review">("cards");
   const [reviewIndex, setReviewIndex] = useState(0);
+  /**
+   * Review carousel: while moving between candidates both sit side by side in one strip that glides across.
+   * fromId is the candidate being left; dir 1 = next (strip moves left), -1 = previous (strip moves right).
+   */
+  const [reviewTransition, setReviewTransition] = useState<{ fromId: string; dir: 1 | -1 } | null>(null);
+  const reviewViewportRef = useRef<HTMLDivElement>(null);
+  const reviewTrackRef = useRef<HTMLDivElement>(null);
   const loadTokenRef = useRef(0);
   /** Stable display order of match ids, captured on first load per request id. */
   const orderRef = useRef<{ requestId: string; order: string[] } | null>(null);
@@ -242,14 +253,117 @@ function RequestDetail() {
   const currentReviewIndex = matches?.length ? Math.min(reviewIndex, matches.length - 1) : 0;
   const reviewMatch = matches?.[currentReviewIndex] ?? null;
 
+  function stepReview(dir: 1 | -1, total: number) {
+    if (reviewTransition || !reviewMatch) return;
+    const nextIndex = dir === 1 ? Math.min(total - 1, currentReviewIndex + 1) : Math.max(0, currentReviewIndex - 1);
+    if (nextIndex === currentReviewIndex) return;
+    if (!prefersReducedMotion()) setReviewTransition({ fromId: reviewMatch.id, dir });
+    setReviewIndex(nextIndex);
+  }
+
+  // Runs when a transition starts: glide the strip one candidate across and ease the height to the new candidate.
+  useLayoutEffect(() => {
+    if (!reviewTransition) return;
+    const track = reviewTrackRef.current;
+    const viewport = reviewViewportRef.current;
+    if (!track || !viewport) return;
+    const panes = Array.from(track.children) as HTMLElement[];
+    const fromPane = panes.find((el) => el.dataset.matchId === reviewTransition.fromId);
+    const toPane = panes.find((el) => el.dataset.matchId !== reviewTransition.fromId);
+    const vs = getComputedStyle(viewport);
+    const pad = parseFloat(vs.paddingTop) + parseFloat(vs.paddingBottom);
+    const fromH = (fromPane?.offsetHeight ?? viewport.offsetHeight - pad) + pad;
+    const toH = (toPane?.offsetHeight ?? fromH - pad) + pad;
+    const finish = () => {
+      flushSync(() => setReviewTransition(null));
+      gsap.set(track, { xPercent: 0 });
+      gsap.set(viewport, { clearProps: "height" });
+    };
+    const tl = gsap.timeline({ onComplete: finish });
+    tl.fromTo(
+      track,
+      { xPercent: reviewTransition.dir === 1 ? 0 : -100 },
+      { xPercent: reviewTransition.dir === 1 ? -100 : 0, duration: 0.75, ease: "expo.inOut" },
+      0,
+    );
+    tl.fromTo(viewport, { height: fromH }, { height: toH, duration: 0.75, ease: "expo.inOut" }, 0);
+    return () => {
+      tl.kill();
+    };
+  }, [reviewTransition]);
+
+  /** One candidate in Review: full profile, then rating and actions (unchanged content). */
+  function renderReviewPane(m: MatchRow) {
+    return (
+      <>
+        <CandidateFullProfileView
+          candidateId={m.candidate_id}
+          matchId={m.id}
+          matchStatus={m.status}
+          matchReason={m.match_reason}
+          requiredSkills={requiredSkills}
+          candidateSkills={candidateSkills[m.candidate_id] ?? []}
+          preloadedProfile={fullProfiles[m.candidate_id] ?? null}
+          preloadedPhotoUrl={photos[m.id] ?? null}
+        />
+        <Card className="card-amber mt-4 rounded-3xl">
+          <CardContent className="space-y-3 p-5">
+            <CandidateRating
+              matchId={m.id}
+              interviewCompletedAt={m.interview_completed_at}
+              rating={m.client_rating}
+              note={m.client_rating_note}
+              onSaved={() => void load()}
+            />
+            <CandidateActions
+              key={m.id}
+              match={m}
+              busy={actingId === m.id}
+              locked={actingId !== null && actingId !== m.id}
+              onShortlist={() =>
+                callRpc(
+                  "client_shortlist_candidate",
+                  m.id,
+                  m.status === "shortlisted" ? "Removed from shortlist" : "Added to shortlist"
+                )
+              }
+              onRequestInterview={() => setInterviewFor(m)}
+              onRequestHire={() => callRpc("client_request_hire", m.id, "Hire request sent to ScaleSource")}
+              onRejected={() => void load()}
+              onInterviewTimeAccepted={() => void load()}
+            />
+          </CardContent>
+        </Card>
+      </>
+    );
+  }
+
   function selectCandidateView(view: "cards" | "compare" | "review") {
-    if (view === "review") setReviewIndex(0);
+    if (view === "review") {
+      setReviewIndex(0);
+      setReviewTransition(null);
+    }
     setCandidateView(view);
   }
 
+  // Entrance runs once when the page's data first arrives; the 20s polling never replays it.
+  const scope = useEntrance<HTMLDivElement>([request === null, matches === null]);
+
+  const viewButton = (view: "cards" | "compare" | "review", icon: React.ReactNode, label: string) => (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => selectCandidateView(view)}
+      aria-pressed={candidateView === view}
+      className="h-9 px-4 text-[13px] font-medium aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:shadow-[0_6px_18px_-6px_rgb(67_24_103/0.6)] aria-pressed:hover:bg-primary"
+    >
+      {icon} {label}
+    </Button>
+  );
+
   return (
-    <div className="space-y-6">
-      <Link to="/requests" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
+    <div ref={scope} className="space-y-6">
+      <Link to="/requests" data-rise className="inline-flex items-center rounded-md text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground hover:text-primary">
         <ArrowLeft className="mr-1 h-3.5 w-3.5" /> All requests
       </Link>
 
@@ -260,11 +374,11 @@ function RequestDetail() {
       )}
 
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,2.4fr)] lg:gap-6 lg:space-y-0 space-y-6">
-        <div className="min-w-0 lg:self-start">
-          <Card className="card-amber rounded-2xl">
-            <CardContent className="p-5">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl font-semibold tracking-tight">{request?.job_roles?.name ?? "Hiring request"}</h1>
+        <div data-rise className="min-w-0 lg:sticky lg:top-24 lg:self-start">
+          <Card className="card-amber rounded-[28px]">
+            <CardContent className="p-6">
+              <h1 className="font-display text-4xl font-semibold leading-[1.02] tracking-[-0.01em]">{request?.job_roles?.name ?? "Hiring request"}</h1>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 {request && (
                   <Badge className={requestStatusTone(request.status)} variant="secondary">
                     {REQUEST_STATUS_LABELS[request.status ?? ""] ?? request.status ?? "—"}
@@ -294,7 +408,7 @@ function RequestDetail() {
               </div>
 
               {request && (
-                <dl className="mt-4 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-1">
+                <dl className="mt-5 grid text-sm tabular-nums sm:grid-cols-2 sm:gap-x-8 lg:grid-cols-1">
                   <Detail label="Engagement" value={engagement} />
                   <Detail label="Hours needed" value={request.hours_needed} />
                   <Detail label="Days needed" value={days || null} />
@@ -316,54 +430,41 @@ function RequestDetail() {
           </Card>
         </div>
 
-        <div aria-hidden className="hidden lg:block lg:w-px lg:bg-amber" />
+        <div aria-hidden className="hidden lg:block lg:w-px lg:bg-gradient-to-b lg:from-transparent lg:via-primary/15 lg:to-transparent" />
 
         <div className="min-w-0 space-y-4">
-          <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <div data-rise className="grid grid-cols-1 items-end gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
             <div className="min-w-0">
-              <h2 className="text-lg font-semibold tracking-tight">Presented candidates</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="font-display text-[32px] font-semibold leading-none">Presented candidates</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
                 Shortlist the people you like, request an interview, or tell us why someone isn&apos;t a fit.
               </p>
             </div>
-            <div className="flex w-fit max-w-full shrink-0 overflow-x-auto rounded-md border border-border bg-background p-1" aria-label="Candidate view">
-              <Button
-                variant={candidateView === "cards" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => selectCandidateView("cards")}
-                aria-pressed={candidateView === "cards"}
-              >
-                <LayoutGrid className="mr-1.5 h-4 w-4" /> Cards
-              </Button>
-              <Button
-                variant={candidateView === "review" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => selectCandidateView("review")}
-                aria-pressed={candidateView === "review"}
-              >
-                <ScrollText className="mr-1.5 h-4 w-4" /> Review
-              </Button>
-              <Button
-                variant={candidateView === "compare" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => selectCandidateView("compare")}
-                aria-pressed={candidateView === "compare"}
-              >
-                <Columns3 className="mr-1.5 h-4 w-4" /> Compare
-              </Button>
+            <div
+              className="flex w-fit max-w-full shrink-0 gap-0.5 overflow-x-auto rounded-full bg-white/65 p-1 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.9),0_0_0_1px_rgb(26_19_32/0.07),0_10px_30px_-18px_rgb(46_16_73/0.4)] backdrop-blur-md"
+              aria-label="Candidate view"
+            >
+              {viewButton("cards", <LayoutGrid className="mr-1.5 h-4 w-4" />, "Cards")}
+              {viewButton("review", <ScrollText className="mr-1.5 h-4 w-4" />, "Review")}
+              {viewButton("compare", <Columns3 className="mr-1.5 h-4 w-4" />, "Compare")}
             </div>
           </div>
 
           {matches === null ? (
-            <p className="text-sm text-muted-foreground">Loading candidates…</p>
+            <div className="grid gap-4 md:grid-cols-2" aria-busy="true" aria-label="Loading candidates">
+              {[0, 1].map((i) => (
+                <Skeleton key={i} className="h-[340px] rounded-3xl bg-white/70" />
+              ))}
+            </div>
           ) : matches.length === 0 ? (
-            <Card className="rounded-2xl border-dashed">
-              <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            <Card className="card-amber rounded-3xl border-dashed">
+              <CardContent className="py-14 text-center text-sm text-muted-foreground">
                 No candidates presented yet — matching is still in progress. We&apos;ll email you when profiles are ready.
               </CardContent>
             </Card>
           ) : (
             <>
+              <div key={candidateView} className="animate-in fade-in slide-in-from-bottom-3 duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:animate-none">
               {candidateView === "cards" ? (
                 <div className="grid gap-4 md:grid-cols-2">
                   {matches.map((m) => (
@@ -414,66 +515,47 @@ function RequestDetail() {
                 />
               ) : reviewMatch ? (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border bg-card p-3">
+                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-full bg-white/65 p-1.5 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.9),0_0_0_1px_rgb(26_19_32/0.07)] backdrop-blur-md">
                     <Button
                       variant="outline"
                       size="sm"
                       disabled={currentReviewIndex === 0}
-                      onClick={() => setReviewIndex((index) => Math.max(0, index - 1))}
+                      onClick={() => stepReview(-1, matches.length)}
                     >
                       <ChevronLeft className="mr-1.5 h-4 w-4" /> Previous
                     </Button>
-                    <p className="text-center text-sm font-medium text-muted-foreground">
-                      Candidate {currentReviewIndex + 1} of {matches.length}
+                    <p className="text-center text-sm tabular-nums text-muted-foreground">
+                      Candidate <span className="font-display text-xl font-semibold text-foreground">{currentReviewIndex + 1}</span> of {matches.length}
                     </p>
                     <Button
                       variant="outline"
                       size="sm"
                       disabled={currentReviewIndex === matches.length - 1}
-                      onClick={() => setReviewIndex((index) => Math.min(matches.length - 1, index + 1))}
+                      onClick={() => stepReview(1, matches.length)}
                     >
                       Next <ChevronRight className="ml-1.5 h-4 w-4" />
                     </Button>
                   </div>
-                  <CandidateFullProfileView
-                    candidateId={reviewMatch.candidate_id}
-                    matchId={reviewMatch.id}
-                    matchStatus={reviewMatch.status}
-                    matchReason={reviewMatch.match_reason}
-                    requiredSkills={requiredSkills}
-                    candidateSkills={candidateSkills[reviewMatch.candidate_id] ?? []}
-                    preloadedProfile={fullProfiles[reviewMatch.candidate_id] ?? null}
-                  />
-                  <Card className="rounded-lg">
-                    <CardContent className="space-y-3 p-4">
-                      <CandidateRating
-                        matchId={reviewMatch.id}
-                        interviewCompletedAt={reviewMatch.interview_completed_at}
-                        rating={reviewMatch.client_rating}
-                        note={reviewMatch.client_rating_note}
-                        onSaved={() => void load()}
-                      />
-                      <CandidateActions
-                        key={reviewMatch.id}
-                        match={reviewMatch}
-                        busy={actingId === reviewMatch.id}
-                        locked={actingId !== null && actingId !== reviewMatch.id}
-                        onShortlist={() =>
-                          callRpc(
-                            "client_shortlist_candidate",
-                            reviewMatch.id,
-                            reviewMatch.status === "shortlisted" ? "Removed from shortlist" : "Added to shortlist"
-                          )
-                        }
-                        onRequestInterview={() => setInterviewFor(reviewMatch)}
-                        onRequestHire={() => callRpc("client_request_hire", reviewMatch.id, "Hire request sent to ScaleSource")}
-                        onRejected={() => void load()}
-                        onInterviewTimeAccepted={() => void load()}
-                      />
-                    </CardContent>
-                  </Card>
+                  <div ref={reviewViewportRef} className="-mx-3 -mb-8 overflow-hidden px-3 pb-8">
+                    <div ref={reviewTrackRef} className="flex items-start will-change-transform">
+                      {(() => {
+                        const from = reviewTransition ? matches.find((m) => m.id === reviewTransition.fromId) ?? null : null;
+                        const panes = !from
+                          ? [reviewMatch]
+                          : reviewTransition!.dir === 1
+                            ? [from, reviewMatch]
+                            : [reviewMatch, from];
+                        return panes.map((m) => (
+                          <div key={m.id} data-match-id={m.id} className="w-full shrink-0" aria-hidden={m.id !== reviewMatch.id || undefined}>
+                            {renderReviewPane(m)}
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
                 </div>
               ) : null}
+              </div>
 
               {SHOW_MORE_CANDIDATES_ENABLED && (
                 <div className="flex flex-col items-center gap-2 pt-2">
@@ -522,9 +604,9 @@ function RequestDetail() {
 function Detail({ label, value }: { label: string; value: string | null | undefined }) {
   if (!value) return null;
   return (
-    <div>
-      <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 font-medium">{value}</dd>
+    <div className="flex items-baseline justify-between gap-4 border-b border-border py-2.5 last:border-b-0">
+      <dt className="text-[13px] text-muted-foreground">{label}</dt>
+      <dd className="text-right text-[13px] font-semibold">{value}</dd>
     </div>
   );
 }

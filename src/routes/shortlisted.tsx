@@ -11,6 +11,8 @@ import { Star } from "lucide-react";
 import { toast } from "sonner";
 import { displayName, signedPhotoUrl, type MatchStatus } from "@/lib/matches";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SplitWords, useEntrance } from "@/lib/motion";
 
 export const Route = createFileRoute("/shortlisted")({
   head: () => ({
@@ -41,6 +43,8 @@ interface RequestMeta {
 
 function ShortlistedPage() {
   const [matches, setMatches] = useState<MatchRow[] | null>(null);
+  // Animates once when data first arrives; the 20s polling never replays it.
+  const scope = useEntrance<HTMLDivElement>([matches === null]);
   const [requests, setRequests] = useState<Record<string, string>>({});
   const [curatedRequests, setCuratedRequests] = useState<Set<string>>(new Set());
   const [photos, setPhotos] = useState<Record<string, string | null>>({});
@@ -170,10 +174,12 @@ function ShortlistedPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div ref={scope} className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Shortlisted candidates</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="font-display text-5xl font-medium leading-none tracking-[-0.02em] sm:text-6xl">
+          <SplitWords text="Shortlisted" /> <SplitWords text="candidates" className="italic text-primary" />
+        </h1>
+        <p data-rise className="mt-3 text-sm text-muted-foreground">
           Everyone you&apos;ve moved forward across all your hiring requests, up until they&apos;re hired or ruled out.
         </p>
       </div>
@@ -185,8 +191,8 @@ function ShortlistedPage() {
       )}
 
       {requestIds.length > 1 && (
-        <div className="flex flex-wrap gap-2">
-          <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>
+        <div data-rise className="flex flex-wrap gap-2" role="group" aria-label="Filter by request">
+          <Button variant={filter === "all" ? "default" : "outline"} size="sm" aria-pressed={filter === "all"} className="h-9 px-4" onClick={() => setFilter("all")}>
             All requests
           </Button>
           {requestIds.map((rid) => (
@@ -194,6 +200,8 @@ function ShortlistedPage() {
               key={rid}
               variant={filter === rid ? "default" : "outline"}
               size="sm"
+              aria-pressed={filter === rid}
+              className="h-9 px-4"
               onClick={() => setFilter(rid)}
             >
               {requests[rid] ?? "Hiring request"}
@@ -203,12 +211,18 @@ function ShortlistedPage() {
       )}
 
       {matches === null ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <div className="grid gap-4 lg:grid-cols-2" aria-busy="true" aria-label="Loading">
+          {[0, 1].map((i) => (
+            <Skeleton key={i} className="h-[340px] rounded-3xl bg-white/70" />
+          ))}
+        </div>
       ) : visible.length === 0 ? (
-        <Card className="rounded-2xl border-dashed">
+        <Card className="card-amber rounded-3xl border-dashed">
           <CardContent className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <Star className="h-8 w-8 text-muted-foreground" />
-            <p className="font-medium">You haven&apos;t shortlisted anyone yet.</p>
+            <span className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-primary-soft to-amber-soft text-primary">
+              <Star className="h-7 w-7" />
+            </span>
+            <p className="font-display text-3xl font-medium">You haven&apos;t shortlisted anyone yet.</p>
             <p className="text-sm text-muted-foreground">
               Star a candidate from one of your requests to add them here.
             </p>
@@ -227,7 +241,7 @@ function ShortlistedPage() {
               requiredSkills={requestSkills[m.client_request_id] ?? []}
               candidateSkills={candidateSkillsMap[m.candidate_id] ?? []}
               contextLabel={
-                <Link to="/requests/$id" params={{ id: m.client_request_id }} className="hover:text-foreground">
+                <Link to="/requests/$id" params={{ id: m.client_request_id }} className="rounded font-semibold text-primary hover:underline hover:underline-offset-4">
                   For: {requests[m.client_request_id] ?? "Hiring request"}
                 </Link>
               }

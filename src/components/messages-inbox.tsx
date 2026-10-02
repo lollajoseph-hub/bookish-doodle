@@ -21,7 +21,7 @@ export function InboxSection({
   if (rows.length === 0 && !empty) return null;
   return (
     <div className="py-2">
-      <p className="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="px-5 pb-1 pt-2 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
       {rows.length === 0 ? (
         <p className="px-4 py-2 text-xs text-muted-foreground">{empty}</p>
       ) : (
@@ -42,7 +42,7 @@ export function ThreadListRow({ row, selected, onSelect }: { row: MessageInboxRo
         type="button"
         variant="ghost"
         onClick={onSelect}
-        className={`h-auto w-full justify-start gap-2 rounded-none px-4 py-2.5 text-left whitespace-normal ${selected ? "bg-primary-soft text-primary hover:bg-primary-soft" : "hover:bg-muted"}`}
+        className={`h-auto w-full justify-start gap-2 rounded-2xl px-4 py-2.5 text-left font-normal whitespace-normal ${selected ? "bg-primary-soft text-primary hover:bg-primary-soft" : "hover:bg-primary/[0.05]"}`}
       >
         <MessageSquare className="mt-0.5 h-4 w-4 flex-none opacity-70" />
         <span className="min-w-0 flex-1">
@@ -68,7 +68,7 @@ export function ChatPane({ row, leadingAction, trailingAction }: { row: MessageI
   const { threadId, setThreadId, resolved, messages, senderProfiles, err, latest, addMessage, userId } = useThread(row.target, true);
   return (
     <>
-      <header className="flex items-center gap-2 border-b px-3 py-3">
+      <header className="flex items-center gap-2 border-b px-4 py-3.5">
         {leadingAction}
         <div className="min-w-0 flex-1 px-1">
           <h2 className="truncate font-semibold">{row.title}</h2>

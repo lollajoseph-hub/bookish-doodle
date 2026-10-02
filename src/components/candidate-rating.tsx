@@ -48,8 +48,8 @@ export function CandidateRating({
 
   const shown = hover || value;
   return (
-    <div className="space-y-2 border-t border-border/70 pt-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <div className="space-y-2">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
         {rating ? "Your interview rating" : "Rate this interview"}
       </p>
       <div className="flex items-center gap-0.5" onMouseLeave={() => setHover(0)}>
@@ -58,11 +58,11 @@ export function CandidateRating({
             key={n}
             type="button"
             aria-label={`${n} star${n > 1 ? "s" : ""}`}
-            className="rounded p-0.5"
+            className="rounded p-0.5 transition-transform duration-300 hover:scale-110"
             onMouseEnter={() => setHover(n)}
             onClick={() => setValue(n)}
           >
-            <Star className={cn("h-5 w-5", n <= shown ? "fill-amber text-amber" : "text-muted-foreground/40")} />
+            <Star className={cn("h-5 w-5", n <= shown ? "fill-amber text-amber" : "text-foreground/15")} />
           </button>
         ))}
       </div>

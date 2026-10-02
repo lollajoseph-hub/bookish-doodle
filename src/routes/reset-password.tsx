@@ -96,9 +96,9 @@ function ResetPasswordPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Card className="card-amber w-full max-w-md rounded-2xl shadow-lg">
+      <Card className="card-amber w-full max-w-md rounded-[30px]">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-primary text-primary-foreground">
+          <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-[0_14px_30px_-12px_rgb(67_24_103/0.7)]">
             {phase === "done" ? <CheckCircle2 className="h-6 w-6" /> : <Users className="h-6 w-6" />}
           </div>
           <CardTitle>
@@ -151,7 +151,7 @@ function ResetPasswordPage() {
                   required
                 />
               </div>
-              <Button type="submit" disabled={busy} className="w-full">
+              <Button type="submit" disabled={busy} className="h-11 w-full">
                 {busy ? "Saving…" : "Set password"}
               </Button>
             </form>
