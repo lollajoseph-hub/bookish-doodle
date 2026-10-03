@@ -24,7 +24,7 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
-type Mode = "password" | "magic" | "reset";
+type Mode = "password" | "magic" | "forgot";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -36,7 +36,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   // password: normal sign in. magic: secure login link (client-magic-link edge function).
-  // reset: password reset email (addition approved by the owner; same call as the staff app's /forgot-password).
+  // forgot: "Forgot password?" sends the same secure sign-in link as magic (owner's decision: clients sign in by link).
   const [mode, setMode] = useState<Mode>("password");
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [emailError, setEmailError] = useState(false);
@@ -55,9 +55,9 @@ function LoginPage() {
     setPasswordError(false);
   };
 
-  const title = mode === "reset" ? "Reset password" : "Sign in";
-  const lede = mode === "reset" ? "We'll email you a link to choose a new one." : "Review your requests and candidates.";
-  const submitLabel = mode === "reset" ? "Email me a reset link" : mode === "magic" ? "Email me a link" : "Sign in";
+  const title = mode === "forgot" ? "Forgot password?" : "Sign in";
+  const lede = mode === "forgot" ? "We'll email you a secure link to sign in. No password needed." : "Review your requests and candidates.";
+  const submitLabel = mode === "forgot" ? "Email me a sign-in link" : mode === "magic" ? "Email me a link" : "Sign in";
   const busyLabel = mode === "password" ? "Signing in…" : "Sending…";
 
   async function onSubmit(e: React.FormEvent) {
@@ -83,35 +83,24 @@ function LoginPage() {
       else navigate({ to: "/requests" });
       return;
     }
-    if (mode === "magic") {
-      let sendFailed = false;
-      try {
-        const { error } = await supabase.functions.invoke("client-magic-link", {
-          body: { email: trimmed.toLowerCase() },
-        });
-        if (error) {
-          sendFailed = true;
-          toast.error(
-            "We couldn't send the login link right now. Please try again shortly, or contact support if this keeps happening.",
-          );
-        }
-      } catch {
+    // magic and forgot both send the secure sign-in link.
+    let sendFailed = false;
+    try {
+      const { error } = await supabase.functions.invoke("client-magic-link", {
+        body: { email: trimmed.toLowerCase() },
+      });
+      if (error) {
         sendFailed = true;
-        toast.error("Network error. Please try again.");
+        toast.error(
+          "We couldn't send the login link right now. Please try again shortly, or contact support if this keeps happening.",
+        );
       }
-      setBusy(false);
-      if (!sendFailed) setSentTo(trimmed);
-      return;
+    } catch {
+      sendFailed = true;
+      toast.error("Network error. Please try again.");
     }
-    const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
     setBusy(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    setSentTo(trimmed);
+    if (!sendFailed) setSentTo(trimmed);
   }
 
   return (
@@ -160,9 +149,7 @@ function LoginPage() {
                 <div role="status" className="mb-4 grid gap-1 rounded-xl border border-[#e9f2ea]/25 bg-[#e9f2ea]/10 px-4 py-3.5 text-[13px]">
                   <strong>Check your inbox</strong>
                   <span className="text-primary-foreground/80">
-                    {mode === "magic"
-                      ? `If ${sentTo} is registered with a client company, a secure login link has been sent.`
-                      : `If an account exists for ${sentTo}, a reset link is on its way.`}
+                    {`If ${sentTo} is registered with a client company, a secure login link has been sent.`}
                   </span>
                 </div>
               )}
@@ -197,7 +184,7 @@ function LoginPage() {
                       <Label htmlFor="password" className="text-[12.5px] text-primary-foreground">Password</Label>
                       <button
                         type="button"
-                        onClick={() => switchMode("reset")}
+                        onClick={() => switchMode("forgot")}
                         className="rounded text-[12.5px] font-medium text-amber hover:underline hover:underline-offset-4"
                       >
                         Forgot password?
