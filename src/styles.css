@@ -566,8 +566,9 @@
   position: absolute; inset: 0;
   background-image: radial-gradient(rgb(67 24 103 / 38%) 1.4px, transparent 1.8px);
   background-size: 22px 22px;
-  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 0%, rgb(0 0 0 / 55%) 55%, transparent 90%);
-  mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 0%, rgb(0 0 0 / 55%) 55%, transparent 90%);
+  /* Clear behind the page heading (top), strongest around the form, fading at the bottom. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 24%, #000 42%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, transparent 24%, #000 42%, #000 78%, transparent 100%);
   opacity: 1;
 }
 .ambient-lines { position: absolute; inset: 0; width: 100%; height: 100%; }

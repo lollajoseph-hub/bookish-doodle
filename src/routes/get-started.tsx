@@ -369,7 +369,7 @@ function GetStartedPage() {
               <h1 className="font-display text-5xl font-medium leading-none tracking-[-0.02em] sm:text-6xl">
                 <SplitWords text="Get" /> <SplitWords text="started" className="italic text-primary" />
               </h1>
-              <p data-rise className="mt-3 text-sm text-muted-foreground">
+              <p data-rise className="mt-3 text-sm text-secondary-foreground">
                  Five focused steps and we'll start matching candidates for you.
               </p>
             </div>
