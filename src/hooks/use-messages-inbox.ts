@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
-import { getLastRead, type ThreadTarget } from "@/components/request-messages";
+import { type ThreadTarget } from "@/components/request-messages";
+import { getLastRead, useThreadReads } from "@/lib/thread-reads";
 import { useAuth } from "@/lib/auth";
 import { displayName } from "@/lib/matches";
 import { useMembership } from "@/lib/membership";
@@ -59,6 +60,7 @@ function byRecent(a: MessageInboxRow, b: MessageInboxRow) {
 export function useMessagesInbox() {
   const { membership } = useMembership();
   const { user } = useAuth();
+  const readsVersion = useThreadReads(user?.id);
   const [requests, setRequests] = useState<RequestItem[] | null>(null);
   const [matches, setMatches] = useState<MatchRow[] | null>(null);
   const [threadByTarget, setThreadByTarget] = useState<Record<string, string>>({});
@@ -132,7 +134,9 @@ export function useMessagesInbox() {
         unread: !!lastMessage && lastMessage.sender_role === "staff" && (!lastRead || new Date(lastMessage.created_at) > new Date(lastRead)),
       };
     },
-    [lastByThread, threadByTarget, user],
+    // readsVersion: recompute when read markers load or change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [lastByThread, threadByTarget, user, readsVersion],
   );
 
   const general = membership?.client_id

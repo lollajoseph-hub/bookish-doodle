@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { CalendarClock, FileText, Loader2, MessageSquare, PhoneCall, Send } from "lucide-react";
 import { formatDateTime } from "@/lib/matches";
+import { getLastRead, markThreadRead, useThreadReads } from "@/lib/thread-reads";
 
 type StructuredType = "reschedule_request" | "call_me_asap" | "send_portfolio";
 
@@ -56,14 +57,8 @@ export type ThreadTarget =
   | { kind: "candidate"; id: string }
   | { kind: "general"; id: string };
 
-function lastReadKey(userId: string, threadId: string) {
-  return `cp:thread-last-read:${userId}:${threadId}`;
-}
-
-/** Stored last-read timestamp for a thread, or null if never read. */
-export function getLastRead(userId: string, threadId: string): string | null {
-  return window.localStorage.getItem(lastReadKey(userId, threadId));
-}
+/** Stored last-read timestamp for a thread, or null if never read (per user, saved in thread_reads). */
+export { getLastRead };
 
 const TARGET_COLUMN = {
   request: "client_request_id",
@@ -99,7 +94,7 @@ export async function createThread(target: ThreadTarget): Promise<string> {
 
 /**
  * Looks up an existing thread (read-only), loads its messages with realtime,
- * and tracks unread staff messages via a localStorage last-read marker.
+ * and tracks unread staff messages via the user's thread_reads marker.
  * If no thread exists yet, threadId stays null until `setThreadId` is called
  * (the Composer creates the thread on first send). `active` marks it read.
  */
@@ -110,7 +105,7 @@ export function useThread(target: ThreadTarget | null, active = false) {
   const [messages, setMessages] = useState<ThreadMessage[] | null>(null);
   const [senderProfiles, setSenderProfiles] = useState<ThreadSenderProfiles>({});
   const [err, setErr] = useState<string | null>(null);
-  const [lastRead, setLastRead] = useState<string | null>(null);
+  const readsVersion = useThreadReads(user?.id);
   const kind = target?.kind ?? null;
   const targetId = target?.id ?? null;
 
@@ -133,11 +128,6 @@ export function useThread(target: ThreadTarget | null, active = false) {
       cancelled = true;
     };
   }, [kind, targetId, user]);
-
-  useEffect(() => {
-    if (!user || !threadId) return;
-    setLastRead(window.localStorage.getItem(lastReadKey(user.id, threadId)));
-  }, [user, threadId]);
 
   useEffect(() => {
     if (!threadId) return;
@@ -219,9 +209,11 @@ export function useThread(target: ThreadTarget | null, active = false) {
 
   useEffect(() => {
     if (!active || !user || !threadId || !latest) return;
-    window.localStorage.setItem(lastReadKey(user.id, threadId), latest.created_at);
-    setLastRead(latest.created_at);
+    markThreadRead(user.id, threadId, latest.created_at);
   }, [active, user, threadId, latest]);
+
+  void readsVersion; // re-render when read markers load or change
+  const lastRead = user && threadId ? getLastRead(user.id, threadId) : null;
 
   const unread = (messages ?? []).filter(
     (m) => m.sender_role === "staff" && (!lastRead || new Date(m.created_at) > new Date(lastRead))
@@ -236,12 +228,13 @@ export function useThread(target: ThreadTarget | null, active = false) {
 /** Read-only unread count for a thread. Never creates a thread. */
 export function useThreadPreview(target: ThreadTarget | null) {
   const { user } = useAuth();
-  const [unread, setUnread] = useState(0);
+  const [staffTimes, setStaffTimes] = useState<{ threadId: string; times: string[] } | null>(null);
+  const readsVersion = useThreadReads(user?.id);
   const kind = target?.kind ?? null;
   const targetId = target?.id ?? null;
 
   useEffect(() => {
-    setUnread(0);
+    setStaffTimes(null);
     if (!user || !kind || !targetId) return;
     let cancelled = false;
     void (async () => {
@@ -253,13 +246,18 @@ export function useThreadPreview(target: ThreadTarget | null) {
         .eq("thread_id", id)
         .eq("sender_role", "staff");
       if (cancelled) return;
-      const lastRead = window.localStorage.getItem(lastReadKey(user.id, id));
-      setUnread((data ?? []).filter((m) => !lastRead || new Date(m.created_at) > new Date(lastRead)).length);
+      setStaffTimes({ threadId: id, times: (data ?? []).map((m) => m.created_at as string) });
     })();
     return () => {
       cancelled = true;
     };
   }, [kind, targetId, user]);
+
+  void readsVersion; // re-render when read markers load or change
+  const lastRead = user && staffTimes ? getLastRead(user.id, staffTimes.threadId) : null;
+  const unread = staffTimes
+    ? staffTimes.times.filter((at) => !lastRead || new Date(at) > new Date(lastRead)).length
+    : 0;
 
   return { unread };
 }
