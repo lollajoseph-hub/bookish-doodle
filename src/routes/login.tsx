@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
 import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
@@ -81,8 +81,9 @@ function LoginPage() {
 
           <section aria-label="Sign in" data-pop className="glass-dark-edge w-full">
             <div ref={glare} className="glass-dark px-6 py-9 sm:px-10">
-              <h2 className="font-display text-[40px] font-medium leading-none tracking-[-0.01em]">Sign in to your workstation</h2>
-              <form onSubmit={onSubmit} className="mt-7 space-y-4">
+              <h2 className="font-display text-[40px] font-medium leading-none tracking-[-0.01em]">Sign in</h2>
+              <p className="mb-6 mt-2 text-sm text-primary-foreground/70">Sign in to your workstation</p>
+              <form onSubmit={onSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-[12.5px] text-primary-foreground">Email</Label>
                   <Input
@@ -124,7 +125,19 @@ function LoginPage() {
                   </div>
                 </div>
                 <Button ref={submitRef} type="submit" className="cta-gold h-[50px] w-full rounded-[14px] text-[14.5px]" disabled={submitting}>
-                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Submit
+                  {submitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Signing in…
+                    </>
+                  ) : (
+                    <>
+                      Sign in
+                      <span aria-hidden="true" className="grid h-[26px] w-[26px] place-items-center rounded-full bg-[#1d0a2e]/[0.12]">
+                        <ArrowRight className="!size-3.5" />
+                      </span>
+                    </>
+                  )}
                 </Button>
               </form>
             </div>
