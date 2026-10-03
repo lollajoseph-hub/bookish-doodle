@@ -180,7 +180,7 @@ function ShortlistedPage() {
           <SplitWords text="Shortlisted" /> <SplitWords text="candidates" className="italic text-primary" />
         </h1>
         <p data-rise className="mt-3 text-sm text-muted-foreground">
-          Everyone you&apos;ve moved forward across all your hiring requests, up until they&apos;re hired or ruled out.
+          Everyone you&apos;ve shortlisted across your hiring requests.
         </p>
       </div>
 

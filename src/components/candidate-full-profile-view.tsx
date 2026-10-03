@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/lib/supabase";
-import { displayName, firstNameOnlyAnalysis, formatDate, signedPhotoUrl, signedVideoUrl, toStringList } from "@/lib/matches";
+import { displayName, firstNameOnlyAnalysis, formatDate, privacyText, signedPhotoUrl, signedVideoUrl, toStringList } from "@/lib/matches";
 
 export interface FullPoolProfile {
   candidate_id: string;
@@ -89,6 +89,8 @@ export function CandidateFullProfileView({ candidateId, matchId, matchStatus, ma
   const [isAtTop, setIsAtTop] = useState(true);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Last match whose view was logged, so polling refreshes (new preloadedProfile object) don't re-log it.
+  const loggedMatchRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!candidateId) {
@@ -108,7 +110,8 @@ export function CandidateFullProfileView({ candidateId, matchId, matchStatus, ma
     }
     // Analytics: record that the client opened this candidate's full profile.
     // Fire-and-forget — never block or break the viewing experience.
-    if (matchId) {
+    if (matchId && loggedMatchRef.current !== matchId) {
+      loggedMatchRef.current = matchId;
       supabase.rpc("log_match_view", { p_match_id: matchId }).then(
         ({ error }) => { if (error) console.warn("log_match_view failed:", error.message); },
         () => {},
@@ -154,8 +157,13 @@ export function CandidateFullProfileView({ candidateId, matchId, matchStatus, ma
   const highlights = toStringList(profile?.highlights).map((item) => firstNameOnlyAnalysis(item, profile?.full_name));
   const skills = toStringList(profile?.skills);
   const roles = [...toStringList(profile?.primary_role), ...toStringList(profile?.secondary_roles)];
-  const work = toEntries(profile?.work_history);
-  const education = toEntries(profile?.education);
+  // Free text below follows the same first-name-only rule as the name until the match is hired.
+  const scrub = (text: string | null | undefined) => privacyText(text, profile?.full_name, matchStatus) || null;
+  const scrubEntry = (entry: Entry): Entry => ({ title: scrub(entry.title), subtitle: scrub(entry.subtitle), period: entry.period, detail: scrub(entry.detail) });
+  const work = toEntries(profile?.work_history).map(scrubEntry);
+  const education = toEntries(profile?.education).map(scrubEntry);
+  const headline = scrub(profile?.headline);
+  const reason = scrub(matchReason);
 
   return (
     <div className={scrollable ? "relative" : "card-amber overflow-hidden rounded-[30px]"}>
@@ -167,17 +175,17 @@ export function CandidateFullProfileView({ candidateId, matchId, matchStatus, ma
           <div>
             <div className="bg-gradient-to-br from-primary-soft/80 via-white/40 to-amber-soft/40 px-6 py-7 sm:px-8"><div className="flex items-center gap-5">
               {photo ? <img src={photo} alt="" className="h-24 w-24 shrink-0 rounded-[26px] object-cover shadow-[0_14px_30px_-14px_rgb(46_16_73/0.5)]" /> : <div className="grid h-24 w-24 shrink-0 place-items-center rounded-[26px] bg-gradient-to-br from-[#ebddf7] to-[#d6c2ea] text-3xl font-semibold text-primary shadow-[0_14px_30px_-14px_rgb(46_16_73/0.5)]">{name.slice(0, 1).toUpperCase()}</div>}
-              <div className="min-w-0"><h2 className="font-display text-[44px] font-semibold leading-[0.95]">{name}</h2><p className="mt-1.5 text-sm text-secondary-foreground">{profile.headline ?? "Full candidate profile"}</p>{matchId && <div className="mt-3"><CandidateMessages matchId={matchId} matchStatus={matchStatus} candidateName={name} /></div>}</div>
+              <div className="min-w-0"><h2 className="font-display text-[44px] font-semibold leading-[0.95]">{name}</h2><p className="mt-1.5 text-sm text-secondary-foreground">{headline ?? "Full candidate profile"}</p>{matchId && <div className="mt-3"><CandidateMessages matchId={matchId} matchStatus={matchStatus} candidateName={name} /></div>}</div>
             </div></div>
             <div className="space-y-6 px-6 py-6 sm:px-8">
               <Separator />
               <section className="space-y-3"><h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Availability</h3><dl className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-2xl bg-stone/80 p-4 text-sm tabular-nums shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] sm:grid-cols-3">
                 <Row label="Status" value={availabilityLabel(profile.availability)} /><Row label="Country" value={profile.country} /><Row label="Timezone" value={profile.timezone} /><Row label="Weekly hours" value={profile.weekly_hours_available ? `${profile.weekly_hours_available} hrs` : null} /><Row label="Preferred shift" value={profile.preferred_shift} /><Row label="Experience" value={profile.years_experience ? `${profile.years_experience} years` : null} /><Row label="Earliest start" value={formatDate(profile.earliest_start_date)} />
               </dl></section>
-               {matchReason?.trim() && (
+               {reason?.trim() && (
                  <div>
                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Why this candidate</p>
-                   <p className="mt-1.5 text-sm leading-relaxed text-secondary-foreground">{matchReason}</p>
+                   <p className="mt-1.5 text-sm leading-relaxed text-secondary-foreground">{reason}</p>
                  </div>
                )}
                <CandidateSkillGap requiredSkills={requiredSkills ?? []} candidateSkills={candidateSkills ?? []} />

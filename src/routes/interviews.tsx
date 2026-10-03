@@ -1,6 +1,6 @@
 import { CandidateRating } from "@/components/candidate-rating";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,6 +17,7 @@ import {
   MATCH_STATUS_LABELS,
   displayName,
   formatDateTime,
+  privacyText,
   signedPhotoUrl,
   type MatchStatus,
 } from "@/lib/matches";
@@ -335,6 +336,8 @@ function InterviewsPage() {
   const [views, setViews] = useState<Record<string, string>>({});
   const [profileId, setProfileId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("requested");
+  // The default tab is never "changed to", so mark it seen once after the first load (not on every poll).
+  const initialSeenRef = useRef(false);
 
   const load = useCallback(async () => {
     setErr(null);
@@ -449,6 +452,15 @@ function InterviewsPage() {
     void stageStatus;
   }
 
+  useEffect(() => {
+    if (initialSeenRef.current || rows === null || !profileId) return;
+    initialSeenRef.current = true;
+    const tab = STAGE_TABS.find((t) => t.value === activeTab);
+    if (tab) void markStageSeen(tab.status, rows.filter((m) => m.status === tab.status));
+    // markStageSeen is recreated every render; the ref guard makes this a one-shot.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, profileId, activeTab]);
+
   async function requestHire(matchId: string) {
     setActingId(matchId);
     const { error } = await supabase.rpc("client_request_hire", { p_match_id: matchId });
@@ -477,6 +489,12 @@ function InterviewsPage() {
     const when = formatDateTime(m.interview_scheduled_at);
     const proposed = formatDateTime(m.interview_proposed_at);
     const photo = photos[m.id] ?? null;
+    // Free text follows the same first-name-only rule as the name until this match is hired.
+    const scrub = (text: string | null | undefined) => privacyText(text, p?.full_name, m.status);
+    const headline = scrub(p?.headline);
+    const reason = scrub(m.match_reason);
+    const interviewNotes = scrub(m.interview_notes);
+    const meetingNotes = scrub(m.meeting_notes_text);
     return (
       <Card key={m.id} className="card-amber rounded-3xl">
         <CardContent className="space-y-4 p-5 sm:p-6">
@@ -507,7 +525,7 @@ function InterviewsPage() {
                             </span>
                           )}
                         </div>
-                        {p?.headline && <p className="truncate text-[13px] text-secondary-foreground">{p.headline}</p>}
+                        {headline && <p className="truncate text-[13px] text-secondary-foreground">{headline}</p>}
                         <Link
                           to="/requests/$id"
                           params={{ id: m.client_request_id }}
@@ -535,7 +553,7 @@ function InterviewsPage() {
                     </div>
                   </div>
 
-                   {m.match_reason?.trim() && <InterviewReason reason={m.match_reason} />}
+                   {reason.trim() && <InterviewReason reason={reason} />}
 
                    <CandidateSkillGap
                      requiredSkills={requestSkills[m.client_request_id] ?? []}
@@ -576,14 +594,14 @@ function InterviewsPage() {
                             : `Interview on ${when}`
                           : MATCH_STATUS_LABELS[m.status]}
                       </p>
-                      {m.status === "interview_completed" && m.interview_notes && (
-                        <p className="whitespace-pre-line text-sm text-muted-foreground">{m.interview_notes}</p>
+                      {m.status === "interview_completed" && interviewNotes && (
+                        <p className="whitespace-pre-line text-sm text-muted-foreground">{interviewNotes}</p>
                       )}
-                      {m.status === "interview_completed" && (m.meeting_notes_text || m.recording_url) && (
+                      {m.status === "interview_completed" && (meetingNotes || m.meeting_notes_doc_url || m.recording_url) && (
                         <div className="mt-2 space-y-1.5 border-t border-primary/10 pt-2">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">Meeting notes &amp; recording</p>
-                          {m.meeting_notes_text && (
-                            <p className="whitespace-pre-line text-sm text-muted-foreground">{m.meeting_notes_text}</p>
+                          {meetingNotes && (
+                            <p className="whitespace-pre-line text-sm text-muted-foreground">{meetingNotes}</p>
                           )}
                           <div className="flex flex-wrap gap-3 pt-1">
                             {m.meeting_notes_doc_url && (

@@ -35,6 +35,7 @@ import {
   firstNameOnlyAnalysis,
   formatDateTime,
   MATCH_STATUS_LABELS,
+  privacyText,
   REJECTION_REASONS,
   type RejectionReason,
   toStringList,
@@ -102,7 +103,7 @@ export function CandidateCompareTable({
           </CompareRow>
 
           <CompareRow label="Headline">
-            {matches.map((match) => <CompareCell key={match.id}>{match.candidate_pool_profile?.headline ?? "—"}</CompareCell>)}
+            {matches.map((match) => <CompareCell key={match.id}>{privacyText(match.candidate_pool_profile?.headline, match.candidate_pool_profile?.full_name, match.status) || "—"}</CompareCell>)}
           </CompareRow>
 
           <CompareRow label="Availability">
@@ -172,7 +173,7 @@ export function CandidateCompareTable({
           </CompareRow>
 
           <CompareRow label="Why this candidate">
-            {matches.map((match) => <CompareCell key={match.id} className="align-top leading-relaxed">{match.match_reason ?? "—"}</CompareCell>)}
+            {matches.map((match) => <CompareCell key={match.id} className="align-top leading-relaxed">{privacyText(match.match_reason, match.candidate_pool_profile?.full_name, match.status) || "—"}</CompareCell>)}
           </CompareRow>
 
           <CompareRow label="Actions" last>

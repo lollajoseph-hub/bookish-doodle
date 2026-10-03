@@ -207,6 +207,20 @@ export function firstNameOnlyAnalysis(
   return result;
 }
 
+/**
+ * Same per-match rule as `displayName`: a `hired` match may show text as written; every other match
+ * gets `firstNameOnlyAnalysis` so free text (match reason, headline, notes, history) cannot reveal a surname.
+ */
+export function privacyText(
+  text: string | null | undefined,
+  fullName: string | null | undefined,
+  status: string | null | undefined,
+) {
+  if (!text) return "";
+  if (status === "hired") return text;
+  return firstNameOnlyAnalysis(text, fullName);
+}
+
 export function formatDateTime(v: string | null | undefined) {
   if (!v) return null;
   const d = new Date(v);

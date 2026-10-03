@@ -38,6 +38,7 @@ import {
   displayName,
   formatDate,
   formatDateTime,
+  privacyText,
   rejectionReasonLabel,
   toStringList,
   type MatchStatus,
@@ -295,6 +296,12 @@ export function CandidateCard({
   // Per-match rule: the full name is revealed only when THIS match is hired.
   const name = displayName(p?.full_name, status);
   const initial = name.slice(0, 1).toUpperCase();
+  // Free text follows the same first-name-only rule as the name until this match is hired.
+  const scrub = (text: string | null | undefined) => privacyText(text, p?.full_name, status);
+  const headline = scrub(p?.headline);
+  const matchReason = scrub(match.match_reason);
+  const interviewNotes = scrub(match.interview_notes);
+  const meetingNotes = scrub(match.meeting_notes_text);
   const primaryRole = toStringList(p?.primary_role)[0] ?? null;
   const scheduled = formatDateTime(match.interview_scheduled_at);
   const availabilityStatus = availabilityLabel(p?.availability);
@@ -340,7 +347,7 @@ export function CandidateCard({
                 )}
               </div>
               <h3 className="font-display truncate pt-2 text-[30px] font-semibold leading-none">{name}</h3>
-              {p?.headline && <p className="line-clamp-2 text-[13px] leading-snug text-secondary-foreground">{p.headline}</p>}
+              {headline && <p className="line-clamp-2 text-[13px] leading-snug text-secondary-foreground">{headline}</p>}
               {availabilityStatus && (
                 <p className={`text-xs font-semibold ${availabilityToneClass(p?.availability)}`}>
                   {availabilityStatus}
@@ -378,11 +385,11 @@ export function CandidateCard({
         </div>
         {contextLabel && <div className="text-xs text-muted-foreground">{contextLabel}</div>}
 
-        {match.match_reason?.trim() && (
+        {matchReason.trim() && (
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Why this candidate</p>
-            <p className={reasonExpanded ? "mt-1.5 text-[13px] leading-relaxed text-secondary-foreground" : "mt-1.5 text-[13px] leading-relaxed text-secondary-foreground line-clamp-2"}>{match.match_reason}</p>
-            {match.match_reason.length > 120 && (
+            <p className={reasonExpanded ? "mt-1.5 text-[13px] leading-relaxed text-secondary-foreground" : "mt-1.5 text-[13px] leading-relaxed text-secondary-foreground line-clamp-2"}>{matchReason}</p>
+            {matchReason.length > 120 && (
               <button type="button" onClick={() => setReasonExpanded((v) => !v)} className="mt-1 rounded text-xs font-semibold text-primary hover:underline hover:underline-offset-4">
                 {reasonExpanded ? "Show less" : "Read more"}
               </button>
@@ -483,14 +490,14 @@ export function CandidateCard({
               <CalendarClock className="h-4 w-4 flex-none" />
               {scheduled ? `Interview held on ${scheduled}` : "Interview completed"}
             </p>
-            {match.interview_notes && (
-              <p className="whitespace-pre-line text-sm text-muted-foreground">{match.interview_notes}</p>
+            {interviewNotes && (
+              <p className="whitespace-pre-line text-sm text-muted-foreground">{interviewNotes}</p>
             )}
-            {(match.meeting_notes_text || match.recording_url) && (
+            {(meetingNotes || match.meeting_notes_doc_url || match.recording_url) && (
               <div className="mt-2 space-y-1.5 border-t border-primary/10 pt-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-primary">Meeting notes &amp; recording</p>
-                {match.meeting_notes_text && (
-                  <p className="whitespace-pre-line text-sm text-muted-foreground">{match.meeting_notes_text}</p>
+                {meetingNotes && (
+                  <p className="whitespace-pre-line text-sm text-muted-foreground">{meetingNotes}</p>
                 )}
                 <div className="flex flex-wrap gap-3 pt-1">
                   {match.meeting_notes_doc_url && (
