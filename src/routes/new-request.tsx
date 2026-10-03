@@ -21,6 +21,7 @@ import { SuccessFlourish } from "@/components/success-flourish";
 import { SplitWords, useEntrance } from "@/lib/motion";
 
 export const Route = createFileRoute("/new-request")({
+  ssr: false,
   validateSearch: (search: Record<string, unknown>): { clone?: string } => ({
     ...(typeof search.clone === "string" && search.clone ? { clone: search.clone } : {}),
   }),

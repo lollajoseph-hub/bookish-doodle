@@ -11,6 +11,7 @@ import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
 import { AuroraBackdrop, SplitWords, useEntrance, useGlare, useMagnetic } from "@/lib/motion";
 
 export const Route = createFileRoute("/login")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Sign in — Candidate Pool" },

@@ -33,6 +33,7 @@ import {
 } from "@/lib/matches";
 
 export const Route = createFileRoute("/requests/$id")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Presented candidates — Candidate Pool" },

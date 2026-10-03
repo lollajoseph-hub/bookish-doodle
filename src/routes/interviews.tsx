@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SplitWords, useEntrance } from "@/lib/motion";
 
 export const Route = createFileRoute("/interviews")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Interviews — Candidate Pool" },

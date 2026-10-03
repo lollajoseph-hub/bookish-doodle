@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SplitWords, useEntrance } from "@/lib/motion";
 
 export const Route = createFileRoute("/requests/")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "My hiring requests — Candidate Pool" },
