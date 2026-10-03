@@ -54,10 +54,25 @@ export function useEntrance<T extends HTMLElement>(deps: unknown[] = []) {
     const rise = fresh("[data-rise]");
     const pop = fresh("[data-pop]");
     if (!words.length && !rise.length && !pop.length) return;
-    const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
+    // Start paused so the from-state applies before paint, then play once web fonts are ready
+    // (or after 600ms at most). This stops headlines re-flowing mid-animation when Cormorant arrives.
+    const tl = gsap.timeline({ paused: true, defaults: { ease: "expo.out" } });
     if (words.length) tl.fromTo(words, { yPercent: 115, rotate: 3 }, { yPercent: 0, rotate: 0, duration: 1.05, stagger: 0.07 }, 0);
     if (rise.length) tl.fromTo(rise, { autoAlpha: 0, y: 22 }, { autoAlpha: 1, y: 0, duration: 0.85, stagger: 0.07 }, words.length ? 0.15 : 0);
     if (pop.length) tl.fromTo(pop, { autoAlpha: 0, scale: 0.96, y: 30 }, { autoAlpha: 1, scale: 1, y: 0, duration: 1.1 }, 0.1);
+    let started = false;
+    const start = () => {
+      if (started) return;
+      started = true;
+      requestAnimationFrame(() => tl.play());
+    };
+    const fonts = typeof document !== "undefined" ? document.fonts : undefined;
+    if (fonts && fonts.status !== "loaded") {
+      fonts.ready.then(start, start);
+      window.setTimeout(start, 600);
+    } else {
+      start();
+    }
     // Safety net: content must never stay hidden, whatever happens to the animation.
     // Deliberately not cleared on cleanup, so it also covers React StrictMode's dev re-mount.
     window.setTimeout(() => {
@@ -73,13 +88,25 @@ export function useGlare<T extends HTMLElement>() {
   useEffect(() => {
     const el = ref.current;
     if (!el || !hasFinePointer()) return;
-    const move = (e: PointerEvent) => {
+    let frame = 0;
+    let x = 0;
+    let y = 0;
+    const apply = () => {
+      frame = 0;
       const r = el.getBoundingClientRect();
-      el.style.setProperty("--gx", `${e.clientX - r.left}px`);
-      el.style.setProperty("--gy", `${e.clientY - r.top}px`);
+      el.style.setProperty("--gx", `${x - r.left}px`);
+      el.style.setProperty("--gy", `${y - r.top}px`);
+    };
+    const move = (e: PointerEvent) => {
+      x = e.clientX;
+      y = e.clientY;
+      if (!frame) frame = requestAnimationFrame(apply); // at most one update per screen refresh
     };
     el.addEventListener("pointermove", move);
-    return () => el.removeEventListener("pointermove", move);
+    return () => {
+      el.removeEventListener("pointermove", move);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, []);
   return ref;
 }
@@ -90,16 +117,14 @@ export function useMagnetic<T extends HTMLElement>(strength = 0.18) {
   useEffect(() => {
     const el = ref.current;
     if (!el || !hasFinePointer() || prefersReducedMotion()) return;
+    const toX = gsap.quickTo(el, "x", { duration: 0.4, ease: "power3.out" });
+    const toY = gsap.quickTo(el, "y", { duration: 0.4, ease: "power3.out" });
     const move = (e: PointerEvent) => {
       const r = el.getBoundingClientRect();
-      gsap.to(el, {
-        x: (e.clientX - r.left - r.width / 2) * strength,
-        y: (e.clientY - r.top - r.height / 2) * strength * 1.4,
-        duration: 0.4,
-        ease: "power3.out",
-      });
+      toX((e.clientX - r.left - r.width / 2) * strength);
+      toY((e.clientY - r.top - r.height / 2) * strength * 1.4);
     };
-    const leave = () => gsap.to(el, { x: 0, y: 0, duration: 0.8, ease: "elastic.out(1,0.4)" });
+    const leave = () => gsap.to(el, { x: 0, y: 0, duration: 0.8, ease: "elastic.out(1,0.4)", overwrite: true });
     el.addEventListener("pointermove", move);
     el.addEventListener("pointerleave", leave);
     return () => {
