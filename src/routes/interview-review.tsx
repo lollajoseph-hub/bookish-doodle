@@ -6,13 +6,12 @@ import { CalendarCheck, StickyNote } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { DateTimePicker } from "@/components/date-time-fields";
 import { MatchStatusBadge } from "@/components/match-status";
+import { RejectReasonDialog } from "@/components/reject-reason-dialog";
 import {
   completeInterview,
   confirmInterview,
   fetchMatchesByStatus,
-  labelize,
   proposeInterviewTime,
-  REJECTION_REASONS,
   staffExtendOffer,
   updateMatchStatus,
 } from "@/lib/crm-queries";
@@ -30,7 +29,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -145,8 +143,6 @@ function InterviewReviewPage() {
   const [proposeNotes, setProposeNotes] = useState("");
   const [notesOpenFor, setNotesOpenFor] = useState<string | null>(null);
   const [rejectFor, setRejectFor] = useState<string | null>(null);
-  const [rejectReason, setRejectReason] = useState<RejectionReason>("skill_mismatch");
-  const [rejectNote, setRejectNote] = useState("");
 
   const reject = useMutation({
     mutationFn: ({ id, reason, note }: { id: string; reason: RejectionReason; note: string }) =>
@@ -157,7 +153,6 @@ function InterviewReviewPage() {
     onSuccess: () => {
       toast.success("Candidate rejected");
       setRejectFor(null);
-      setRejectNote("");
       queryClient.invalidateQueries({ queryKey: ["matches"] });
       queryClient.invalidateQueries({ queryKey: ["candidates"] });
       queryClient.invalidateQueries({ queryKey: ["all-matches"] });
@@ -293,24 +288,12 @@ function InterviewReviewPage() {
                         >
                           Decline time
                         </Button>
-                      ) : m.status === "interview_completed" ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setRejectReason("skill_mismatch");
-                            setRejectNote("");
-                            setRejectFor(m.id);
-                          }}
-                        >
-                          Reject
-                        </Button>
                       ) : (
                         <Button
                           size="sm"
                           variant="outline"
-                          disabled={advance.isPending}
-                          onClick={() => advance.mutate({ id: m.id, status: "rejected" })}
+                          disabled={reject.isPending}
+                          onClick={() => setRejectFor(m.id)}
                         >
                           Reject
                         </Button>
@@ -402,44 +385,16 @@ function InterviewReviewPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!rejectFor} onOpenChange={(open) => !open && setRejectFor(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject candidate</DialogTitle>
-            <DialogDescription>Record why this candidate didn't fit.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Reason</Label>
-              <Select value={rejectReason} onValueChange={(value) => setRejectReason(value as RejectionReason)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {REJECTION_REASONS.map((reason) => (
-                    <SelectItem key={reason} value={reason}>{labelize(reason)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="reject-note">Note</Label>
-              <Textarea id="reject-note" value={rejectNote} onChange={(e) => setRejectNote(e.target.value)} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setRejectFor(null)}>Cancel</Button>
-            <Button
-              disabled={reject.isPending}
-              onClick={() => {
-                if (rejectFor) reject.mutate({ id: rejectFor, reason: rejectReason, note: rejectNote });
-              }}
-            >
-              Reject
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <RejectReasonDialog
+        open={!!rejectFor}
+        onOpenChange={(open) => !open && setRejectFor(null)}
+        pending={reject.isPending}
+        onConfirm={(reason, note) => {
+          if (rejectFor) reject.mutate({ id: rejectFor, reason, note });
+        }}
+      />
 
-  <Dialog
+        <Dialog
         open={!!proposeFor}
         onOpenChange={(open) => {
           if (!open) {

@@ -11,6 +11,7 @@ import {
   OTHER_CATEGORY,
 } from "@/lib/skills-admin";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -28,6 +29,7 @@ export function RoleSkillsPanel() {
   const queryClient = useQueryClient();
   const [roleId, setRoleId] = useState("");
   const [open, setOpen] = useState(false);
+  const [untag, setUntag] = useState<{ skillId: string; name: string } | null>(null);
 
   const { data: roles = [] } = useQuery({ queryKey: ["job-roles-list"], queryFn: fetchJobRoles });
   const { data: catalog = [] } = useQuery({ queryKey: ["skills-admin"], queryFn: fetchSkillsWithUsage });
@@ -136,7 +138,7 @@ export function RoleSkillsPanel() {
                     aria-label={`Remove ${s.name} from this role`}
                     title="Remove from this role"
                     disabled={remove.isPending}
-                    onClick={() => remove.mutate(s.skill_id)}
+                    onClick={() => setUntag({ skillId: s.skill_id, name: s.name })}
                     className="ml-1 rounded-full p-1 transition-colors hover:bg-destructive/15 hover:text-destructive"
                   >
                     <X className="h-3 w-3" />
@@ -147,6 +149,18 @@ export function RoleSkillsPanel() {
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!untag}
+        onOpenChange={(o) => !o && setUntag(null)}
+        title={`Remove ${untag?.name ?? "this skill"} from ${
+          roles.find((r) => r.id === roleId)?.name ?? "this role"
+        }?`}
+        description="The skill stays in the catalog; it's only untagged from this role."
+        confirmLabel="Remove from role"
+        destructive
+        onConfirm={() => untag && remove.mutate(untag.skillId)}
+      />
     </div>
   );
 }

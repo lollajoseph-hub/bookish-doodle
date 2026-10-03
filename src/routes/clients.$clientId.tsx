@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowLeft, Building2, Loader2, Plus, Trash2, Mail, MessageSquare, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RequestStatusBadge } from "@/components/match-status";
 import {
   addClientMember,
@@ -60,6 +61,7 @@ function ClientDetailPage() {
   const [memberProfile, setMemberProfile] = useState("");
   const [memberPosition, setMemberPosition] = useState("");
   const [memberPrimary, setMemberPrimary] = useState(false);
+  const [removeContact, setRemoveContact] = useState<{ profileId: string; name: string } | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["client", clientId],
@@ -229,7 +231,7 @@ function ClientDetailPage() {
             <section className="card-amber rounded-3xl p-6">
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-2xl font-semibold leading-tight">
-                  Open requests
+                  Requests
                 </h2>
                 <Link to="/requests" className="text-xs text-primary hover:underline">
                   All requests
@@ -328,7 +330,13 @@ function ClientDetailPage() {
                             size="icon"
                             className="h-7 w-7"
                             aria-label="Remove contact"
-                            onClick={() => dropMember.mutate(m.profile_id)}
+                            disabled={dropMember.isPending}
+                            onClick={() =>
+                              setRemoveContact({
+                                profileId: m.profile_id,
+                                name: m.profile?.full_name || m.profile?.email || "this contact",
+                              })
+                            }
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -358,6 +366,16 @@ function ClientDetailPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!removeContact}
+        onOpenChange={(o) => !o && setRemoveContact(null)}
+        title={`Remove ${removeContact?.name ?? "contact"}?`}
+        description={`They will no longer be linked to ${c.name}.`}
+        confirmLabel="Remove contact"
+        destructive
+        onConfirm={() => removeContact && dropMember.mutate(removeContact.profileId)}
+      />
 
       <Dialog open={memberOpen} onOpenChange={setMemberOpen}>
         <DialogContent>

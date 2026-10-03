@@ -197,6 +197,15 @@ function RequestsPage() {
     onSuccess: () => {
       toast.success("Request created");
       setOpen(false);
+      // Reset every field to its initial value so the next request starts clean.
+      setClientId("");
+      setRoleId("");
+      setHiresNeeded("1");
+      setEngagement("full_time");
+      setHours("");
+      setTz("");
+      setMinYears("");
+      setStartDate("");
       setNotes("");
       setMustSkillIds([]);
       setLangIds([]);

@@ -78,6 +78,7 @@ export function CandidateForm({
   const [form, setForm] = useState<CandidateFormInput>(() => emptyForm(profile?.id ?? null));
   const [files, setFiles] = useState<Partial<Record<CandidateFileType, File>>>({});
   const [videoMode, setVideoMode] = useState<"upload" | "link">("link");
+  const [startDateError, setStartDateError] = useState<string | null>(null);
 
   const { data: roles = [] } = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: fetchStaffProfiles });
@@ -116,11 +117,16 @@ export function CandidateForm({
       setForm(emptyForm(profile?.id ?? null));
       setFiles({});
     }
+    setStartDateError(null);
   }, [active, candidateId, detail, profile?.id]);
 
   const save = useMutation({
     mutationFn: async () => {
       if (!form.full_name.trim()) throw new Error("Full name is required");
+      if (form.availability === "available_from" && !form.earliest_start_date) {
+        setStartDateError("Pick the earliest start date.");
+        throw new Error("Pick the earliest start date.");
+      }
       const payload: CandidateFormInput = { ...form };
       const id = candidateId
         ? (await updateCandidate(candidateId, payload), candidateId)
@@ -352,8 +358,16 @@ export function CandidateForm({
                 form.availability === "available_from" ? "border-primary ring-1 ring-primary/40" : undefined
               }
               value={form.earliest_start_date ?? ""}
-              onChange={(v) => set("earliest_start_date", v || null)}
+              onChange={(v) => {
+                set("earliest_start_date", v || null);
+                if (v) setStartDateError(null);
+              }}
             />
+            {startDateError && form.availability === "available_from" && (
+              <p role="alert" className="text-xs font-medium text-destructive">
+                {startDateError}
+              </p>
+            )}
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label>Languages</Label>

@@ -6,6 +6,7 @@ import { FileCheck, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { DatePicker } from "@/components/date-time-fields";
 import { MatchStatusBadge } from "@/components/match-status";
+import { RejectReasonDialog } from "@/components/reject-reason-dialog";
 import {
   createPlacement,
   fetchMatchesByStatus,
@@ -13,7 +14,7 @@ import {
   updateMatchStatus,
   type MatchPipelineView,
 } from "@/lib/crm-queries";
-import type { MatchStatus } from "@/lib/database.types";
+import type { RejectionReason } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,7 @@ export const Route = createFileRoute("/offer-review")({
 function OfferReviewPage() {
   const queryClient = useQueryClient();
   const [placementFor, setPlacementFor] = useState<MatchPipelineView | null>(null);
+  const [rejectFor, setRejectFor] = useState<MatchPipelineView | null>(null);
 
   const { data: offers = [], isLoading } = useQuery({
     queryKey: ["matches", "offer"],
@@ -70,10 +72,12 @@ function OfferReviewPage() {
     (m) => !placedKeys.has(`${m.candidate_id}:${m.client_request_id ?? ""}`),
   );
 
-  const decide = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: MatchStatus }) => updateMatchStatus(id, status),
+  const reject = useMutation({
+    mutationFn: ({ id, reason, note }: { id: string; reason: RejectionReason; note: string }) =>
+      updateMatchStatus(id, "rejected", { rejection_reason: reason, rejection_reason_note: note }),
     onSuccess: () => {
-      toast.success("Status updated");
+      toast.success("Candidate rejected");
+      setRejectFor(null);
       queryClient.invalidateQueries({ queryKey: ["matches"] });
       queryClient.invalidateQueries({ queryKey: ["candidates"] });
       queryClient.invalidateQueries({ queryKey: ["all-matches"] });
@@ -134,8 +138,8 @@ function OfferReviewPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={decide.isPending}
-                        onClick={() => decide.mutate({ id: m.id, status: "rejected" })}
+                        disabled={reject.isPending}
+                        onClick={() => setRejectFor(m)}
                       >
                         Reject
                       </Button>
@@ -158,7 +162,8 @@ function OfferReviewPage() {
 
       {/* Legacy: pre-existing "hired" matches with no placement row. Under the current
           pipeline this list stays empty, since creating the placement is what marks a
-          match hired. Kept so older data is still visible. */}
+          match hired. Kept so older data is still visible. create_placement_and_mark_hired
+          requires offer_extended, so it can't be used for these rows. */}
       <section className="mt-12 space-y-4">
         <h2 className="font-display text-[32px] font-semibold leading-none text-muted-foreground">
           Legacy — hired, awaiting placement
@@ -190,10 +195,8 @@ function OfferReviewPage() {
                   </TableCell>
                   <TableCell className="text-sm">{m.clientName ?? "—"}</TableCell>
                   <TableCell className="text-sm">{m.roleName ?? m.requestTitle ?? "—"}</TableCell>
-                  <TableCell className="text-right">
-                    <Button size="sm" onClick={() => setPlacementFor(m)}>
-                      Create placement
-                    </Button>
+                  <TableCell className="text-right text-xs text-muted-foreground">
+                    Already marked hired without a placement record — create the placement manually.
                   </TableCell>
                 </TableRow>
               ))}
@@ -204,6 +207,13 @@ function OfferReviewPage() {
           <p className="rounded-2xl bg-stone/90 p-4 text-sm text-muted-foreground shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]">Every hire has a placement record.</p>
         )}
       </section>
+
+      <RejectReasonDialog
+        open={!!rejectFor}
+        onOpenChange={(o) => !o && setRejectFor(null)}
+        pending={reject.isPending}
+        onConfirm={(reason, note) => rejectFor && reject.mutate({ id: rejectFor.id, reason, note })}
+      />
 
       <PlacementDialog
         match={placementFor}

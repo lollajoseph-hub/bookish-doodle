@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
+import { fetchStaffProfiles } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import {
@@ -404,6 +405,20 @@ function MessagesPage() {
   );
 }
 
+/**
+ * Label for a message sender: "You" only for the signed-in user, the staff
+ * member's name when it's in the loaded staff list, otherwise a team label.
+ */
+function useSenderLabel(userId: string) {
+  const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: fetchStaffProfiles });
+  return (m: ThreadMessageRow) => {
+    if (m.sender_role === "client") return "Client";
+    if (userId && m.sender_id === userId) return "You";
+    const p = staff.find((s) => s.id === m.sender_id);
+    return p?.full_name || p?.email || "ScaleSource team";
+  };
+}
+
 function ThreadListRow({
   icon: Icon,
   title,
@@ -425,6 +440,7 @@ function ThreadListRow({
   onClick: () => void;
 }) {
   const unread = isUnread(thread, lastMessage, userId);
+  const senderLabel = useSenderLabel(userId);
 
   return (
     <button
@@ -459,7 +475,7 @@ function ThreadListRow({
           )}
         >
           {lastMessage
-            ? `${lastMessage.sender_role === "staff" ? "You: " : ""}${lastMessage.body}`
+            ? `${lastMessage.sender_role === "staff" ? `${senderLabel(lastMessage)}: ` : ""}${lastMessage.body}`
             : "No messages yet"}
         </span>
       </div>
@@ -736,6 +752,7 @@ function ThreadWorkspace({
   side: ReactNode;
 }) {
   const queryClient = useQueryClient();
+  const senderLabel = useSenderLabel(userId);
 
   const threadKey = ["thread-id", target.kind, threadTargetKey(target)];
   const {
@@ -846,7 +863,7 @@ function ThreadWorkspace({
               No messages yet. Say hello to the client.
             </p>
           ) : (
-            messages.map((m) => <MessageBubble key={m.id} m={m} />)
+            messages.map((m) => <MessageBubble key={m.id} m={m} senderLabel={senderLabel(m)} />)
           )}
           <div ref={bottomRef} />
         </div>
@@ -905,7 +922,7 @@ function Detail({ label, value }: { label: string; value: string }) {
   );
 }
 
-function MessageBubble({ m }: { m: ThreadMessageRow }) {
+function MessageBubble({ m, senderLabel }: { m: ThreadMessageRow; senderLabel: string }) {
   const mine = m.sender_role === "staff";
   const action = m.structured_type ? (STRUCTURED_META[m.structured_type] ?? null) : null;
   const time = format(new Date(m.created_at), "MMM d, h:mm a");
@@ -946,7 +963,7 @@ function MessageBubble({ m }: { m: ThreadMessageRow }) {
           {m.body}
         </div>
         <p className={cn("mt-1 text-[11px] tabular-nums text-muted-foreground", mine && "text-right")}>
-          {mine ? "You" : "Client"} · {time}
+          {senderLabel} · {time}
         </p>
       </div>
     </div>

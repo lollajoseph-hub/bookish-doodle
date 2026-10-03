@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Search, Archive, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { fetchCandidates, fetchStaffProfiles } from "@/lib/queries";
 import {
   fetchClientRequests,
@@ -62,6 +63,14 @@ function AdminToolsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [clientSearch, setClientSearch] = useState("");
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  // Pending dropdown changes awaiting confirmation. The Selects stay bound to the
+  // saved values, so cancelling leaves the original selection in place.
+  const [pendingStatus, setPendingStatus] = useState<{ id: string; status: string } | null>(null);
+  const [pendingRecruiter, setPendingRecruiter] = useState<{
+    id: string;
+    recruiterId: string | null;
+    label: string;
+  } | null>(null);
 
   const { data: candidates = [], isLoading } = useQuery({
     queryKey: ["candidates"],
@@ -222,7 +231,7 @@ function AdminToolsPage() {
                     <Label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Status</Label>
                     <Select
                       value={selected.status ?? "available"}
-                      onValueChange={(status) => statusMutation.mutate({ id: selected.id, status })}
+                      onValueChange={(status) => setPendingStatus({ id: selected.id, status })}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -241,12 +250,17 @@ function AdminToolsPage() {
                     <Label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Recruiter</Label>
                     <Select
                       value={selected.recruiter_id ?? "none"}
-                      onValueChange={(value) =>
-                        recruiterMutation.mutate({
+                      onValueChange={(value) => {
+                        const member = staff.find((s) => s.id === value);
+                        setPendingRecruiter({
                           id: selected.id,
                           recruiterId: value === "none" ? null : value,
-                        })
-                      }
+                          label:
+                            value === "none"
+                              ? "Unassigned"
+                              : member?.full_name || member?.email || "this recruiter",
+                        });
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -398,6 +412,34 @@ function AdminToolsPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <ConfirmDialog
+        open={!!pendingStatus}
+        onOpenChange={(o) => !o && setPendingStatus(null)}
+        title={`Change status to ${labelize(pendingStatus?.status)}?`}
+        description={selected ? `This updates ${selected.full_name}'s candidate status.` : undefined}
+        confirmLabel="Change status"
+        onConfirm={() => pendingStatus && statusMutation.mutate(pendingStatus)}
+      />
+
+      <ConfirmDialog
+        open={!!pendingRecruiter}
+        onOpenChange={(o) => !o && setPendingRecruiter(null)}
+        title={
+          pendingRecruiter?.recruiterId
+            ? `Assign to ${pendingRecruiter.label}?`
+            : "Leave this candidate unassigned?"
+        }
+        description={selected ? `This changes the recruiter for ${selected.full_name}.` : undefined}
+        confirmLabel={pendingRecruiter?.recruiterId ? "Assign" : "Unassign"}
+        onConfirm={() =>
+          pendingRecruiter &&
+          recruiterMutation.mutate({
+            id: pendingRecruiter.id,
+            recruiterId: pendingRecruiter.recruiterId,
+          })
+        }
+      />
     </AppShell>
   );
 }

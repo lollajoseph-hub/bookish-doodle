@@ -26,6 +26,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PdfPagePreview } from "@/components/PdfPagePreview";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import {
   Select,
   SelectContent,
@@ -77,6 +78,7 @@ export function CandidateFilesCard({
   const [previewFileId, setPreviewFileId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [deleteFor, setDeleteFor] = useState<CandidateFileRow | null>(null);
 
   const { data: files = [], isLoading } = useQuery({
     queryKey: ["candidate-files", candidateId],
@@ -246,7 +248,8 @@ export function CandidateFilesCard({
                       size="icon"
                       className="h-8 w-8 rounded-full"
                       aria-label="Delete file"
-                      onClick={() => remove.mutate(f)}
+                      disabled={remove.isPending}
+                      onClick={() => setDeleteFor(f)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -273,6 +276,16 @@ export function CandidateFilesCard({
           <p className="text-sm text-muted-foreground">No files uploaded yet.</p>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!deleteFor}
+        onOpenChange={(o) => !o && setDeleteFor(null)}
+        title={`Delete ${deleteFor?.file_name || "this file"}?`}
+        description="The file is removed from this candidate's profile. This can't be undone."
+        confirmLabel="Delete file"
+        destructive
+        onConfirm={() => deleteFor && remove.mutate(deleteFor)}
+      />
     </section>
   );
 }

@@ -83,6 +83,8 @@ function TeamPage() {
     enabled: isAdmin,
   });
 
+  // Only the card whose invite is being resent shows the spinner.
+  const [resendingId, setResendingId] = useState<string | null>(null);
   const resend = useMutation({
     mutationFn: async (userId: string) => {
       const { data, error } = await supabase.functions.invoke("admin-resend-staff-invite", {
@@ -91,8 +93,10 @@ function TeamPage() {
       const message = invokeError(error, data);
       if (message) throw new Error(message);
     },
+    onMutate: (userId: string) => setResendingId(userId),
     onSuccess: () => toast.success("Invite resent"),
     onError: (e: Error) => toast.error(e.message),
+    onSettled: () => setResendingId(null),
   });
 
   return (
@@ -148,14 +152,14 @@ function TeamPage() {
                       className="h-8 w-8 rounded-full text-primary hover:bg-primary-soft"
                       aria-label="Resend invite"
                       title="Resend invite"
-                      disabled={resend.isPending}
+                      disabled={resendingId === s.id}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         resend.mutate(s.id);
                       }}
                     >
-                      {resend.isPending ? (
+                      {resendingId === s.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <Send className="h-4 w-4" />

@@ -1,7 +1,11 @@
--- Atomic skill merge for the staff "Manage Skills" page.
--- Re-points candidate_skills + client_request_skills from the duplicate skills
--- onto the canonical skill, dropping rows that would violate the unique
--- (parent, skill_id) constraints, then deletes the now-orphaned skill rows.
+-- Atomic skill merge for the "Manage Skills" page. Admin-only: the live
+-- function requires is_admin().
+-- Re-points candidate_skills, client_request_skills and role_skills from the
+-- duplicate skills onto the canonical skill, dropping rows that would violate
+-- the unique (parent, skill_id) constraints, then deletes the now-orphaned
+-- skill rows.
+-- NOTE: the function body below may lag the live definition (is_admin() check,
+-- role_skills handling). Treat the live database function as the source of truth.
 
 create or replace function public.admin_merge_skills(
   p_source_ids uuid[],

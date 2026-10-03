@@ -8,11 +8,11 @@ import { AppShell } from "@/components/app-shell";
 import { CuratedBadge, MatchStatusBadge, PriorityBadge, RequestStatusBadge } from "@/components/match-status";
 import {
   MATCH_STATUSES,
-  REJECTION_REASONS,
   addMatch,
   confirmInterview,
   fetchClientRequestDetail,
   labelize,
+  staffExtendOffer,
   updateMatchStatus,
   updateRequestStatus,
 } from "@/lib/crm-queries";
@@ -28,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TimePicker } from "@/components/date-time-fields";
+import { RejectReasonDialog } from "@/components/reject-reason-dialog";
 import {
   Dialog,
   DialogContent,
@@ -70,8 +71,6 @@ function RequestDetailPage() {
   const [confirmFor, setConfirmFor] = useState<{ id: string; proposedAt: string | null } | null>(null);
   const [proposeDate, setProposeDate] = useState<Date | undefined>(undefined);
   const [proposeTime, setProposeTime] = useState("");
-  const [rejectReason, setRejectReason] = useState<RejectionReason>("skill_mismatch");
-  const [rejectNote, setRejectNote] = useState("");
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["client-request", requestId],
@@ -106,6 +105,15 @@ function RequestDetailPage() {
   const setStatus = useMutation({
     mutationFn: ({ id, status }: { id: string; status: MatchStatus }) => updateMatchStatus(id, status),
     onSuccess: invalidate,
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const extendOffer = useMutation({
+    mutationFn: (id: string) => staffExtendOffer(id),
+    onSuccess: () => {
+      toast.success("Contract sent — offer extended");
+      invalidate();
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -144,17 +152,16 @@ function RequestDetailPage() {
   });
 
   const reject = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({ reason, note }: { reason: RejectionReason; note: string }) => {
       if (!rejectFor) return;
       await updateMatchStatus(rejectFor, "rejected", {
-        rejection_reason: rejectReason,
-        rejection_reason_note: rejectNote,
+        rejection_reason: reason,
+        rejection_reason_note: note,
       });
     },
     onSuccess: () => {
       toast.success("Candidate rejected");
       setRejectFor(null);
-      setRejectNote("");
       invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -353,6 +360,29 @@ function RequestDetailPage() {
                           }
                           if (m.status === "interview_requested" && v === "interview_confirmed") {
                             setConfirmFor({ id: m.id, proposedAt: m.interview_proposed_at });
+                            return;
+                          }
+                          if (v === "interview_confirmed") {
+                            toast.error(
+                              "An interview can only be confirmed after one has been requested with a proposed time.",
+                            );
+                            return;
+                          }
+                          if (v === "offer_extended") {
+                            if (m.status === "hire_requested") {
+                              extendOffer.mutate(m.id);
+                            } else {
+                              toast.error("A contract can only be sent after the client requests to hire.");
+                            }
+                            return;
+                          }
+                          if (v === "hired") {
+                            toast.error("Mark a candidate hired by creating their placement in Offer review.", {
+                              action: {
+                                label: "Offer review",
+                                onClick: () => navigate({ to: "/offer-review" }),
+                              },
+                            });
                             return;
                           }
                           setStatus.mutate({ id: m.id, status: v as MatchStatus });
@@ -621,43 +651,12 @@ function RequestDetailPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!rejectFor} onOpenChange={(o) => !o && setRejectFor(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject candidate</DialogTitle>
-            <DialogDescription>Record why this candidate didn't fit.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Reason</Label>
-              <Select value={rejectReason} onValueChange={(v: string) => setRejectReason(v as RejectionReason)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {REJECTION_REASONS.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {labelize(s)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="reject-note">Note</Label>
-              <Textarea id="reject-note" value={rejectNote} onChange={(e) => setRejectNote(e.target.value)} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setRejectFor(null)}>
-              Cancel
-            </Button>
-            <Button onClick={() => reject.mutate()} disabled={reject.isPending}>
-              {reject.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Reject
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <RejectReasonDialog
+        open={!!rejectFor}
+        onOpenChange={(o) => !o && setRejectFor(null)}
+        pending={reject.isPending}
+        onConfirm={(reason, note) => reject.mutate({ reason, note })}
+      />
     </AppShell>
   );
 }

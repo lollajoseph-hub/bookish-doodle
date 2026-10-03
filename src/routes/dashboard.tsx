@@ -407,7 +407,7 @@ function DashboardPage() {
             </SectionTitle>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <StatCard
-                label="Active clients"
+                label="Clients"
                 value={clients.length}
                 icon={Building2}
                 loading={clientsQ.isLoading}
@@ -474,7 +474,7 @@ function DashboardPage() {
             </SectionTitle>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <StatCard
-                label="Active clients"
+                label="Clients"
                 value={clients.length}
                 icon={Building2}
                 hint="Company-wide"
@@ -587,11 +587,11 @@ function DashboardPage() {
             <div className="card-amber rounded-3xl p-5 sm:p-6">
               <SectionTitle>
                 <span className="flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-primary" /> Recent activity
+                  <Activity className="h-4 w-4 text-primary" /> My recent candidates
                 </span>
               </SectionTitle>
               <div className="mt-3 space-y-2">
-                {candidatesQ.isLoading && <p className="text-sm text-muted-foreground">Loading activity…</p>}
+                {candidatesQ.isLoading && <p className="text-sm text-muted-foreground">Loading candidates…</p>}
                 {myCandidates.slice(0, 10).map((c) => (
                   <div
                     key={c.id}
@@ -607,7 +607,7 @@ function DashboardPage() {
                   </div>
                 ))}
                 {!candidatesQ.isLoading && !myCandidates.length && (
-                  <p className="text-sm text-muted-foreground">No recorded activity yet.</p>
+                  <p className="text-sm text-muted-foreground">No candidates assigned to you yet.</p>
                 )}
               </div>
             </div>
