@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
@@ -41,6 +41,9 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Forgot password now happens inside this card (same request as the /forgot-password page, which still exists).
+  const [forgot, setForgot] = useState(false);
+  const [resetSentTo, setResetSentTo] = useState<string | null>(null);
   const scope = useEntrance<HTMLDivElement>();
   const glare = useGlare<HTMLDivElement>();
   const submitRef = useMagnetic<HTMLButtonElement>();
@@ -48,6 +51,18 @@ function LoginPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
+    if (forgot) {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      setSubmitting(false);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      setResetSentTo(email);
+      return;
+    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setSubmitting(false);
     if (error) {
@@ -80,8 +95,13 @@ function LoginPage() {
 
           <section aria-label="Sign in" data-pop className="glass-dark-edge w-full">
             <div ref={glare} className="glass-dark px-6 py-9 sm:px-10">
-              <h2 className="font-display text-[40px] font-medium leading-none tracking-[-0.01em]">Sign in</h2>
-              <p className="mb-6 mt-2 text-sm text-primary-foreground/70">Sign in to your workstation</p>
+              <h2 className="font-display text-[40px] font-medium leading-none tracking-[-0.01em]">{forgot ? "Reset password" : "Sign in"}</h2>
+              <p className="mb-6 mt-2 text-sm text-primary-foreground/70">{forgot ? "We'll email you a recovery link." : "Sign in to your workstation"}</p>
+              {forgot && resetSentTo && (
+                <div role="status" className="mb-4 rounded-xl border border-[#e9f2ea]/25 bg-[#e9f2ea]/10 px-4 py-3.5 text-[13px] text-primary-foreground/85">
+                  If an account exists for <strong className="text-primary-foreground">{resetSentTo}</strong>, a reset link is on its way.
+                </div>
+              )}
               <form onSubmit={onSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-[12.5px] text-primary-foreground">Email</Label>
@@ -95,12 +115,20 @@ function LoginPage() {
                     className="input-dark"
                   />
                 </div>
+                {!forgot && (
                 <div className="space-y-2">
                   <div className="flex items-baseline justify-between">
                     <Label htmlFor="password" className="text-[12.5px] text-primary-foreground">Password</Label>
-                    <Link to="/forgot-password" className="rounded text-[12.5px] font-medium text-amber hover:underline hover:underline-offset-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForgot(true);
+                        setResetSentTo(null);
+                      }}
+                      className="rounded text-[12.5px] font-medium text-amber hover:underline hover:underline-offset-4"
+                    >
                       Forgot password?
-                    </Link>
+                    </button>
                   </div>
                   <div className="relative">
                     <Input
@@ -123,15 +151,16 @@ function LoginPage() {
                     </button>
                   </div>
                 </div>
+                )}
                 <Button ref={submitRef} type="submit" className="cta-gold h-[50px] w-full rounded-[14px] text-[14.5px]" disabled={submitting}>
                   {submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Signing in…
+                      {forgot ? "Sending…" : "Signing in…"}
                     </>
                   ) : (
                     <>
-                      Sign in
+                      {forgot ? "Send reset link" : "Sign in"}
                       <span aria-hidden="true" className="grid h-[26px] w-[26px] place-items-center rounded-full bg-[#1d0a2e]/[0.12]">
                         <ArrowRight className="!size-3.5" />
                       </span>
@@ -139,6 +168,17 @@ function LoginPage() {
                   )}
                 </Button>
               </form>
+              {forgot && (
+                <div className="mt-5 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setForgot(false)}
+                    className="rounded text-[13px] text-primary-foreground/75 hover:text-primary-foreground hover:underline hover:underline-offset-4"
+                  >
+                    Back to sign in
+                  </button>
+                </div>
+              )}
             </div>
           </section>
         </main>
