@@ -182,3 +182,50 @@ export function AuroraBackdrop({ children }: { children?: ReactNode }) {
     </div>
   );
 }
+
+/** Subtle animated backdrop for light pages: slow plum/gold glows, a faint dot texture and a gold line that draws once.
+ *  Fixed behind the content, non-interactive, and still when reduced motion is on. */
+export function AmbientBackdrop() {
+  const ref = useRef<HTMLDivElement>(null);
+  useGSAP(
+    () => {
+      if (prefersReducedMotion() || !ref.current) return;
+      gsap.utils.toArray<HTMLElement>(ref.current.querySelectorAll("[data-glow]")).forEach((b, i) => {
+        gsap.to(b, {
+          xPercent: gsap.utils.random(-14, 14),
+          yPercent: gsap.utils.random(-12, 12),
+          scale: gsap.utils.random(0.92, 1.12),
+          duration: gsap.utils.random(16, 22),
+          ease: "sine.inOut",
+          repeat: -1,
+          yoyo: true,
+          delay: i * 0.6,
+        });
+      });
+      ref.current.querySelectorAll<SVGPathElement>("path[data-draw]").forEach((p, i) => {
+        const len = p.getTotalLength();
+        gsap.fromTo(p, { strokeDasharray: len, strokeDashoffset: len }, { strokeDashoffset: 0, duration: 3.2, delay: 0.4 + i * 0.5, ease: "power2.inOut" });
+      });
+    },
+    { scope: ref },
+  );
+  return (
+    <div ref={ref} aria-hidden="true" className="ambient-backdrop">
+      <span data-glow className="ambient-glow ambient-glow-1" />
+      <span data-glow className="ambient-glow ambient-glow-2" />
+      <span data-glow className="ambient-glow ambient-glow-3" />
+      <span className="ambient-dots" />
+      <svg className="ambient-lines" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" fill="none">
+        <defs>
+          <linearGradient id="ambient-line" x1="0" x2="1">
+            <stop offset="0" stopColor="#E0A43A" stopOpacity="0" />
+            <stop offset=".5" stopColor="#E0A43A" stopOpacity=".55" />
+            <stop offset="1" stopColor="#7A59A3" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path data-draw d="M-60 760 C 300 640, 620 900, 1000 700 S 1420 520, 1520 560" stroke="url(#ambient-line)" strokeWidth="1.2" />
+        <path data-draw d="M-60 180 C 380 60, 760 300, 1120 140 S 1440 60, 1520 90" stroke="url(#ambient-line)" strokeWidth="1" opacity=".6" />
+      </svg>
+    </div>
+  );
+}

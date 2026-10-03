@@ -556,6 +556,22 @@
   50% { transform: translateY(-3px); }
 }
 
+/* Subtle animated backdrop for light pages (Get started) */
+.ambient-backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.ambient-glow { position: absolute; border-radius: 50%; will-change: transform; transform: translateZ(0); }
+.ambient-glow-1 { width: max(52vw, 520px); height: max(52vw, 520px); left: -14vw; top: -18vw; background: radial-gradient(circle, rgb(122 89 163 / 34%) 0%, rgb(122 89 163 / 14%) 38%, rgb(122 89 163 / 0) 70%); }
+.ambient-glow-2 { width: max(44vw, 440px); height: max(44vw, 440px); right: -12vw; top: 18vh; background: radial-gradient(circle, rgb(224 164 58 / 30%) 0%, rgb(224 164 58 / 11%) 38%, rgb(224 164 58 / 0) 70%); }
+.ambient-glow-3 { width: max(40vw, 420px); height: max(40vw, 420px); left: 28vw; bottom: -20vw; background: radial-gradient(circle, rgb(67 24 103 / 18%) 0%, rgb(67 24 103 / 7%) 38%, rgb(67 24 103 / 0) 70%); }
+.ambient-dots {
+  position: absolute; inset: 0;
+  background-image: radial-gradient(rgb(67 24 103 / 22%) 1px, transparent 1.3px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 0%, transparent 75%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 0%, transparent 75%);
+  opacity: .8;
+}
+.ambient-lines { position: absolute; inset: 0; width: 100%; height: 100%; }
+
 .candidate-profile-scroll {
   scrollbar-width: none;
   -ms-overflow-style: none;

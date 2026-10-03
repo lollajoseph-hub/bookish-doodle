@@ -36,7 +36,7 @@ import {
 } from "@/components/request-fields";
 import { toast } from "sonner";
 import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
-import { SplitWords, useEntrance } from "@/lib/motion";
+import { AmbientBackdrop, SplitWords, useEntrance } from "@/lib/motion";
 import { buildRequestRecap, RequestRecap } from "@/components/request-recap";
 import { SuccessFlourish } from "@/components/success-flourish";
 
@@ -317,7 +317,8 @@ function GetStartedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative isolate min-h-screen bg-background">
+      <AmbientBackdrop />
       <header className="sticky top-3 z-20 px-3 pt-3 sm:px-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 rounded-full bg-white/65 py-1.5 pl-2 pr-4 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.85),0_0_0_1px_rgb(26_19_32/0.06),0_10px_40px_-16px_rgb(46_16_73/0.35)] backdrop-blur-xl">
           <Link to="/login" className="flex items-center gap-2.5 rounded-full">
@@ -332,7 +333,7 @@ function GetStartedPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+      <main className="relative z-10 mx-auto max-w-3xl px-4 py-10 sm:px-6">
         {result ? (
           <Card className="card-amber overflow-hidden rounded-[30px]">
             <CardContent className="flex flex-col items-center gap-6 px-6 py-12 text-center sm:px-12">
