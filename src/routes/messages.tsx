@@ -32,6 +32,7 @@ import {
   getLastRead,
   findThreadId,
   markRead,
+  useThreadReads,
   sendThreadMessage,
   sendThreadMessageEnsuringThread,
   threadTargetKey,
@@ -157,6 +158,7 @@ function isUnread(thread: ThreadRow | null, lastMessage: ThreadMessageRow | null
 function MessagesPage() {
   const { session } = useAuth();
   const userId = session?.user.id ?? "";
+  useThreadReads(userId); // re-render when read markers load or change
   const queryClient = useQueryClient();
   const search_ = Route.useSearch();
   const navigate = useNavigate();

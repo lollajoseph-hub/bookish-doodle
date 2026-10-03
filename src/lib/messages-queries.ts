@@ -350,18 +350,8 @@ export async function fetchThreadNoteAuthors(threadId: string): Promise<ThreadNo
   return (data ?? []) as ThreadNoteAuthor[];
 }
 
-const readKey = (userId: string, threadId: string) => `msg-last-read:${userId}:${threadId}`;
-
-export function getLastRead(userId: string, threadId: string): string | null {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(readKey(userId, threadId));
-}
-
-export function markRead(userId: string, threadId: string, at: string) {
-  if (typeof window === "undefined") return;
-  const prev = getLastRead(userId, threadId);
-  if (!prev || prev < at) window.localStorage.setItem(readKey(userId, threadId), at);
-}
+// Read markers are per user in the thread_reads table (see thread-reads.ts).
+export { getLastRead, markThreadRead as markRead, useThreadReads } from "@/lib/thread-reads";
 
 export interface CandidateThreadContext {
   matchId: string;
