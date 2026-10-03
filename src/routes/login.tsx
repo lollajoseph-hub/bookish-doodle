@@ -71,11 +71,10 @@ function LoginPage() {
               Staff workstation
             </p>
             <h1 className="font-display text-[clamp(3.2rem,7vw,6.5rem)] font-medium leading-[0.95] tracking-[-0.02em]">
-              <SplitWords text="Welcome!" className="italic text-amber" />
+              <SplitWords text="Everything you need," /> <SplitWords text="in one place." className="italic text-amber" />
             </h1>
             <p data-rise className="mt-7 max-w-[44ch] text-base text-primary-foreground/70">
-              Review the candidate pool, manage client requests, and track placements — everything
-              you need in one place.
+              Review the candidate pool, manage client requests, and track placements.
             </p>
           </section>
 
