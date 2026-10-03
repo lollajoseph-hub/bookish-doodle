@@ -564,11 +564,11 @@
 .ambient-glow-3 { width: max(40vw, 420px); height: max(40vw, 420px); left: 28vw; bottom: -20vw; background: radial-gradient(circle, rgb(67 24 103 / 18%) 0%, rgb(67 24 103 / 7%) 38%, rgb(67 24 103 / 0) 70%); }
 .ambient-dots {
   position: absolute; inset: 0;
-  background-image: radial-gradient(rgb(67 24 103 / 22%) 1px, transparent 1.3px);
-  background-size: 26px 26px;
-  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 0%, transparent 75%);
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 0%, transparent 75%);
-  opacity: .8;
+  background-image: radial-gradient(rgb(67 24 103 / 38%) 1.4px, transparent 1.8px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 0%, rgb(0 0 0 / 55%) 55%, transparent 90%);
+  mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, #000 0%, rgb(0 0 0 / 55%) 55%, transparent 90%);
+  opacity: 1;
 }
 .ambient-lines { position: absolute; inset: 0; width: 100%; height: 100%; }
 
