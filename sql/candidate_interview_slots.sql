@@ -159,7 +159,7 @@ $$;
 revoke execute on function public.slot_is_taken(public.candidate_interview_slots) from public, anon;
 revoke execute on function public.get_match_interview_slots(uuid) from public, anon;
 revoke execute on function public.client_book_interview_slot(uuid, uuid) from public, anon;
-grant execute on function public.slot_is_taken(public.candidate_interview_slots) to authenticated;
+-- slot_is_taken is internal only (called inside the security definer functions above).
 grant execute on function public.get_match_interview_slots(uuid) to authenticated;
 grant execute on function public.client_book_interview_slot(uuid, uuid) to authenticated;
 
