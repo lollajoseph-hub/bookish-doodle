@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { CandidateFormDialog } from "@/components/candidate-form-dialog";
 import { CandidateFilesCard } from "@/components/candidate-files-card";
+import { InterviewAvailabilityCard } from "@/components/interview-availability-card";
 import { MatchStatusBadge } from "@/components/match-status";
 import {
   fetchCandidateAiProfile,
@@ -511,6 +512,12 @@ function CandidateDetailPage() {
                   Client Pipeline
                 </TabsTrigger>
                 <TabsTrigger
+                  value="availability"
+                  className="rounded-full px-4 py-2 text-[13px] font-semibold text-foreground/70 transition-[background-color,color,box-shadow] duration-300 hover:bg-primary/[0.08] hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_10px_24px_-12px_rgb(67_24_103/0.6)] data-[state=active]:hover:bg-primary"
+                >
+                  Availability
+                </TabsTrigger>
+                <TabsTrigger
                   value="notes"
                   className="rounded-full px-4 py-2 text-[13px] font-semibold text-foreground/70 transition-[background-color,color,box-shadow] duration-300 hover:bg-primary/[0.08] hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_10px_24px_-12px_rgb(67_24_103/0.6)] data-[state=active]:hover:bg-primary"
                 >
@@ -644,6 +651,14 @@ function CandidateDetailPage() {
                     )}
                   </div>
                 </SectionCard>
+              </TabsContent>
+
+              <TabsContent value="availability" className="mt-4">
+                <InterviewAvailabilityCard
+                  candidateId={candidateId}
+                  candidateTimezone={data.candidate.timezone}
+                  canEdit={canEdit}
+                />
               </TabsContent>
 
               <TabsContent value="notes" className="mt-4">
