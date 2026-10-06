@@ -217,6 +217,8 @@ export function privacyText(
   status: string | null | undefined,
 ) {
   if (!text) return "";
+  // Matches created before the reason generator existed still hold a scoring placeholder, not a real reason.
+  if (/^\s*Structured match:/i.test(text)) return "";
   if (status === "hired") return text;
   return firstNameOnlyAnalysis(text, fullName);
 }

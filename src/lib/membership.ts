@@ -14,6 +14,8 @@ export function useMembership() {
   const [membership, setMembership] = useState<Membership | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // True only when the lookup succeeded and this account has no client company (e.g. a staff account).
+  const [notMember, setNotMember] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -30,7 +32,10 @@ export function useMembership() {
         .maybeSingle();
       if (cancelled) return;
       if (e) setError(e.message);
-      else if (!data) setError("We couldn't find a company linked to your account.");
+      else if (!data) {
+        setError("We couldn't find a company linked to your account.");
+        setNotMember(true);
+      }
       else {
         const row = data as unknown as {
           client_id: string;
@@ -51,5 +56,5 @@ export function useMembership() {
     };
   }, [user]);
 
-  return { membership, loading, error };
+  return { membership, loading, error, notMember };
 }

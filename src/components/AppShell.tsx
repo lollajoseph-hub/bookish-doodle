@@ -7,11 +7,12 @@ import { NotificationsBell } from "@/components/notifications-bell";
 import { MessagesWidget } from "@/components/messages-widget";
 import { MessagesWidgetProvider } from "@/lib/messages-widget";
 import { LogOut, PlusCircle, ListChecks, CalendarClock, Star, UsersRound, Menu, X } from "lucide-react";
+import { toast } from "sonner";
 import whiteBrandLogo from "@/assets/scalesource-logo-white.png.asset.json";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, loading, signOut } = useAuth();
-  const { membership } = useMembership();
+  const { membership, notMember } = useMembership();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -19,7 +20,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (!loading && !user) navigate({ to: "/login" });
   }, [loading, user, navigate]);
 
-  if (loading || !user) {
+  // The Candidate Pool is for client company accounts only. Staff accounts would otherwise see
+  // every client's data (staff database access) and staff notifications, so sign them out.
+  useEffect(() => {
+    if (!user || !notMember) return;
+    toast.error("This account isn't linked to a client company. ScaleSource staff should use the Candidate Review Dashboard.");
+    void signOut().then(() => navigate({ to: "/login" }));
+  }, [user, notMember, signOut, navigate]);
+
+  if (loading || !user || notMember) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
         Loading…
