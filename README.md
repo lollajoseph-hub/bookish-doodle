@@ -26,3 +26,5 @@ bun run dev
 The app reads its Supabase connection from `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in a local `.env` file. Don't commit credentials. Never use a service-role key in this app.
 
 Type check: `node node_modules/typescript/bin/tsc --noEmit`
+
+_GitHub to Lovable sync last checked: 2026-10-07._
