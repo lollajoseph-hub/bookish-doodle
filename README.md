@@ -30,3 +30,5 @@ bun run dev
 The Supabase client is configured in `src/lib/supabase.ts`. The app talks to the live ScaleSource database, so do not run migrations or write test data against it.
 
 Type-check with `node node_modules/typescript/bin/tsc --noEmit` and lint with `bun run lint`.
+
+_GitHub to Lovable sync last checked: 2026-10-07._
