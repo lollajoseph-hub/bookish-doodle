@@ -1,0 +1,77 @@
+-- 1. Pin search_path on every function (advisor: function_search_path_mutable)
+alter function public.client_can_view_candidate(uuid) set search_path = public;
+alter function public.client_owns_request(uuid) set search_path = public;
+alter function public.audit_trigger() set search_path = public;
+alter function public.candidate_primary_role(uuid) set search_path = public;
+alter function public.rank_and_match(uuid, int) set search_path = public;
+alter function public.reject_candidate_match(uuid, public.rejection_reason, text) set search_path = public;
+alter function public.reshuffle_request(uuid, int) set search_path = public;
+alter function public.set_updated_at() set search_path = public;
+alter function public.handle_new_user() set search_path = public;
+alter function public.is_staff() set search_path = public;
+alter function public.is_admin() set search_path = public;
+alter function public.is_recruiter() set search_path = public;
+alter function public.is_client() set search_path = public;
+alter function public.enforce_one_primary_role() set search_path = public;
+alter function public.client_ids_for_profile(uuid) set search_path = public;
+alter function public.request_to_hire(uuid) set search_path = public;
+
+-- 2. Tighten grants (advisor: anon/authenticated_security_definer_function_executable)
+revoke all on function public.audit_trigger() from public;
+revoke all on function public.handle_new_user() from public;
+revoke all on function public.set_updated_at() from public;
+revoke all on function public.enforce_one_primary_role() from public;
+
+revoke all on function public.is_staff() from public;
+grant execute on function public.is_staff() to authenticated;
+revoke all on function public.is_admin() from public;
+grant execute on function public.is_admin() to authenticated;
+revoke all on function public.is_recruiter() from public;
+grant execute on function public.is_recruiter() to authenticated;
+revoke all on function public.is_client() from public;
+grant execute on function public.is_client() to authenticated;
+revoke all on function public.client_can_view_candidate(uuid) from public;
+grant execute on function public.client_can_view_candidate(uuid) to authenticated;
+revoke all on function public.client_owns_request(uuid) from public;
+grant execute on function public.client_owns_request(uuid) to authenticated;
+revoke all on function public.client_ids_for_profile(uuid) from public;
+grant execute on function public.client_ids_for_profile(uuid) to authenticated;
+revoke all on function public.candidate_primary_role(uuid) from public;
+grant execute on function public.candidate_primary_role(uuid) to authenticated;
+revoke all on function public.rank_and_match(uuid, int) from public;
+grant execute on function public.rank_and_match(uuid, int) to authenticated;
+revoke all on function public.reject_candidate_match(uuid, public.rejection_reason, text) from public;
+grant execute on function public.reject_candidate_match(uuid, public.rejection_reason, text) to authenticated;
+revoke all on function public.reshuffle_request(uuid, int) from public;
+grant execute on function public.reshuffle_request(uuid, int) to authenticated;
+revoke all on function public.request_to_hire(uuid) from public;
+grant execute on function public.request_to_hire(uuid) to authenticated;
+
+-- 3. Missing FK indexes (advisor: unindexed_foreign_keys)
+create index if not exists idx_audit_logs_user_id on public.audit_logs(user_id);
+create index if not exists idx_candidate_education_candidate_id on public.candidate_education(candidate_id);
+create index if not exists idx_candidate_files_candidate_id on public.candidate_files(candidate_id);
+create index if not exists idx_candidate_files_uploaded_by on public.candidate_files(uploaded_by);
+create index if not exists idx_candidate_matches_candidate_id on public.candidate_matches(candidate_id);
+create index if not exists idx_candidate_roles_role_id on public.candidate_roles(role_id);
+create index if not exists idx_candidate_skills_skill_id on public.candidate_skills(skill_id);
+create index if not exists idx_candidate_tags_recruiter_id on public.candidate_tags(recruiter_id);
+create index if not exists idx_candidate_tags_tag_id on public.candidate_tags(tag_id);
+create index if not exists idx_candidate_work_history_candidate_id on public.candidate_work_history(candidate_id);
+create index if not exists idx_candidates_created_by on public.candidates(created_by);
+create index if not exists idx_client_members_profile_id on public.client_members(profile_id);
+create index if not exists idx_client_request_skills_skill_id on public.client_request_skills(skill_id);
+create index if not exists idx_client_requests_client_id on public.client_requests(client_id);
+create index if not exists idx_client_requests_created_by on public.client_requests(created_by);
+create index if not exists idx_client_requests_role_id on public.client_requests(role_id);
+create index if not exists idx_clients_parent_client_id on public.clients(parent_client_id);
+create index if not exists idx_job_roles_created_by on public.job_roles(created_by);
+create index if not exists idx_notifications_recipient_id on public.notifications(recipient_id);
+create index if not exists idx_placements_candidate_id on public.placements(candidate_id);
+create index if not exists idx_placements_client_id on public.placements(client_id);
+create index if not exists idx_placements_client_request_id on public.placements(client_request_id);
+create index if not exists idx_placements_role_id on public.placements(role_id);
+create index if not exists idx_recruiter_notes_candidate_id on public.recruiter_notes(candidate_id);
+create index if not exists idx_recruiter_notes_recruiter_id on public.recruiter_notes(recruiter_id);
+create index if not exists idx_role_skills_skill_id on public.role_skills(skill_id);
+create index if not exists idx_skills_created_by on public.skills(created_by);

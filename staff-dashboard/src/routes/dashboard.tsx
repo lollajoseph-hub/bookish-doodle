@@ -1,0 +1,674 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
+import {
+  Users,
+  Briefcase,
+  UserCheck,
+  Sparkles,
+  RefreshCw,
+  Building2,
+  ClipboardList,
+  GitCompareArrows,
+  CalendarCheck,
+  BadgeCheck,
+  UserPlus,
+  UserMinus,
+  Activity,
+  UserCog,
+  LifeBuoy,
+  FileCheck,
+} from "lucide-react";
+import { AppShell } from "@/components/app-shell";
+import { fetchCandidates, fetchJobRoles, fetchStaffProfiles } from "@/lib/queries";
+import {
+  fetchAllMatches,
+  fetchAuditLogs,
+  fetchClientRequests,
+  fetchClients,
+  fetchPlacements,
+  labelize,
+} from "@/lib/crm-queries";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+
+export const Route = createFileRoute("/dashboard")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Operations overview | ScaleSource Candidate Review Dashboard" },
+      {
+        name: "description",
+        content:
+          "Operations overview of the ScaleSource pipeline: candidates, client requests, matches and placements.",
+      },
+      { property: "og:title", content: "Operations overview | ScaleSource" },
+      {
+        property: "og:description",
+        content: "Candidate, client and placement pipeline overview for ScaleSource staff.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: DashboardPage,
+});
+
+type Tone = "default" | "primary" | "success" | "warning";
+
+const TONES: Record<Tone, { wrap: string; icon: string; value: string }> = {
+  default: { wrap: "bg-gradient-to-br from-primary-soft to-amber-soft", icon: "text-primary", value: "text-foreground" },
+  primary: { wrap: "bg-primary", icon: "text-primary-foreground", value: "text-primary" },
+  success: { wrap: "bg-[#e9f2ea]", icon: "text-[#2f5f35]", value: "text-[#2f5f35]" },
+  warning: { wrap: "bg-amber-soft", icon: "text-gold-ink", value: "text-gold-ink" },
+};
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  hint,
+  tone = "default",
+  loading = false,
+}: {
+  label: string;
+  value: string | number;
+  icon: typeof Users;
+  hint?: string;
+  tone?: Tone;
+  loading?: boolean;
+}) {
+  const t = TONES[tone];
+  return (
+    <div className="card-amber rounded-3xl p-5">
+      <div className="flex items-start justify-between gap-3">
+        <span className="pt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
+        <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ${t.wrap}`}>
+          <Icon className={`h-4 w-4 ${t.icon}`} />
+        </div>
+      </div>
+      {loading ? (
+        <div className="mt-4 h-9 w-16 animate-pulse rounded-xl bg-primary/10" />
+      ) : (
+        <div className={`mt-4 font-display text-4xl font-semibold leading-none tabular-nums ${t.value}`}>{value}</div>
+      )}
+      {hint && !loading && <p className="mt-2 text-xs text-muted-foreground">{hint}</p>}
+    </div>
+  );
+}
+
+function SectionTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <h2 className="font-display text-2xl font-semibold leading-tight">{children}</h2>
+      {action}
+    </div>
+  );
+}
+
+function DashboardPage() {
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === "admin";
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const candidatesQ = useQuery({ queryKey: ["candidates"], queryFn: fetchCandidates });
+  const rolesQ = useQuery({ queryKey: ["job-roles"], queryFn: fetchJobRoles });
+  const staffQ = useQuery({ queryKey: ["staff"], queryFn: fetchStaffProfiles });
+  const clientsQ = useQuery({ queryKey: ["clients"], queryFn: fetchClients });
+  const requestsQ = useQuery({ queryKey: ["client-requests"], queryFn: fetchClientRequests });
+  const matchesQ = useQuery({ queryKey: ["all-matches"], queryFn: fetchAllMatches });
+  const placementsQ = useQuery({ queryKey: ["placements"], queryFn: fetchPlacements });
+  const auditQ = useQuery({
+    queryKey: ["audit-logs"],
+    queryFn: () => fetchAuditLogs(20),
+    enabled: isAdmin,
+  });
+
+  const candidates = candidatesQ.data ?? [];
+  const roles = rolesQ.data ?? [];
+  const staff = staffQ.data ?? [];
+  const clients = clientsQ.data ?? [];
+  const requests = requestsQ.data ?? [];
+  const matches = matchesQ.data ?? [];
+  const placements = placementsQ.data ?? [];
+  const auditLogs = auditQ.data ?? [];
+
+  const stats = useMemo(() => {
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const byStatus = (st: string) => candidates.filter((c) => (c.status ?? "available") === st).length;
+    const byMatch = (...sts: string[]) =>
+      matches.filter((m) => sts.includes(m.status ?? "")).length;
+    return {
+      total: candidates.length,
+      newThisWeek: candidates.filter((c) => new Date(c.created_at).getTime() >= weekAgo).length,
+      new: byStatus("available"),
+      shortlisted: byStatus("shortlisted"),
+      interviewed: byStatus("interviewed"),
+      hiredCandidates: byStatus("hired"),
+      placed: byStatus("placed"),
+      rejectedByClient: matches.filter((m) => m.status === "rejected" && m.rejected_by === "client")
+        .length,
+      rejectedByStaff: matches.filter((m) => m.status === "rejected" && m.rejected_by === "staff")
+        .length,
+      mine: candidates.filter((c) => c.recruiter_id === profile?.id).length,
+      unassigned: candidates.filter((c) => !c.recruiter_id).length,
+      openRequests: requests.filter((r) => r.status === "open").length,
+      needsAttention: requests.filter((r) => r.status === "needs_attention").length,
+      recruiters: staff.filter((p) => p.role === "recruiter").length,
+      pendingOffers: byMatch("offer_extended"),
+      upcomingInterviews: byMatch("interview_requested", "interview_confirmed"),
+      interviewing: byMatch(
+        "interview_requested",
+        "interview_confirmed",
+        "interview_completed",
+      ),
+      hired: byMatch("hired"),
+      activePlacements: placements.filter((p) => (p.status ?? "active") === "active").length,
+    };
+  }, [candidates, matches, requests, staff, placements, profile?.id]);
+
+  const recent = useMemo(() => candidates.slice(0, 6), [candidates]);
+
+  const myCandidates = useMemo(
+    () => candidates.filter((c) => c.recruiter_id === profile?.id),
+    [candidates, profile?.id],
+  );
+  const myStats = useMemo(() => {
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const byStatus = (st: string) => myCandidates.filter((c) => (c.status ?? "available") === st).length;
+    const myCandidateIds = new Set(myCandidates.map((c) => c.id));
+    const myMatchesList = matches.filter((m) => myCandidateIds.has(m.candidate_id));
+    const byMatch = (...sts: string[]) => myMatchesList.filter((m) => sts.includes(m.status ?? "")).length;
+    return {
+      total: myCandidates.length,
+      newThisWeek: myCandidates.filter((c) => new Date(c.created_at).getTime() >= weekAgo).length,
+      new: byStatus("available"),
+      shortlisted: byStatus("shortlisted"),
+      interviewed: byStatus("interviewed"),
+      hiredCandidates: byStatus("hired"),
+      placed: byStatus("placed"),
+      rejectedByClient: myMatchesList.filter((m) => m.status === "rejected" && m.rejected_by === "client")
+        .length,
+      rejectedByStaff: myMatchesList.filter((m) => m.status === "rejected" && m.rejected_by === "staff")
+        .length,
+      upcomingInterviews: byMatch("interview_requested", "interview_confirmed"),
+      pendingOffers: byMatch("offer_extended"),
+      matched: myMatchesList.length,
+      hired: byMatch("hired"),
+      activePlacements: placements.filter(
+        (p) => myCandidateIds.has(p.candidate_id) && (p.status ?? "active") === "active",
+      ).length,
+    };
+  }, [myCandidates, matches, placements]);
+  const myRecent = useMemo(() => myCandidates.slice(0, 6), [myCandidates]);
+
+  async function refreshAll() {
+    setRefreshing(true);
+    try {
+      await queryClient.refetchQueries({ type: "active" });
+      toast.success("Refreshed");
+    } catch (e) {
+      toast.error((e as Error).message || "Could not refresh");
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  const loadingCore = candidatesQ.isLoading;
+
+  return (
+    <AppShell
+      title={
+        profile?.full_name
+          ? `Welcome ${profile.full_name.split(" ")[0]},`
+          : "Welcome,"
+      }
+      description="Candidate Review System"
+      actions={null}
+    >
+      <div className="space-y-8">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            {isAdmin ? (
+              <>
+                <h1 className="font-display text-[32px] font-semibold leading-none">Operations overview</h1>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Live snapshot of the candidate pool, client demand and placements.
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="font-display text-[32px] font-semibold leading-none">My pipeline overview</h1>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Your assigned candidates, pipeline and today's snapshot.
+                </p>
+              </>
+            )}
+          </div>
+          <Button variant="outline" onClick={refreshAll} disabled={refreshing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
+
+        {isAdmin ? (
+          <section className="space-y-3">
+            <SectionTitle
+              action={
+                <Link to="/candidates" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+                  View candidates
+                </Link>
+              }
+            >
+              Candidate pipeline
+            </SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard label="Total candidates" value={stats.total} icon={Users} loading={loadingCore} />
+              <StatCard
+                label="New this week"
+                value={stats.newThisWeek}
+                icon={UserPlus}
+                tone="success"
+                hint="Added in the last 7 days"
+                loading={loadingCore}
+              />
+              <StatCard label="Available" value={stats.new} icon={Sparkles} loading={loadingCore} />
+              <StatCard
+                label="Shortlisted"
+                value={stats.shortlisted}
+                icon={BadgeCheck}
+                tone="warning"
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Interviewed"
+                value={stats.interviewed}
+                icon={CalendarCheck}
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Hired"
+                value={stats.hiredCandidates}
+                icon={UserCheck}
+                tone="success"
+                loading={loadingCore}
+              />
+              <StatCard label="Placed" value={stats.placed} icon={Sparkles} tone="success" loading={loadingCore} />
+              <StatCard
+                label="Rejected by client"
+                value={stats.rejectedByClient}
+                icon={UserMinus}
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Rejected by staff"
+                value={stats.rejectedByStaff}
+                icon={UserMinus}
+                loading={loadingCore}
+              />
+              <StatCard label="Assigned to me" value={stats.mine} icon={UserCheck} loading={loadingCore} />
+              <StatCard
+                label="Unassigned"
+                value={stats.unassigned}
+                icon={UserMinus}
+                tone="warning"
+                hint="Need a recruiter"
+                loading={loadingCore}
+              />
+            </div>
+          </section>
+        ) : (
+          <section className="space-y-3">
+            <SectionTitle
+              action={
+                <Link to="/candidates" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+                  View candidates
+                </Link>
+              }
+            >
+              My candidate pipeline
+            </SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard label="Total assigned to me" value={myStats.total} icon={Users} loading={loadingCore} />
+              <StatCard
+                label="New this week"
+                value={myStats.newThisWeek}
+                icon={UserPlus}
+                tone="success"
+                hint="Added in the last 7 days"
+                loading={loadingCore}
+              />
+              <StatCard label="Available" value={myStats.new} icon={Sparkles} loading={loadingCore} />
+              <StatCard
+                label="Shortlisted"
+                value={myStats.shortlisted}
+                icon={BadgeCheck}
+                tone="warning"
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Interviewed"
+                value={myStats.interviewed}
+                icon={CalendarCheck}
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Hired"
+                value={myStats.hiredCandidates}
+                icon={UserCheck}
+                tone="success"
+                loading={loadingCore}
+              />
+              <StatCard label="Placed" value={myStats.placed} icon={Sparkles} tone="success" loading={loadingCore} />
+              <StatCard
+                label="Rejected by client"
+                value={myStats.rejectedByClient}
+                icon={UserMinus}
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Rejected by staff"
+                value={myStats.rejectedByStaff}
+                icon={UserMinus}
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Total candidates"
+                value={stats.total}
+                icon={Users}
+                hint="Company-wide"
+                loading={loadingCore}
+              />
+              <StatCard
+                label="Unassigned"
+                value={stats.unassigned}
+                icon={UserMinus}
+                tone="warning"
+                hint="Company-wide"
+                loading={loadingCore}
+              />
+            </div>
+          </section>
+        )}
+
+        {isAdmin ? (
+          <section className="space-y-3">
+            <SectionTitle
+              action={
+                <Link to="/requests" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+                  View requests
+                </Link>
+              }
+            >
+              Client &amp; placement pipeline
+            </SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard
+                label="Clients"
+                value={clients.length}
+                icon={Building2}
+                loading={clientsQ.isLoading}
+              />
+              <StatCard
+                label="Recruiters"
+                value={stats.recruiters}
+                icon={UserCog}
+                loading={staffQ.isLoading}
+              />
+              <StatCard
+                label="Open requests"
+                value={stats.openRequests}
+                icon={ClipboardList}
+                tone="warning"
+                loading={requestsQ.isLoading}
+              />
+              <StatCard
+                label="Needs attention"
+                value={stats.needsAttention}
+                icon={LifeBuoy}
+                tone="warning"
+                hint="CS queue"
+                loading={requestsQ.isLoading}
+              />
+              <StatCard
+                label="Candidates matched"
+                value={matches.length}
+                icon={GitCompareArrows}
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Upcoming interviews"
+                value={stats.upcomingInterviews}
+                icon={CalendarCheck}
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Pending offers"
+                value={stats.pendingOffers}
+                icon={FileCheck}
+                tone="warning"
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Active placements"
+                value={stats.activePlacements}
+                icon={Sparkles}
+                tone="success"
+                loading={placementsQ.isLoading}
+              />
+            </div>
+          </section>
+        ) : (
+          <section className="space-y-3">
+            <SectionTitle
+              action={
+                <Link to="/requests" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+                  View requests
+                </Link>
+              }
+            >
+              My activity &amp; company snapshot
+            </SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard
+                label="Clients"
+                value={clients.length}
+                icon={Building2}
+                hint="Company-wide"
+                loading={clientsQ.isLoading}
+              />
+              <StatCard
+                label="Open requests"
+                value={stats.openRequests}
+                icon={ClipboardList}
+                tone="warning"
+                hint="Company-wide"
+                loading={requestsQ.isLoading}
+              />
+              <StatCard
+                label="Needs attention"
+                value={stats.needsAttention}
+                icon={LifeBuoy}
+                tone="warning"
+                hint="CS queue"
+                loading={requestsQ.isLoading}
+              />
+              <StatCard
+                label="Candidates matched"
+                value={myStats.matched}
+                icon={GitCompareArrows}
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Upcoming interviews"
+                value={myStats.upcomingInterviews}
+                icon={CalendarCheck}
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Pending offers"
+                value={myStats.pendingOffers}
+                icon={FileCheck}
+                tone="warning"
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Hired"
+                value={myStats.hired}
+                icon={UserCheck}
+                tone="success"
+                loading={matchesQ.isLoading}
+              />
+              <StatCard
+                label="Active placements"
+                value={myStats.activePlacements}
+                icon={Sparkles}
+                tone="success"
+                loading={placementsQ.isLoading}
+              />
+            </div>
+          </section>
+        )}
+
+        {isAdmin && (
+          <section className="space-y-3">
+            <SectionTitle>Admin overview</SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard label="Team members" value={staff.length} icon={Users} loading={staffQ.isLoading} />
+              <StatCard label="Total roles" value={roles.length} icon={Briefcase} loading={rolesQ.isLoading} />
+            </div>
+            <div className="card-amber rounded-3xl p-5 sm:p-6">
+              <SectionTitle>
+                <span className="flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-primary" /> Recent activity
+                </span>
+              </SectionTitle>
+              <div className="mt-3 space-y-2">
+                {auditQ.isLoading && <p className="text-sm text-muted-foreground">Loading activity…</p>}
+                {auditLogs.slice(0, 10).map((log) => (
+                  <div
+                    key={log.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-stone/90 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] px-4 py-3 text-sm"
+                  >
+                    <div className="min-w-0">
+                      <span className="font-medium">{log.userName ?? "System"}</span>{" "}
+                      <span className="text-muted-foreground">
+                        {labelize(log.action).toLowerCase()} · {labelize(log.entity_type)}
+                      </span>
+                    </div>
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
+                    </span>
+                  </div>
+                ))}
+                {!auditQ.isLoading && !auditLogs.length && (
+                  <p className="text-sm text-muted-foreground">No recorded activity yet.</p>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {!isAdmin && (
+          <section className="space-y-3">
+            <SectionTitle>My overview</SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard
+                label="My candidates"
+                value={myStats.total}
+                icon={Users}
+                loading={loadingCore}
+              />
+              <StatCard label="Total roles" value={roles.length} icon={Briefcase} loading={rolesQ.isLoading} />
+            </div>
+            <div className="card-amber rounded-3xl p-5 sm:p-6">
+              <SectionTitle>
+                <span className="flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-primary" /> My recent candidates
+                </span>
+              </SectionTitle>
+              <div className="mt-3 space-y-2">
+                {candidatesQ.isLoading && <p className="text-sm text-muted-foreground">Loading candidates…</p>}
+                {myCandidates.slice(0, 10).map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-stone/90 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] px-4 py-3 text-sm"
+                  >
+                    <div className="min-w-0">
+                      <span className="font-medium">{c.full_name}</span>{" "}
+                      <span className="text-muted-foreground">· {labelize(c.status ?? "available")}</span>
+                    </div>
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
+                    </span>
+                  </div>
+                ))}
+                {!candidatesQ.isLoading && !myCandidates.length && (
+                  <p className="text-sm text-muted-foreground">No candidates assigned to you yet.</p>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+
+        <section className="card-amber rounded-3xl p-5 sm:p-6">
+          <SectionTitle
+            action={
+              <Link to="/roles" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+                Manage roles
+              </Link>
+            }
+          >
+            {isAdmin ? "Candidates by role" : "My candidates by role"}
+          </SectionTitle>
+          <div className="mt-4 space-y-3">
+            {roles.map((r) => {
+              const pool = isAdmin ? candidates : myCandidates;
+              const count = pool.filter((c) => c.roleIds.includes(r.id)).length;
+              const pct = pool.length ? Math.round((count / pool.length) * 100) : 0;
+              return (
+                <div key={r.id}>
+                  <div className="flex items-center justify-between text-sm">
+                    <span>{r.name}</span>
+                    <span className="font-semibold tabular-nums text-muted-foreground">{count}</span>
+                  </div>
+                  <div className="mt-1.5 h-2 rounded-full bg-primary/[0.08]">
+                    <div className="h-2 rounded-full bg-gradient-to-r from-[#431867] to-[#7a59a3] transition-[width] duration-500" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+            {!roles.length && <p className="text-sm text-muted-foreground">No roles yet.</p>}
+          </div>
+        </section>
+
+        <section className="card-amber rounded-3xl p-5 sm:p-6">
+          <SectionTitle>{isAdmin ? "Recently added" : "My recently added"}</SectionTitle>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {(isAdmin ? recent : myRecent).map((c) => (
+              <Link
+                key={c.id}
+                to="/candidates/$candidateId"
+                params={{ candidateId: c.id }}
+                className="rounded-2xl bg-stone/90 shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)] p-4 transition-[box-shadow,border-color] duration-300 hover:shadow-[inset_0_0_0_1px_rgb(122_89_163/0.25),0_22px_44px_-24px_rgb(46_16_73/0.5)]"
+              >
+                <div className="truncate font-medium">{c.full_name}</div>
+                <div className="truncate text-xs text-muted-foreground">{c.headline || c.email || "—"}</div>
+                {isAdmin && <div className="mt-1.5 text-[11px] font-semibold text-primary">{c.recruiterName ?? "Unassigned"}</div>}
+              </Link>
+            ))}
+            {!(isAdmin ? recent : myRecent).length && (
+              <p className="text-sm text-muted-foreground">
+                {isAdmin ? "No candidates added yet." : "No candidates assigned to you yet."}
+              </p>
+            )}
+          </div>
+        </section>
+      </div>
+    </AppShell>
+  );
+}

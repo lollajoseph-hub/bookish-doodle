@@ -1,0 +1,495 @@
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/auth";
+import { useMessagesWidget } from "@/lib/messages-widget";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { CalendarClock, FileText, Loader2, MessageSquare, PhoneCall, Send } from "lucide-react";
+import { formatDateTime } from "@/lib/matches";
+import { getLastRead, markThreadRead, useThreadReads } from "@/lib/thread-reads";
+
+type StructuredType = "reschedule_request" | "call_me_asap" | "send_portfolio";
+
+export interface ThreadMessage {
+  id: string;
+  thread_id: string;
+  sender_id: string | null;
+  sender_role: "staff" | "client";
+  body: string | null;
+  structured_type: StructuredType | null;
+  created_at: string;
+}
+
+export interface ThreadSenderProfile {
+  full_name: string | null;
+  role: string | null;
+}
+
+export type ThreadSenderProfiles = Record<string, ThreadSenderProfile>;
+
+export interface QuickAction {
+  type: StructuredType;
+  label: string;
+  /** Message body sent with the action. */
+  body: string;
+  icon: typeof PhoneCall;
+  tone: string;
+}
+
+/** Display metadata for sendable structured types; legacy types render via LEGACY_ACTION_META. */
+export const ACTION_META: Record<Exclude<StructuredType, "call_me_asap">, QuickAction> = {
+  reschedule_request: { type: "reschedule_request", label: "Request Reschedule", body: "Request Reschedule", icon: CalendarClock, tone: "bg-amber-soft text-gold-ink border-amber/40" },
+  send_portfolio: { type: "send_portfolio", label: "Send Portfolio", body: "Send Portfolio", icon: FileText, tone: "bg-primary-soft text-primary border-primary/30" },
+};
+
+/** Render-only metadata for legacy structured types that can no longer be sent. */
+const LEGACY_ACTION_META: Record<string, QuickAction> = {
+  call_me_asap: { type: "call_me_asap", label: "Call Me ASAP", body: "Please call me as soon as possible.", icon: PhoneCall, tone: "bg-destructive/10 text-destructive border-destructive/30" },
+};
+
+function actionMetaFor(type: StructuredType): QuickAction | null {
+  return (ACTION_META as Partial<Record<StructuredType, QuickAction>>)[type] ?? LEGACY_ACTION_META[type] ?? null;
+}
+
+export type ThreadTarget =
+  | { kind: "request"; id: string }
+  | { kind: "candidate"; id: string }
+  | { kind: "general"; id: string };
+
+/** Stored last-read timestamp for a thread, or null if never read (per user, saved in thread_reads). */
+export { getLastRead };
+
+const TARGET_COLUMN = {
+  request: "client_request_id",
+  candidate: "candidate_match_id",
+  general: "client_id",
+} as const;
+
+/** Read-only lookup of an existing thread. Never creates one. */
+export async function findThreadId(target: ThreadTarget): Promise<{ id: string | null; error: string | null }> {
+  const { data, error } = await supabase
+    .from("threads")
+    .select("id")
+    .eq("kind", target.kind)
+    .eq(TARGET_COLUMN[target.kind], target.id)
+    .maybeSingle();
+  if (error) return { id: null, error: error.message };
+  return { id: (data as { id: string } | null)?.id ?? null, error: null };
+}
+
+/** Creates (or returns) the thread via get_or_create_thread. Only call on a real user write. */
+export async function createThread(target: ThreadTarget): Promise<string> {
+  const { data, error } = await supabase.rpc("get_or_create_thread", {
+    p_client_request_id: target.kind === "request" ? target.id : null,
+    p_candidate_match_id: target.kind === "candidate" ? target.id : null,
+    p_client_id: target.kind === "general" ? target.id : null,
+  });
+  if (error) throw new Error(error.message);
+  const row = (Array.isArray(data) ? data[0] : data) as { id: string } | string | null;
+  const tid = typeof row === "string" ? row : row?.id;
+  if (!tid) throw new Error("Could not start the conversation.");
+  return tid;
+}
+
+/**
+ * Looks up an existing thread (read-only), loads its messages with realtime,
+ * and tracks unread staff messages via the user's thread_reads marker.
+ * If no thread exists yet, threadId stays null until `setThreadId` is called
+ * (the Composer creates the thread on first send). `active` marks it read.
+ */
+export function useThread(target: ThreadTarget | null, active = false) {
+  const { user } = useAuth();
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const [resolved, setResolved] = useState(false);
+  const [messages, setMessages] = useState<ThreadMessage[] | null>(null);
+  const [senderProfiles, setSenderProfiles] = useState<ThreadSenderProfiles>({});
+  const [err, setErr] = useState<string | null>(null);
+  const readsVersion = useThreadReads(user?.id);
+  const kind = target?.kind ?? null;
+  const targetId = target?.id ?? null;
+
+  useEffect(() => {
+    setThreadId(null);
+    setResolved(false);
+    setMessages(null);
+    setSenderProfiles({});
+    setErr(null);
+    if (!user || !kind || !targetId) return;
+    let cancelled = false;
+    void findThreadId({ kind, id: targetId }).then(({ id, error }) => {
+      if (cancelled) return;
+      setResolved(true);
+      if (error) setErr(error);
+      if (id) setThreadId(id);
+      else setMessages([]);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [kind, targetId, user]);
+
+  useEffect(() => {
+    if (!threadId) return;
+    let cancelled = false;
+    void supabase
+      .from("thread_messages")
+      .select("id,thread_id,sender_id,sender_role,body,structured_type,created_at")
+      .eq("thread_id", threadId)
+      .order("created_at", { ascending: true })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        setErr(error ? error.message : null);
+        setMessages((prev) => {
+          const fetched = (data ?? []) as ThreadMessage[];
+          const extra = (prev ?? []).filter((p) => !fetched.some((f) => f.id === p.id));
+          return [...fetched, ...extra];
+        });
+      });
+    const channel = supabase
+      .channel(`thread-messages-${threadId}-${Math.random().toString(36).slice(2)}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "thread_messages", filter: `thread_id=eq.${threadId}` },
+        (payload) => {
+          const m = payload.new as ThreadMessage;
+          setMessages((prev) => ((prev ?? []).some((x) => x.id === m.id) ? prev : [...(prev ?? []), m]));
+        }
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      void supabase.removeChannel(channel);
+    };
+  }, [threadId]);
+
+  useEffect(() => {
+    if (!threadId) return;
+    let cancelled = false;
+    void supabase.rpc("get_thread_sender_profiles", { p_thread_id: threadId }).then(({ data }) => {
+      if (cancelled) return;
+      const profiles = (data ?? []) as Array<{ id: string; full_name: string | null; role: string | null }>;
+      setSenderProfiles((prev) => ({
+        ...prev,
+        ...Object.fromEntries(profiles.map(({ id, full_name, role }) => [id, { full_name, role }])),
+      }));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [threadId]);
+
+  const unknownStaffSenderIds = Array.from(
+    new Set(
+      (messages ?? [])
+        .filter((message) => message.sender_role === "staff" && message.sender_id && !senderProfiles[message.sender_id])
+        .map((message) => message.sender_id as string)
+    )
+  )
+    .sort()
+    .join("|");
+
+  useEffect(() => {
+    if (!threadId || !unknownStaffSenderIds) return;
+    let cancelled = false;
+    void supabase.rpc("get_thread_sender_profiles", { p_thread_id: threadId }).then(({ data }) => {
+      if (cancelled) return;
+      const profiles = (data ?? []) as Array<{ id: string; full_name: string | null; role: string | null }>;
+      setSenderProfiles((prev) => ({
+        ...prev,
+        ...Object.fromEntries(profiles.map(({ id, full_name, role }) => [id, { full_name, role }])),
+      }));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [threadId, unknownStaffSenderIds]);
+
+  const latest = messages && messages.length > 0 ? messages[messages.length - 1] : null;
+
+  useEffect(() => {
+    if (!active || !user || !threadId || !latest) return;
+    markThreadRead(user.id, threadId, latest.created_at);
+  }, [active, user, threadId, latest]);
+
+  void readsVersion; // re-render when read markers load or change
+  const lastRead = user && threadId ? getLastRead(user.id, threadId) : null;
+
+  const unread = (messages ?? []).filter(
+    (m) => m.sender_role === "staff" && (!lastRead || new Date(m.created_at) > new Date(lastRead))
+  ).length;
+
+  const addMessage = (m: ThreadMessage) =>
+    setMessages((prev) => ((prev ?? []).some((x) => x.id === m.id) ? prev : [...(prev ?? []), m]));
+
+  return { threadId, setThreadId, resolved, messages, senderProfiles, err, unread, latest, addMessage, userId: user?.id ?? null };
+}
+
+/** Read-only unread count for a thread. Never creates a thread. */
+export function useThreadPreview(target: ThreadTarget | null) {
+  const { user } = useAuth();
+  const [staffTimes, setStaffTimes] = useState<{ threadId: string; times: string[] } | null>(null);
+  const readsVersion = useThreadReads(user?.id);
+  const kind = target?.kind ?? null;
+  const targetId = target?.id ?? null;
+
+  useEffect(() => {
+    setStaffTimes(null);
+    if (!user || !kind || !targetId) return;
+    let cancelled = false;
+    void (async () => {
+      const { id } = await findThreadId({ kind, id: targetId });
+      if (cancelled || !id) return;
+      const { data } = await supabase
+        .from("thread_messages")
+        .select("sender_role,created_at")
+        .eq("thread_id", id)
+        .eq("sender_role", "staff");
+      if (cancelled) return;
+      setStaffTimes({ threadId: id, times: (data ?? []).map((m) => m.created_at as string) });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [kind, targetId, user]);
+
+  void readsVersion; // re-render when read markers load or change
+  const lastRead = user && staffTimes ? getLastRead(user.id, staffTimes.threadId) : null;
+  const unread = staffTimes
+    ? staffTimes.times.filter((at) => !lastRead || new Date(at) > new Date(lastRead)).length
+    : 0;
+
+  return { unread };
+}
+
+function MessagesButton({
+  target,
+  label,
+  variant = "outline",
+}: {
+  target: ThreadTarget;
+  label: string;
+  variant?: "outline" | "ghost";
+}) {
+  const { openThread } = useMessagesWidget();
+  const { unread } = useThreadPreview(target);
+  return (
+    <Button variant={variant} size="sm" className="relative" onClick={() => openThread(target)}>
+      <MessageSquare className="mr-1.5 h-4 w-4" />
+      {label}
+      {unread > 0 && (
+        <span className="absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-amber px-1 text-[10px] font-bold text-amber-foreground">
+          {unread > 9 ? "9+" : unread}
+        </span>
+      )}
+    </Button>
+  );
+}
+
+/** Opens the request thread in the unified Messages page. */
+export function RequestMessages({ requestId }: { requestId: string }) {
+  return <MessagesButton target={{ kind: "request", id: requestId }} label="Talk to us about this request" />;
+}
+
+/** Opens the general ScaleSource thread in the unified Messages page. */
+export function GeneralMessages({ clientId }: { clientId: string }) {
+  return <MessagesButton target={{ kind: "general", id: clientId }} label="Messages" variant="ghost" />;
+}
+
+/** Opens the candidate thread in the unified Messages page. */
+export function CandidateMessages({
+  matchId,
+  candidateName,
+}: {
+  matchId: string;
+  matchStatus?: string | null;
+  candidateName: string;
+}) {
+  const firstName = candidateName.split(" ")[0] || candidateName;
+  return <MessagesButton target={{ kind: "candidate", id: matchId }} label={`Talk to us about ${firstName}`} />;
+}
+
+/** Quick actions available for a thread kind. */
+export function actionsFor(kind: ThreadTarget["kind"], matchStatus?: string | null): QuickAction[] {
+  if (kind === "candidate" && matchStatus === "interview_confirmed") return [ACTION_META.reschedule_request];
+  return [];
+}
+
+export function ChatFeed({
+  messages,
+  userId,
+  senderProfiles,
+}: {
+  messages: ThreadMessage[] | null;
+  userId: string | null;
+  senderProfiles: ThreadSenderProfiles;
+}) {
+  const endRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "end" });
+  }, [messages?.length]);
+
+  return (
+    <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 py-4">
+      {messages === null ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">Loading messages…</p>
+      ) : messages.length === 0 ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">No messages yet — say hello to your recruiter.</p>
+      ) : (
+        <ul className="space-y-3">
+          {messages.map((m) => {
+            const mine = m.sender_role === "client" && (!userId || !m.sender_id || m.sender_id === userId);
+            const action = m.structured_type ? actionMetaFor(m.structured_type) : null;
+            const senderProfile = m.sender_role === "staff" ? senderProfiles[m.sender_id ?? ""] : null;
+            const firstName = senderProfile?.full_name?.trim().split(/\s+/)[0];
+            const roleLabel = senderProfile?.role
+              ? senderProfile.role.charAt(0).toUpperCase() + senderProfile.role.slice(1)
+              : "Staff";
+            const senderLabel = firstName ? `${firstName} (${roleLabel})` : "ScaleSource Team";
+            return (
+              <li key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
+                <span className="mb-1 text-xs text-muted-foreground">
+                  {mine ? "You" : m.sender_role === "client" ? "Your team" : senderLabel} ·{" "}
+                  {formatDateTime(m.created_at)}
+                </span>
+                {action ? (
+                  <div className={`inline-flex min-w-0 max-w-[85%] flex-col gap-1 break-words rounded-2xl border px-3.5 py-2.5 text-sm ${action.tone}`}>
+                    <span className="inline-flex items-center gap-1.5 break-words font-semibold">
+                      <action.icon className="h-3.5 w-3.5 flex-none" />
+                      {action.label}
+                    </span>
+                    {m.body && m.body !== action.label && m.body !== action.body && <span className="whitespace-pre-line break-words">{m.body}</span>}
+                  </div>
+                ) : (
+                  <div
+                    className={`max-w-[85%] whitespace-pre-line break-words rounded-2xl px-3.5 py-2 text-sm ${
+                      mine ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md bg-white text-foreground shadow-[inset_0_0_0_1px_rgb(26_19_32/0.08)]"
+                    }`}
+                  >
+                    {m.body}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <div ref={endRef} />
+    </div>
+  );
+}
+
+export function Composer({
+  threadId,
+  target,
+  ready = true,
+  actions,
+  onSent,
+  onThreadCreated,
+}: {
+  threadId: string | null;
+  /** When set and no thread exists yet, the thread is created on first send. */
+  target?: ThreadTarget;
+  /** False while the existing-thread lookup is still in flight. */
+  ready?: boolean;
+  actions: QuickAction[];
+  onSent: (m: ThreadMessage) => void;
+  onThreadCreated?: (id: string) => void;
+}) {
+  const canSend = ready && (!!threadId || !!target);
+  const [body, setBody] = useState("");
+  const [sending, setSending] = useState<string | null>(null);
+
+  async function send(text: string, structured: StructuredType | null) {
+    if (!canSend || sending) return;
+    const trimmed = text.trim();
+    if (!trimmed && !structured) return;
+    setSending(structured ?? "text");
+    let tid = threadId;
+    if (!tid && target) {
+      // Atomic path: create/find the thread and insert the first message in one transaction.
+      const { data, error } = await supabase.rpc("send_thread_message_ensuring_thread", {
+        p_client_request_id: target.kind === "request" ? target.id : null,
+        p_candidate_match_id: target.kind === "candidate" ? target.id : null,
+        p_client_id: target.kind === "general" ? target.id : null,
+        p_body: trimmed,
+        p_structured_type: structured,
+      });
+      setSending(null);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      const result = (Array.isArray(data) ? data[0] : data) as { thread?: { id?: string } | null; message?: ThreadMessage | null } | null;
+      tid = result?.thread?.id ?? null;
+      if (!tid) {
+        toast.error("Could not start the conversation.");
+        return;
+      }
+      onThreadCreated?.(tid);
+      if (!structured) setBody("");
+      if (result?.message?.id) onSent(result.message);
+      return;
+    }
+    if (!tid) {
+      setSending(null);
+      return;
+    }
+    const { data, error } = await supabase.rpc("send_thread_message", {
+      p_thread_id: tid,
+      p_body: trimmed,
+      p_structured_type: structured,
+    });
+    setSending(null);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (!structured) setBody("");
+    const row = (Array.isArray(data) ? data[0] : data) as ThreadMessage | null;
+    if (row?.id) onSent(row);
+  }
+
+  function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      void send(body, null);
+    }
+  }
+
+  return (
+    <div className="space-y-2 border-t px-5 py-3">
+      {actions.length > 0 && (
+      <div className="flex flex-wrap gap-1.5">
+        {actions.map((a) => (
+          <button
+            key={a.type}
+            type="button"
+            disabled={!canSend || sending !== null}
+            onClick={() => void send(a.body, a.type)}
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-opacity hover:opacity-80 disabled:opacity-50 ${a.tone}`}
+          >
+            {sending === a.type ? <Loader2 className="h-3 w-3 animate-spin" /> : <a.icon className="h-3 w-3" />}
+            {a.label}
+          </button>
+        ))}
+      </div>
+      )}
+      <div className="flex items-end gap-2">
+        <Textarea
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder="Write a message…"
+          rows={2}
+          className="min-h-[44px] resize-none rounded-2xl"
+          disabled={!canSend}
+        />
+        <Button size="icon" aria-label="Send" disabled={!canSend || !body.trim() || sending !== null} onClick={() => void send(body, null)}>
+          {sending === "text" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+        </Button>
+      </div>
+      <p className="text-[11px] text-muted-foreground">Enter to send · Shift+Enter for a new line</p>
+    </div>
+  );
+}

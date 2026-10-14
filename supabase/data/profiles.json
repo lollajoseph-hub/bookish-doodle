@@ -1,0 +1,4 @@
+[
+  {"id":"3beda13c-a00e-4b4e-87cb-74d0341ff9db","role":"admin","full_name":"Lola","email":"lola@scalesource.com","phone":null,"avatar_url":null,"is_active":true,"created_at":"2026-09-17T18:18:18.602244+00:00","updated_at":"2026-09-17T18:18:18.602244+00:00"},
+  {"id":"9ada87b8-57a7-4ec5-925f-f5af377c0806","role":"admin","full_name":"Gui Lozano","email":"gui@scalesource.com","phone":null,"avatar_url":null,"is_active":true,"created_at":"2026-10-07T18:01:19.520594+00:00","updated_at":"2026-10-07T18:01:20.840167+00:00"}
+]

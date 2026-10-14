@@ -1,0 +1,613 @@
+import { CandidateRating } from "@/components/candidate-rating";
+import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
+import { AppShell } from "@/components/AppShell";
+import { supabase } from "@/lib/supabase";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { CandidateCard, MATCH_SELECT, type MatchRow } from "@/components/candidate-card";
+import { CandidateActions, CandidateCompareTable } from "@/components/candidate-compare-table";
+import { CandidateFullProfileView, PROFILE_SELECT, type FullPoolProfile } from "@/components/candidate-full-profile-view";
+import { CandidateProfileDialog } from "@/components/candidate-profile-dialog";
+import { InterviewRequestDialog } from "@/components/interview-request-dialog";
+import { RequestMessages } from "@/components/request-messages";
+import { toast } from "sonner";
+import { ArrowLeft, ChevronLeft, ChevronRight, Columns3, Copy, LayoutGrid, Loader2, ScrollText, Sparkles, UsersRound } from "lucide-react";
+import { usePollingRefresh } from "@/hooks/use-polling-refresh";
+import { Skeleton } from "@/components/ui/skeleton";
+import { prefersReducedMotion, useEntrance } from "@/lib/motion";
+import { gsap } from "gsap";
+import { ENGAGEMENT_TYPES, DAYS_OF_WEEK } from "@/lib/catalog";
+import {
+  REQUEST_STATUS_LABELS,
+  REQUEST_PRIORITY_LABELS,
+  requestStatusTone,
+  requestPriorityTone,
+  signedPhotoUrl,
+  displayName,
+  formatDate,
+  type MatchStatus,
+} from "@/lib/matches";
+
+export const Route = createFileRoute("/requests/$id")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Presented candidates — Candidate Pool" },
+      { name: "description", content: "Review the candidates presented for this hiring request: shortlist, request an interview, or request to hire." },
+      { property: "og:title", content: "Presented candidates — Candidate Pool" },
+      { property: "og:description", content: "Review the candidates presented for this hiring request: shortlist, request an interview, or request to hire." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: () => (
+    <AppShell>
+      <RequestDetail />
+    </AppShell>
+  ),
+});
+
+interface RequestHeader {
+  id: string;
+  status: string | null;
+  source: string | null;
+  priority: string | null;
+  engagement_type: string | null;
+  hours_needed: string | null;
+  days_of_week_needed: string[] | null;
+  hires_needed: number | null;
+  timezone_requirement: string | null;
+  years_experience_min: number | null;
+  desired_start_date: string | null;
+  notes: string | null;
+  created_at: string;
+  job_roles: { name: string | null } | null;
+}
+
+const REQUEST_SELECT =
+  "id,status,source,priority,engagement_type,hours_needed,days_of_week_needed,hires_needed,timezone_requirement,years_experience_min,desired_start_date,notes,created_at,job_roles(name)";
+
+/** Disabled: candidates are only reshuffled from Admin Tools after a request is rejected 4x. */
+const SHOW_MORE_CANDIDATES_ENABLED = false;
+
+/** Active matches first, decided ones (hired / not a fit) last. */
+const STATUS_ORDER: MatchStatus[] = [
+  "interview_completed",
+  "hire_requested",
+  "interview_confirmed",
+  "interview_requested",
+  "shortlisted",
+  "offer_extended",
+  "recommended",
+  "hired",
+  "rejected",
+];
+
+function RequestDetail() {
+  const { id } = useParams({ from: "/requests/$id" });
+  const navigate = useNavigate();
+  const [request, setRequest] = useState<RequestHeader | null>(null);
+  const [matches, setMatches] = useState<MatchRow[] | null>(null);
+  const [photos, setPhotos] = useState<Record<string, string | null>>({});
+  const [requiredSkills, setRequiredSkills] = useState<string[]>([]);
+  const [candidateSkills, setCandidateSkills] = useState<Record<string, string[]>>({});
+  const [fullProfiles, setFullProfiles] = useState<Record<string, FullPoolProfile>>({});
+  const [err, setErr] = useState<string | null>(null);
+  const [actingId, setActingId] = useState<string | null>(null);
+  const [profileFor, setProfileFor] = useState<MatchRow | null>(null);
+  const [interviewFor, setInterviewFor] = useState<MatchRow | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [noMoreCandidates, setNoMoreCandidates] = useState(false);
+  const [candidateView, setCandidateView] = useState<"cards" | "compare" | "review">("cards");
+  const [reviewIndex, setReviewIndex] = useState(0);
+  /**
+   * Review carousel: while moving between candidates both sit side by side in one strip that glides across.
+   * fromId is the candidate being left; dir 1 = next (strip moves left), -1 = previous (strip moves right).
+   */
+  const [reviewTransition, setReviewTransition] = useState<{ fromId: string; dir: 1 | -1 } | null>(null);
+  const reviewViewportRef = useRef<HTMLDivElement>(null);
+  const reviewTrackRef = useRef<HTMLDivElement>(null);
+  const loadTokenRef = useRef(0);
+  /** Stable display order of match ids, captured on first load per request id. */
+  const orderRef = useRef<{ requestId: string; order: string[] } | null>(null);
+
+  const load = useCallback(async () => {
+    const token = ++loadTokenRef.current;
+    const [reqRes, matchRes, requiredSkillsRes] = await Promise.all([
+      supabase.from("client_requests").select(REQUEST_SELECT).eq("id", id).maybeSingle(),
+      supabase.from("candidate_matches").select(MATCH_SELECT).eq("client_request_id", id),
+      supabase
+        .from("client_request_skills")
+        .select("skills(name)")
+        .eq("request_id", id)
+        .eq("is_required", true),
+    ]);
+
+    if (reqRes.error) setErr(reqRes.error.message);
+    else setRequest((reqRes.data as unknown as RequestHeader) ?? null);
+
+    if (matchRes.error) {
+      if (loadTokenRef.current !== token) return null;
+      setErr(matchRes.error.message);
+      setMatches([]);
+      return null;
+    }
+
+    const raw = (matchRes.data ?? []) as unknown as MatchRow[];
+    const candidateIds = [...new Set(raw.map((match) => match.candidate_id))];
+    const candidateSkillsRes = candidateIds.length
+      ? await supabase.from("candidate_skills").select("candidate_id,skills(name)").in("candidate_id", candidateIds)
+      : { data: [], error: null };
+
+    if (requiredSkillsRes.error || candidateSkillsRes.error) {
+      if (loadTokenRef.current !== token) return null;
+      setErr(requiredSkillsRes.error?.message ?? candidateSkillsRes.error?.message ?? "Unable to load skills");
+    }
+
+    let list: MatchRow[];
+    if (!orderRef.current || orderRef.current.requestId !== id) {
+      // First load for this request: sort by status/score and capture that order.
+      list = raw.slice().sort((a, b) => {
+        const rank = STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status);
+        if (rank !== 0) return rank;
+        return (b.match_score ?? 0) - (a.match_score ?? 0);
+      });
+      orderRef.current = { requestId: id, order: list.map((m) => m.id) };
+    } else {
+      // Subsequent loads: keep every card in its captured slot so the grid never reshuffles.
+      const stored = orderRef.current.order;
+      const fresh = raw.filter((m) => !stored.includes(m.id));
+      stored.push(...fresh.map((m) => m.id));
+      const byId = new Map(raw.map((m) => [m.id, m]));
+      list = stored.map((mid) => byId.get(mid)).filter((m): m is MatchRow => !!m);
+    }
+
+    if (loadTokenRef.current !== token) return null;
+    const required = (requiredSkillsRes.data ?? [])
+      .map((row) => (row.skills as unknown as { name: string | null } | null)?.name?.trim())
+      .filter((name): name is string => !!name);
+    const byCandidate: Record<string, string[]> = {};
+    for (const row of candidateSkillsRes.data ?? []) {
+      const candidateId = row.candidate_id;
+      const skillName = (row.skills as unknown as { name: string | null } | null)?.name?.trim();
+      if (!candidateId || !skillName) continue;
+      byCandidate[candidateId] = [...(byCandidate[candidateId] ?? []), skillName];
+    }
+    setRequiredSkills(required);
+    setCandidateSkills(byCandidate);
+    const fullProfilesRes = candidateIds.length
+      ? await supabase.from("candidate_pool_profile").select(PROFILE_SELECT).in("candidate_id", candidateIds)
+      : { data: [], error: null };
+    if (loadTokenRef.current !== token) return null;
+    if (fullProfilesRes.error) setErr(fullProfilesRes.error.message);
+    const profilesByCandidate: Record<string, FullPoolProfile> = {};
+    for (const row of fullProfilesRes.data ?? []) {
+      const profile = row as unknown as FullPoolProfile;
+      profilesByCandidate[profile.candidate_id] = profile;
+    }
+    setFullProfiles(profilesByCandidate);
+    setMatches(list);
+
+    const entries = await Promise.all(
+      list.map(async (m) => [m.id, await signedPhotoUrl(m.candidate_pool_profile?.profile_photo_path)] as const)
+    );
+    if (loadTokenRef.current !== token) return null;
+    setPhotos(Object.fromEntries(entries));
+    return list;
+  }, [id]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  usePollingRefresh(load, 20000);
+
+  async function callRpc(
+    fn: "client_shortlist_candidate" | "client_request_hire",
+    matchId: string,
+    success: string
+  ) {
+    setActingId(matchId);
+    const { error } = await supabase.rpc(fn, { p_match_id: matchId });
+    if (error) {
+      setActingId(null);
+      toast.error(error.message);
+      return;
+    }
+    toast.success(success);
+    await load();
+    setActingId(null);
+  }
+
+  async function showMoreCandidates() {
+    const existingIds = new Set((matches ?? []).map((match) => match.id));
+    setLoadingMore(true);
+
+    const { error } = await supabase.rpc("rank_and_match", {
+      p_request_id: id,
+      p_limit: 6,
+    });
+
+    if (error) {
+      setLoadingMore(false);
+      toast.error(error.message);
+      return;
+    }
+
+    const refreshedMatches = await load();
+    setLoadingMore(false);
+
+    if (refreshedMatches && !refreshedMatches.some((match) => !existingIds.has(match.id))) {
+      setNoMoreCandidates(true);
+    }
+  }
+
+  const engagement =
+    ENGAGEMENT_TYPES.find((e) => e.value === request?.engagement_type)?.label ?? request?.engagement_type;
+  const days = (request?.days_of_week_needed ?? [])
+    .map((d) => DAYS_OF_WEEK.find((x) => x.value === d)?.label ?? d)
+    .join(", ");
+  const currentReviewIndex = matches?.length ? Math.min(reviewIndex, matches.length - 1) : 0;
+  const reviewMatch = matches?.[currentReviewIndex] ?? null;
+
+  function stepReview(dir: 1 | -1, total: number) {
+    if (reviewTransition || !reviewMatch) return;
+    const nextIndex = dir === 1 ? Math.min(total - 1, currentReviewIndex + 1) : Math.max(0, currentReviewIndex - 1);
+    if (nextIndex === currentReviewIndex) return;
+    if (!prefersReducedMotion()) setReviewTransition({ fromId: reviewMatch.id, dir });
+    setReviewIndex(nextIndex);
+  }
+
+  // Runs when a transition starts: glide the strip one candidate across and ease the height to the new candidate.
+  useLayoutEffect(() => {
+    if (!reviewTransition) return;
+    const track = reviewTrackRef.current;
+    const viewport = reviewViewportRef.current;
+    if (!track || !viewport) return;
+    const panes = Array.from(track.children) as HTMLElement[];
+    const fromPane = panes.find((el) => el.dataset.matchId === reviewTransition.fromId);
+    const toPane = panes.find((el) => el.dataset.matchId !== reviewTransition.fromId);
+    const vs = getComputedStyle(viewport);
+    const pad = parseFloat(vs.paddingTop) + parseFloat(vs.paddingBottom);
+    const fromH = (fromPane?.offsetHeight ?? viewport.offsetHeight - pad) + pad;
+    const toH = (toPane?.offsetHeight ?? fromH - pad) + pad;
+    const finish = () => {
+      flushSync(() => setReviewTransition(null));
+      gsap.set(track, { xPercent: 0 });
+      gsap.set(viewport, { clearProps: "height" });
+    };
+    const tl = gsap.timeline({ onComplete: finish });
+    tl.fromTo(
+      track,
+      { xPercent: reviewTransition.dir === 1 ? 0 : -100 },
+      { xPercent: reviewTransition.dir === 1 ? -100 : 0, duration: 0.75, ease: "expo.inOut" },
+      0,
+    );
+    tl.fromTo(viewport, { height: fromH }, { height: toH, duration: 0.75, ease: "expo.inOut" }, 0);
+    return () => {
+      tl.kill();
+    };
+  }, [reviewTransition]);
+
+  /** One candidate in Review: full profile, then rating and actions (unchanged content). */
+  function renderReviewPane(m: MatchRow) {
+    return (
+      <>
+        <CandidateFullProfileView
+          candidateId={m.candidate_id}
+          matchId={m.id}
+          matchStatus={m.status}
+          matchReason={m.match_reason}
+          requiredSkills={requiredSkills}
+          candidateSkills={candidateSkills[m.candidate_id] ?? []}
+          preloadedProfile={fullProfiles[m.candidate_id] ?? null}
+          preloadedPhotoUrl={photos[m.id] ?? null}
+        />
+        <Card className="card-amber mt-4 rounded-3xl">
+          <CardContent className="space-y-3 p-5">
+            <CandidateRating
+              matchId={m.id}
+              interviewCompletedAt={m.interview_completed_at}
+              rating={m.client_rating}
+              note={m.client_rating_note}
+              onSaved={() => void load()}
+            />
+            <CandidateActions
+              key={m.id}
+              match={m}
+              busy={actingId === m.id}
+              locked={actingId !== null && actingId !== m.id}
+              onShortlist={() =>
+                callRpc(
+                  "client_shortlist_candidate",
+                  m.id,
+                  m.status === "shortlisted" ? "Removed from shortlist" : "Added to shortlist"
+                )
+              }
+              onRequestInterview={() => setInterviewFor(m)}
+              onRequestHire={() => callRpc("client_request_hire", m.id, "Hire request sent to ScaleSource")}
+              onRejected={() => void load()}
+              onInterviewTimeAccepted={() => void load()}
+            />
+          </CardContent>
+        </Card>
+      </>
+    );
+  }
+
+  function selectCandidateView(view: "cards" | "compare" | "review") {
+    if (view === "review") {
+      setReviewIndex(0);
+      setReviewTransition(null);
+    }
+    setCandidateView(view);
+  }
+
+  // Entrance runs once when the page's data first arrives; the 20s polling never replays it.
+  const scope = useEntrance<HTMLDivElement>([request === null, matches === null]);
+
+  const viewButton = (view: "cards" | "compare" | "review", icon: React.ReactNode, label: string) => (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => selectCandidateView(view)}
+      aria-pressed={candidateView === view}
+      className="h-9 px-4 text-[13px] font-medium aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:shadow-[0_6px_18px_-6px_rgb(67_24_103/0.6)] aria-pressed:hover:bg-primary"
+    >
+      {icon} {label}
+    </Button>
+  );
+
+  return (
+    <div ref={scope} className="space-y-6">
+      <Link to="/requests" data-rise className="inline-flex items-center rounded-md text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground hover:text-primary">
+        <ArrowLeft className="mr-1 h-3.5 w-3.5" /> All requests
+      </Link>
+
+      {err && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+          {err}
+        </div>
+      )}
+
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,2.4fr)] lg:gap-6 lg:space-y-0 space-y-6">
+        <div data-rise className="min-w-0 lg:sticky lg:top-24 lg:self-start">
+          <Card className="card-amber rounded-[28px]">
+            <CardContent className="p-6">
+              <h1 className="font-display text-4xl font-semibold leading-[1.02] tracking-[-0.01em]">{request?.job_roles?.name ?? "Hiring request"}</h1>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {request && (
+                  <Badge className={requestStatusTone(request.status)} variant="secondary">
+                    {REQUEST_STATUS_LABELS[request.status ?? ""] ?? request.status ?? "—"}
+                  </Badge>
+                )}
+                {request?.source === "staff_curated" && (
+                  <Badge className="bg-primary-soft text-primary" variant="secondary">
+                    <Sparkles className="mr-1 h-3 w-3" />
+                    Hand-picked
+                  </Badge>
+                )}
+                {request?.priority && request.priority !== "normal" && (
+                  <Badge className={requestPriorityTone(request.priority)} variant="secondary">
+                    {REQUEST_PRIORITY_LABELS[request.priority] ?? request.priority}
+                  </Badge>
+                )}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <RequestMessages requestId={id} />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate({ to: "/new-request", search: { clone: id } })}
+                >
+                  <Copy className="mr-1.5 h-3.5 w-3.5" /> Clone request
+                </Button>
+              </div>
+
+              {request && (
+                <dl className="mt-5 grid text-sm tabular-nums sm:grid-cols-2 sm:gap-x-8 lg:grid-cols-1">
+                  <Detail label="Engagement" value={engagement} />
+                  <Detail label="Hours needed" value={request.hours_needed} />
+                  <Detail label="Days needed" value={days || null} />
+                  <Detail label="Hires needed" value={String(request.hires_needed ?? 1)} />
+                  <Detail label="Minimum experience" value={request.years_experience_min ? `${request.years_experience_min} years` : null} />
+                  <Detail label="Desired start" value={formatDate(request.desired_start_date)} />
+                  <Detail label="Timezone" value={request.timezone_requirement} />
+                  <Detail label="Submitted" value={formatDate(request.created_at)} />
+                </dl>
+              )}
+
+              {request?.notes && (
+                <>
+                  <Separator className="my-4" />
+                  <p className="whitespace-pre-line text-sm text-muted-foreground">{request.notes}</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div aria-hidden className="hidden lg:block lg:w-px lg:bg-gradient-to-b lg:from-transparent lg:via-primary/15 lg:to-transparent" />
+
+        <div className="min-w-0 space-y-4">
+          <div data-rise className="grid grid-cols-1 items-end gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <div className="min-w-0">
+              <h2 className="font-display text-[32px] font-semibold leading-none">Presented candidates</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Shortlist the people you like, request an interview, or tell us why someone isn&apos;t a fit.
+              </p>
+            </div>
+            <div
+              className="flex w-fit max-w-full shrink-0 gap-0.5 overflow-x-auto rounded-full bg-white/65 p-1 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.9),0_0_0_1px_rgb(26_19_32/0.07),0_10px_30px_-18px_rgb(46_16_73/0.4)] backdrop-blur-md"
+              aria-label="Candidate view"
+            >
+              {viewButton("cards", <LayoutGrid className="mr-1.5 h-4 w-4" />, "Cards")}
+              {viewButton("review", <ScrollText className="mr-1.5 h-4 w-4" />, "Review")}
+              {viewButton("compare", <Columns3 className="mr-1.5 h-4 w-4" />, "Compare")}
+            </div>
+          </div>
+
+          {matches === null ? (
+            <div className="grid gap-4 md:grid-cols-2" aria-busy="true" aria-label="Loading candidates">
+              {[0, 1].map((i) => (
+                <Skeleton key={i} className="h-[340px] rounded-3xl bg-white/70" />
+              ))}
+            </div>
+          ) : matches.length === 0 ? (
+            <Card className="card-amber rounded-3xl border-dashed">
+              <CardContent className="py-14 text-center text-sm text-muted-foreground">
+                No candidates presented yet — matching is still in progress. We&apos;ll email you when profiles are ready.
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <div key={candidateView} className="animate-in fade-in slide-in-from-bottom-3 duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:animate-none">
+              {candidateView === "cards" ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {matches.map((m) => (
+                    <CandidateCard
+                      key={m.id}
+                      match={m}
+                      photoUrl={photos[m.id] ?? null}
+                      busy={actingId === m.id}
+                      locked={actingId !== null && actingId !== m.id}
+                      curated={request?.source === "staff_curated"}
+                      requiredSkills={requiredSkills}
+                      candidateSkills={candidateSkills[m.candidate_id] ?? []}
+                      onViewProfile={() => setProfileFor(m)}
+                      onShortlist={() =>
+                        callRpc(
+                          "client_shortlist_candidate",
+                          m.id,
+                          m.status === "shortlisted" ? "Removed from shortlist" : "Added to shortlist"
+                        )
+                      }
+                      onRequestInterview={() => setInterviewFor(m)}
+                      onRequestHire={() => callRpc("client_request_hire", m.id, "Hire request sent to ScaleSource")}
+                      onRejected={() => void load()}
+                      onInterviewTimeAccepted={() => void load()}
+                    />
+                  ))}
+                </div>
+              ) : candidateView === "compare" ? (
+                <CandidateCompareTable
+                  matches={matches}
+                  photos={photos}
+                  actingId={actingId}
+                  curated={request?.source === "staff_curated"}
+                  requiredSkills={requiredSkills}
+                  candidateSkills={candidateSkills}
+                  onViewProfile={setProfileFor}
+                  onShortlist={(m) =>
+                    callRpc(
+                      "client_shortlist_candidate",
+                      m.id,
+                      m.status === "shortlisted" ? "Removed from shortlist" : "Added to shortlist"
+                    )
+                  }
+                  onRequestInterview={setInterviewFor}
+                  onRequestHire={(m) => callRpc("client_request_hire", m.id, "Hire request sent to ScaleSource")}
+                  onRejected={() => void load()}
+                  onInterviewTimeAccepted={() => void load()}
+                />
+              ) : reviewMatch ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-full bg-white/65 p-1.5 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.9),0_0_0_1px_rgb(26_19_32/0.07)] backdrop-blur-md">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentReviewIndex === 0}
+                      onClick={() => stepReview(-1, matches.length)}
+                    >
+                      <ChevronLeft className="mr-1.5 h-4 w-4" /> Previous
+                    </Button>
+                    <p className="text-center text-sm tabular-nums text-muted-foreground">
+                      Candidate <span className="font-display text-xl font-semibold text-foreground">{currentReviewIndex + 1}</span> of {matches.length}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentReviewIndex === matches.length - 1}
+                      onClick={() => stepReview(1, matches.length)}
+                    >
+                      Next <ChevronRight className="ml-1.5 h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div ref={reviewViewportRef} className="-mx-3 -mb-8 overflow-hidden px-3 pb-8">
+                    <div ref={reviewTrackRef} className="flex items-start will-change-transform">
+                      {(() => {
+                        const from = reviewTransition ? matches.find((m) => m.id === reviewTransition.fromId) ?? null : null;
+                        const panes = !from
+                          ? [reviewMatch]
+                          : reviewTransition!.dir === 1
+                            ? [from, reviewMatch]
+                            : [reviewMatch, from];
+                        return panes.map((m) => (
+                          <div key={m.id} data-match-id={m.id} className="w-full shrink-0" aria-hidden={m.id !== reviewMatch.id || undefined}>
+                            {renderReviewPane(m)}
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+              </div>
+
+              {SHOW_MORE_CANDIDATES_ENABLED && (
+                <div className="flex flex-col items-center gap-2 pt-2">
+                  {noMoreCandidates ? (
+                    <p className="text-sm text-muted-foreground">No more candidates available right now.</p>
+                  ) : (
+                    <Button variant="outline" disabled={loadingMore} onClick={showMoreCandidates}>
+                      {loadingMore ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <UsersRound className="mr-2 h-4 w-4" />
+                      )}
+                      {loadingMore ? "Finding candidates…" : "Show more candidates"}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      <CandidateProfileDialog
+        candidateId={profileFor?.candidate_id ?? null}
+        matchId={profileFor?.id ?? null}
+        matchStatus={profileFor?.status ?? null}
+        matchReason={profileFor?.match_reason ?? null}
+        requiredSkills={requiredSkills}
+        candidateSkills={profileFor ? (candidateSkills[profileFor.candidate_id] ?? []) : []}
+        onClose={() => setProfileFor(null)}
+      />
+
+      <InterviewRequestDialog
+        matchId={interviewFor?.id ?? null}
+        candidateName={interviewFor ? displayName(interviewFor.candidate_pool_profile?.full_name, interviewFor.status) : null}
+        onClose={() => setInterviewFor(null)}
+        onRequested={() => {
+          setInterviewFor(null);
+          void load();
+        }}
+      />
+    </div>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: string | null | undefined }) {
+  if (!value) return null;
+  return (
+    <div className="flex items-baseline justify-between gap-4 border-b border-border py-2.5 last:border-b-0">
+      <dt className="text-[13px] text-muted-foreground">{label}</dt>
+      <dd className="text-right text-[13px] font-semibold">{value}</dd>
+    </div>
+  );
+}

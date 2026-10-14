@@ -1,0 +1,21 @@
+[
+  {"slug":"send-notification-email","version":15,"verify_jwt":false,"entrypoint":"index.ts"},
+  {"slug":"admin-create-staff","version":10,"verify_jwt":true,"entrypoint":"index.ts"},
+  {"slug":"admin-resend-staff-invite","version":10,"verify_jwt":true,"entrypoint":"index.ts"},
+  {"slug":"admin-create-client","version":11,"verify_jwt":true,"entrypoint":"index.ts"},
+  {"slug":"process-resume","version":20,"verify_jwt":false,"entrypoint":"index.ts"},
+  {"slug":"calendar-sync","version":14,"verify_jwt":false,"entrypoint":"index.ts"},
+  {"slug":"public-client-request","version":12,"verify_jwt":false,"entrypoint":"index.ts"},
+  {"slug":"client-invite-colleague","version":5,"verify_jwt":true,"entrypoint":"index.ts"},
+  {"slug":"qa-generate-test-link","version":5,"verify_jwt":true,"entrypoint":"index.ts","note":"disabled stub (returns 410)"},
+  {"slug":"fix-logo-filename","version":5,"verify_jwt":false,"entrypoint":"index.ts","note":"disabled stub (returns 410)"},
+  {"slug":"generate-recovery-link","version":5,"verify_jwt":false,"entrypoint":"index.ts","note":"disabled stub (returns 410)"},
+  {"slug":"check-logo-url","version":6,"verify_jwt":false,"entrypoint":"index.ts","note":"disabled stub (returns 410)"},
+  {"slug":"verify-auto-match","version":5,"verify_jwt":false,"entrypoint":"index.ts","note":"disabled stub (returns 410)"},
+  {"slug":"client-magic-link","version":4,"verify_jwt":false,"entrypoint":"index.ts"},
+  {"slug":"debug-gen-link","version":7,"verify_jwt":false,"entrypoint":"index.ts","note":"disabled stub (returns 410)"},
+  {"slug":"admin-create-client-with-request","version":8,"verify_jwt":true,"entrypoint":"index.ts"},
+  {"slug":"admin-send-pending-client-invite","version":4,"verify_jwt":true,"entrypoint":"index.ts"},
+  {"slug":"capture-meeting-notes","version":2,"verify_jwt":false,"entrypoint":"index.ts"},
+  {"slug":"generate-match-reason","version":2,"verify_jwt":false,"entrypoint":"index.ts"}
+]
